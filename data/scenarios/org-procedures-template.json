@@ -1,0 +1,25 @@
+{
+  "org_id": "sample-co",
+  "org_name": "Sample Company (fictional)",
+  "note": "One entry per scenario and role. Steps are your company's words. notify uses the keys in wi.json notify_keys; within_hours is a number or null. The app compares these with the legal baseline and flags anything slower.",
+  "procedures": [
+    {
+      "scenario_id": "WI-FALL-02",
+      "role": "manager",
+      "steps": ["Call the family or guardian before the end of the day.", "Send the incident form to the care manager."],
+      "notify": [{"key": "rep", "within_hours": 12}, {"key": "mco", "within_hours": 72}],
+      "source": "Sample Co. Falls Procedure",
+      "version": "2.1",
+      "effective": "2026-01-01"
+    },
+    {
+      "scenario_id": "WI-FALL-01",
+      "role": "caregiver",
+      "steps": ["Get the guardian's permission before calling 911.", "Do not move the resident."],
+      "notify": [{"key": "rep", "within_hours": 0}, {"key": "911", "within_hours": null}],
+      "source": "Sample Co. Emergencies",
+      "version": "1.0",
+      "effective": "2026-01-01"
+    }
+  ]
+}
