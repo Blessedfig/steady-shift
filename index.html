@@ -276,6 +276,7 @@ footer nav a:hover{color:var(--pine)}
       <p class="lede">Caregiving comes first and the paperwork follows. Staff check procedures against DHS 88 and DHS 83 in plain language, turn a quick note into a professional incident report, and know exactly when a 2 AM question needs a phone call and when it can wait for morning.</p>
       <p style="font-weight:600">Start with the one that sounds like you:</p>
       <div class="picker" aria-label="Choose your path">
+        <a href="#caregiver">I'm a caregiver at a home or agency</a>
         <a href="#family">I care for a family member</a>
         <a href="#afh">I run an adult family home</a>
         <a href="#cbrf">I run a CBRF</a>
@@ -294,13 +295,32 @@ footer nav a:hover{color:var(--pine)}
   <div class="wrap">
     <span class="eyebrow">Who it's for</span>
     <h2 id="paths-h">One calm system, sized to how you give care.</h2>
-    <p class="lede" style="margin-top:.75rem">From one family caregiver to a group of homes, everyone gets the same plain-language help. What changes is who sees what, and what you pay.</p>
+    <p class="lede" style="margin-top:.75rem">From one caregiver on shift to a group of homes, everyone gets the same plain-language help. What changes is who sees what, and what you pay.</p>
     <div class="tabs" role="tablist" aria-label="Choose your path" hidden>
+<button role="tab" id="tab-caregiver" aria-controls="caregiver" aria-selected="false">Caregiver<small>Direct care staff at an AFH, CBRF or agency</small></button>
 <button role="tab" id="tab-family" aria-controls="family" aria-selected="false">Family caregiver<small>Caring for someone at home</small></button>
 <button role="tab" id="tab-afh" aria-controls="afh" aria-selected="false">Adult family home<small>1 to 4 residents, DHS 88</small></button>
 <button role="tab" id="tab-cbrf" aria-controls="cbrf" aria-selected="false">CBRF<small>Community-based residential facility, DHS 83</small></button>
 <button role="tab" id="tab-agency" aria-controls="agency" aria-selected="false">Home care agency<small>Personal care or home health</small></button>
 <button role="tab" id="tab-multisite" aria-controls="multisite" aria-selected="false">Several sites<small>Owners and operators with more than one home</small></button>
+    </div>
+<div class="path" id="caregiver" role="tabpanel" aria-labelledby="tab-caregiver">
+      <div class="path-main">
+        <span class="eyebrow">Caregiver</span>
+        <h3>You do the real work. You deserve real backup.</h3>
+        <p>You're a CNA, resident care staff or home care aide. You make dozens of calls a shift, often alone, and you're the one who has to write it all down.</p>
+        <div class="tier-cols">
+          <div><h4>What's hard</h4><ul class="hard"><li>Not being sure, and not wanting to look silly for asking</li><li>Writing up an incident at the end of a long shift</li><li>Being alone at night with a call you're unsure about</li></ul></div>
+          <div><h4>How it helps</h4><ul class="helps"><li>Ask any question privately and get your home's answer in plain steps</li><li>Turn a quick note into a calm, professional report</li><li>Know at night what can wait and who to call when it can't</li><li>Keep your own training record, even if you change jobs <span class="draft">Planned</span></li></ul></div>
+        </div>
+      </div>
+      <div class="plan">
+        <div style="display:flex;justify-content:space-between;gap:.5rem;align-items:center;flex-wrap:wrap"><span class="pname">Free for you</span><span class="draft">Draft</span></div>
+        <p>Your home or agency pays for the plan. You never pay to use it at work.</p>
+        <p style="font-weight:600">Want it where you work? Send your manager this note:</p>
+        <p id="mgr-note" style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:.8rem .9rem;font-size:.95rem">Hi, I found an app called Steady Shift that's built for homes like ours. It lets caregivers check procedures in plain language, turns quick notes into professional incident reports, and tells night staff when a question can wait until morning so you're not woken up for it. Caregivers use it free and the home pays a small monthly plan. Could you take a look?</p>
+        <button class="btn primary" type="button" id="copy-note">Copy the note</button>
+      </div>
     </div>
 <div class="path" id="family" role="tabpanel" aria-labelledby="tab-family">
       <div class="path-main">
@@ -578,6 +598,7 @@ footer nav a:hover{color:var(--pine)}
       <table class="compare">
         <thead><tr><th>Plan</th><th>For</th><th>Price</th><th>Who's included</th><th>When</th></tr></thead>
         <tbody>
+          <tr><td><b>Caregiver</b></td><td>Direct care staff</td><td><b>Free</b></td><td>Included in your employer's plan</td><td>First release</td></tr>
           <tr><td><b>Family</b></td><td>One family caregiver</td><td><b>about $10</b> a month</td><td>You and the person you care for</td><td>After first release</td></tr>
           <tr><td><b>Home</b></td><td>Adult family homes</td><td><b>$79</b> a month per home</td><td>All caregivers, manager, owner</td><td>First release</td></tr>
           <tr><td><b>Facility</b></td><td>CBRFs</td><td><b>$199</b> a month per facility</td><td>All staff, manager, nurse, owner</td><td>First release</td></tr>
@@ -654,7 +675,7 @@ document.querySelectorAll('.ph img').forEach(function(img){
 <script>
 // Buyer paths: show one tier at a time; the hash (#afh, #cbrf...) picks it.
 (function(){
-  var ids=['family','afh','cbrf','agency','multisite'];
+  var ids=['caregiver','family','afh','cbrf','agency','multisite'];
   var list=document.querySelector('#paths .tabs'); if(!list) return;
   document.documentElement.classList.add('js'); list.hidden=false;
   function pick(id,scroll){
@@ -668,6 +689,11 @@ document.querySelectorAll('.ph img').forEach(function(img){
   function fromHash(scroll){var h=location.hash.slice(1); if(ids.indexOf(h)>-1){pick(h,scroll);return true} return false}
   if(!fromHash(true)) pick('afh',false);
   window.addEventListener('hashchange',function(){fromHash(true)});
+  var cb=document.getElementById('copy-note'), nt=document.getElementById('mgr-note');
+  if(cb&&nt) cb.addEventListener('click',function(){
+    function sel(){var r=document.createRange();r.selectNodeContents(nt);var g=getSelection();g.removeAllRanges();g.addRange(r);cb.textContent='Selected. Press copy.';}
+    try{navigator.clipboard.writeText(nt.textContent).then(function(){cb.textContent='Copied';setTimeout(function(){cb.textContent='Copy the note'},2000)},sel)}catch(e){sel()}
+  });
 })();
 </script>
 
