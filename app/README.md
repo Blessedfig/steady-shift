@@ -21,8 +21,8 @@ Database rules: `desk/trials.sql`. Turning it on: `desk/README.md` > "Turn on tr
 
 ## What's worked for others (peer-data.js, `#/peer`)
 
-A shared "what's worked for others" library on top of the rule conflicts (C01-C18). Entries are seeded from public
-sources (DHS guidance, DQA statistics, public DQA survey reports, caregiver forums, news), each cited, plus two clearly
+A shared "what's worked for others" library on top of the rule conflicts (C01-C18). 43 entries are seeded from public
+sources (WI DHS guidance and DQA survey and enforcement reports, MN and MI investigation reports, IA survey trends, the WI ombudsman, an AHRQ case study, a WI court decision and bill, caregiver forums, news), each cited by agency and year with no home named, plus two clearly
 marked fictional member samples. Each entry has the situation, what the home does, how it played out, an outcome
 (regulator accepted, cited, contested, untested), the rule it relates to, and upvotes. Every screen says
 "Peer practice, not legal advice".

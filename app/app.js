@@ -745,14 +745,14 @@
     const r = ruleById(e.conflict);
     return h('div',{class:'card'},
       h('div',{class:'chips'}, h('span',{class:'chip '+o.cls},o.label), h('span',{class:'chip grey'},P.SOURCE_KIND[e.source]||'Member home'), h('span',{class:'chip '+(e.verified?'calm':'grey')},e.verified?'Source checked':'Unverified'),
-        e.settings.map(s => h('span',{class:'chip grey'},D.SETTINGS[s].short)), h('span',{class:'chip grey'},e.state+(e.county&&e.county!=='Not given'&&e.county!=='Statewide'?' · '+e.county:''))),
+        e.settingNote ? h('span',{class:'chip grey'},e.settingNote) : e.settings.map(s => h('span',{class:'chip grey'},D.SETTINGS[s].short)), h('span',{class:'chip grey'},e.state+(e.county&&e.county!=='Not given'&&e.county!=='Statewide'?' · '+e.county:''))),
       h('h3',null,e.title),
       e.situation ? h('p',null,h('b',null,'What happened: '),e.situation) : null,
       h('p',null,h('b',null,'What they do: '),e.practice),
       h('p',null,h('b',null,'How it played out: '),e.result),
-      h('p',{class:'small muted'},'Rule: '+e.cite+(r?' · Conflict '+ruleLabel(e.conflict):'')),
+      h('p',{class:'small muted'},'Rule: '+e.cite+(r?' · Conflict '+ruleLabel(e.conflict):'')+(e.ref && !e.ref.url ? ' · Source: '+e.ref.label : '')),
       h('div',{class:'row'}, voteBtn(e), r ? h('a',{class:'btn ghost sm',href:'#/cards'},'Clarity Cards') : null,
-        e.ref ? h('a',{class:'btn ghost sm',href:e.ref.url,target:'_blank',rel:'noopener'},'Source: '+e.ref.label) : null,
+        e.ref && e.ref.url ? h('a',{class:'btn ghost sm',href:e.ref.url,target:'_blank',rel:'noopener'},'Source: '+e.ref.label) : null,
         e.also ? h('a',{class:'btn ghost sm',href:e.also.url,target:'_blank',rel:'noopener'},e.also.label) : null));
   }
 
@@ -765,24 +765,28 @@
     if (sub === 'legal') return peerLegal(v);
 
     const all = P.ENTRIES.concat(S.peer.published.filter(x => x.kind === 'practice'));
-    let f = {conflict:'', outcome:'', mine:true};
-    const confs = [...new Set(all.map(e => e.conflict))].sort();
-    const cs = h('select',{'aria-label':'Rule conflict'}, h('option',{value:''},'All rule conflicts'), confs.map(c => h('option',{value:c},ruleLabel(c)+(ruleById(c)?': '+ruleById(c).q:''))));
+    const topicOf = e => e.topic || (ruleById(e.conflict)||{}).topic || 'Other';
+    let f = {conflict:'', topic:'', state:'', outcome:'', mine:true};
+    const topics = [...new Set(all.map(topicOf))].sort();
+    const cs = h('select',{'aria-label':'Topic'}, h('option',{value:''},'All topics'), topics.map(t => h('option',{value:t},t+' ('+all.filter(e=>topicOf(e)===t).length+')')));
+    const states = [...new Set(all.map(e => e.state))].sort();
+    const ss = h('select',{'aria-label':'State'}, h('option',{value:''},'All states'), states.map(t => h('option',{value:t},t==='Any'?'Not state-specific':t)));
     const os = h('select',{'aria-label':'Outcome'}, h('option',{value:''},'Any outcome'), Object.entries(P.OUTCOMES).map(([k,o]) => h('option',{value:k},o.label)));
     const tg = h('button',{class:'chip',type:'button','aria-pressed':'true'},'Only '+D.SETTINGS[setting()].short+' entries');
     const list = h('div',{class:'list'});
     function draw(){
       list.textContent = '';
-      const rows = all.filter(e => (!f.conflict || e.conflict === f.conflict) && (!f.outcome || e.outcome === f.outcome) && (!f.mine || setting()==='home' || e.settings.includes(setting())))
+      const rows = all.filter(e => (!f.conflict || e.conflict === f.conflict) && (!f.topic || topicOf(e) === f.topic) && (!f.state || e.state === f.state) && (!f.outcome || e.outcome === f.outcome) && (!f.mine || setting()==='home' || e.settings.includes(setting())))
         .sort((a,b) => (b.votes + (S.peer.votes[b.id]?1:0)) - (a.votes + (S.peer.votes[a.id]?1:0)));
       list.append(h('p',{class:'small muted'}, rows.length+' entries · most helpful first · checked '+fmtDate(P.CHECKED)));
       rows.forEach(e => list.append(entryCard(e)));
       if (!rows.length) list.append(h('p',{class:'muted'},'Nothing matches yet.'));
     }
-    cs.addEventListener('change',()=>{f.conflict = cs.value; draw();});
+    cs.addEventListener('change',()=>{f.topic = cs.value; f.conflict = ''; draw();});
+    ss.addEventListener('change',()=>{f.state = ss.value; draw();});
     os.addEventListener('change',()=>{f.outcome = os.value; draw();});
     tg.addEventListener('click',()=>{ f.mine = !f.mine; tg.setAttribute('aria-pressed',String(f.mine)); draw(); });
-    if (param && ruleById(param)) { f.conflict = param; cs.value = param; }
+    if (param && ruleById(param)) { f.conflict = param; }
 
     // de-identified incident patterns, shown only when enough homes contributed
     const pub = S.peer.published.filter(x => x.kind === 'incident');
@@ -792,7 +796,7 @@
       h('div',{class:'list'}, pats.map(p => p.homes >= P.MIN_HOMES
         ? h('div',{class:'item'}, h('div',{class:'meta'},h('span',null,p.shift+' shift'),h('span',null,p.n+' reports from '+p.homes+' homes')), h('b',null,p.type), h('span',null,h('b',null,'Situation: '),p.situation), h('span',null,h('b',null,'Response: '),p.response), h('span',null,h('b',null,'Outcome: '),p.outcome))
         : h('div',{class:'item'}, h('b',null,p.type), h('span',{class:'small muted'},'Hidden until '+P.MIN_HOMES+' homes contribute (now fewer).')))));
-    v.append(h('div',{class:'grid g2'}, h('label',{class:'f'},'Rule conflict',cs), h('label',{class:'f'},'Outcome',os)), h('div',{class:'row'},tg, h('a',{class:'btn sm',href:'#/peer/share'},'Share what worked for you')), list, pv);
+    v.append(h('div',{class:'grid g2'}, h('label',{class:'f'},'Topic',cs), h('label',{class:'f'},'State',ss), h('label',{class:'f'},'Outcome',os)), h('div',{class:'row'},tg, h('a',{class:'btn sm',href:'#/peer/share'},'Share what worked for you')), list, pv);
     draw();
   };
 
