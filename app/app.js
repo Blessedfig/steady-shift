@@ -70,14 +70,15 @@
     handoff:{t:'Hand-off packet', ic:'🧾'},
     mytraining:{t:'My training', ic:'🎓'},
     procedures:{t:'Company procedures', ic:'🗂️'},
-    review:{t:'Feedback review', ic:'👍'}
+    review:{t:'Feedback review', ic:'👍'},
+    sync:{t:'Sync and calendar', ic:'🔗'}
   };
   const NAV = {
     caregiver:['home','check','whatif','report','night','behavior','cards','mytraining'],
-    manager:['home','inbox','questions','check','whatif','report','night','behavior','team','review','survey','decide','ask','cards','watch','procedures'],
-    rn:['home','delegations','check','whatif','cards','night','behavior','watch'],
-    owner:['home','owner','review','whatif','procedures','survey','questions','decide','ask','watch','cards'],
-    multi:['home','sites','owner','review','whatif','procedures','survey','watch','ask','cards'],
+    manager:['home','inbox','questions','check','whatif','report','night','behavior','team','review','survey','decide','ask','cards','watch','procedures','sync'],
+    rn:['home','delegations','sync','check','whatif','cards','night','behavior','watch'],
+    owner:['home','owner','sync','review','whatif','procedures','survey','questions','decide','ask','watch','cards'],
+    multi:['home','sites','owner','sync','review','whatif','procedures','survey','watch','ask','cards'],
     family:['home','check','night','behavior','handoff','cards','watch']
   };
 
@@ -743,6 +744,156 @@
         const t = new Date(); d.checked = t.toISOString().slice(0,10); t.setFullYear(t.getFullYear()+1); d.review = t.toISOString().slice(0,10); d.status = 'Active'; save(); toast('Signed. The caregiver sees the task as cleared.'); route(); });
       area.append(f); f.scrollIntoView({behavior:'smooth'});
     }
+  };
+
+  // ---------- Sync and calendar (sample data only; no resident names or codes leave the app) ----------
+  const TZ = 'America/Chicago';
+  const pad = n => String(n).padStart(2,'0');
+  const isoDay = d => d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+  function addDays(s, n){ const d = new Date(s+'T12:00:00'); d.setDate(d.getDate()+n); return isoDay(d); }
+  function nextWeekday(n){ const d = new Date(); d.setDate(d.getDate()+n); while (d.getDay()===0 || d.getDay()===6) d.setDate(d.getDate()+1); return isoDay(d); }
+  function addMin(time, m){ const [hh,mm] = time.split(':').map(Number); const t = hh*60+mm+m; return pad(Math.floor(t/60)%24)+':'+pad(t%60); }
+  function syncEvents(){
+    const all = ['owner','multi'].includes(S.tier);
+    const sites = all ? D.SITES.filter(s => s.id !== 'family') : [site()];
+    const ids = sites.map(s => s.id);
+    const nm = id => (D.SITES.find(s=>s.id===id)||{}).name || id;
+    const today = isoDay(new Date());
+    const ev = [];
+    S.reports.filter(r => ids.includes(r.site) && r.status !== 'Filed').forEach(r => ev.push({id:'rep-'+r.id, kind:'Report follow-up', who:'House manager', site:r.site,
+      title:'Review report: '+(r.type||'General')+' ('+nm(r.site)+')', date:nextWeekday(1), time:'09:00', dur:30,
+      note:'A report is waiting for manager review in Steady Shift. Open the app to read it. Details stay in the app.', link:'#/inbox'}));
+    S.delegations.filter(d => ids.includes(d.site) && (d.status !== 'Active' || daysUntil(d.review) < 75)).forEach((d,i) => {
+      const late = d.review < today;
+      ev.push({id:'del-'+d.site+'-'+i, kind:'RN delegation', who:'RN', site:d.site,
+        title:(late?'Overdue: ':'')+'RN competency check, '+d.task+' ('+d.cg+', '+nm(d.site)+')', date:late ? nextWeekday(1) : d.review, time:'10:00', dur:30,
+        note:'Return demonstration and sign-off in the delegation ledger. '+(late?'Review date has passed; the caregiver should not do this task until signed.':'Review is due.'), link:'#/delegations'});
+    });
+    sites.forEach(s => (S.staff[s.id]||[]).filter(p => p.need && p.hours < p.need).forEach((p,i) => ev.push({id:'trn-'+s.id+'-'+i, kind:'Training', who:'House manager', site:s.id,
+      title:'Training catch-up: '+p.n+' needs '+(p.need-p.hours)+' more hours ('+s.name+')', date:nextWeekday(7), time:'13:00', dur:60,
+      note:'Plan or schedule the training hours. Track them in Team training.', link:'#/team'})));
+    const settings = [...new Set(sites.map(s => s.setting))];
+    D.WATCH.filter(w => w.date && w.date >= today && w.applies.some(a => settings.includes(a))).forEach(w => ev.push({id:'w-'+w.id, kind:'Rule change', who:'Owner', site:'',
+      title:w.title, date:w.date, time:w.id==='W1' ? '16:00' : null, dur:60, note:(w.status||'')+' '+(w.todo ? 'To do: '+w.todo.join('; ')+'.' : ''), link:'#/watch'}));
+    if (S.oncall && S.oncall.callin) ev.push({id:'oncall', kind:'Staffing', who:'House manager', site:sites[0].id,
+      title:'On-call coverage check for tonight ('+nm(sites[0].id)+')', date:today, time:'17:30', dur:15,
+      note:'Confirm who answers call-ins tonight so the manager can sleep. Set in Night help.', link:'#/night'});
+    return ev.sort((a,b) => (a.date+(a.time||'')).localeCompare(b.date+(b.time||'')));
+  }
+  const appUrl = e => location.origin + location.pathname + e.link;
+  const compact = (date, time) => date.replace(/-/g,'') + (time ? 'T'+time.replace(':','')+'00' : '');
+  function gcalUrl(e){
+    const dates = e.time ? compact(e.date,e.time)+'/'+compact(e.date,addMin(e.time,e.dur)) : compact(e.date)+'/'+compact(addDays(e.date,1));
+    return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent(e.title)+'&dates='+dates+'&ctz='+encodeURIComponent(TZ)+'&details='+encodeURIComponent(e.note+'\n\nOpen in Steady Shift: '+appUrl(e));
+  }
+  function outlookUrl(e){
+    const p = new URLSearchParams({path:'/calendar/action/compose', rru:'addevent', subject:e.title, body:e.note+'\n\nOpen in Steady Shift: '+appUrl(e)});
+    if (e.time){ p.set('startdt', e.date+'T'+e.time+':00'); p.set('enddt', e.date+'T'+addMin(e.time,e.dur)+':00'); }
+    else { p.set('startdt', e.date); p.set('enddt', addDays(e.date,1)); p.set('allday','true'); }
+    return 'https://outlook.office.com/calendar/0/deeplink/compose?'+p.toString();
+  }
+  const icsEsc = s => String(s).replace(/\\/g,'\\\\').replace(/;/g,'\;').replace(/,/g,'\\,').replace(/\r?\n/g,'\\n');
+  function icsFold(line){ const out = []; while (line.length > 74){ out.push(line.slice(0,74)); line = ' '+line.slice(74); } out.push(line); return out.join('\r\n'); }
+  function toIcs(list){
+    const stamp = new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d+/,'');
+    const L = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Steady Shift//Test app//EN','CALSCALE:GREGORIAN','METHOD:PUBLISH','X-WR-CALNAME:Steady Shift (sample)',
+      'BEGIN:VTIMEZONE','TZID:America/Chicago','BEGIN:DAYLIGHT','TZOFFSETFROM:-0600','TZOFFSETTO:-0500','TZNAME:CDT','DTSTART:19700308T020000','RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU','END:DAYLIGHT',
+      'BEGIN:STANDARD','TZOFFSETFROM:-0500','TZOFFSETTO:-0600','TZNAME:CST','DTSTART:19701101T020000','RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU','END:STANDARD','END:VTIMEZONE'];
+    list.forEach(e => {
+      L.push('BEGIN:VEVENT', 'UID:'+e.id+'-'+e.date+'@steady-shift.test', 'DTSTAMP:'+stamp);
+      if (e.time){ L.push('DTSTART;TZID='+TZ+':'+compact(e.date,e.time), 'DTEND;TZID='+TZ+':'+compact(e.date,addMin(e.time,e.dur))); }
+      else { L.push('DTSTART;VALUE=DATE:'+compact(e.date), 'DTEND;VALUE=DATE:'+compact(addDays(e.date,1))); }
+      L.push('SUMMARY:'+icsEsc(e.title), 'DESCRIPTION:'+icsEsc(e.note+'\nOpen in Steady Shift: '+appUrl(e)), 'CATEGORIES:'+icsEsc(e.kind), 'URL:'+appUrl(e));
+      if (e.time) L.push('BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+icsEsc(e.title),'TRIGGER:-PT15M','END:VALARM');
+      L.push('END:VEVENT');
+    });
+    L.push('END:VCALENDAR');
+    return L.map(icsFold).join('\r\n')+'\r\n';
+  }
+  const csvCell = s => { s = String(s==null?'':s); return /[",\n]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s; };
+  function toCsv(list){
+    const nm = id => (D.SITES.find(s=>s.id===id)||{}).name || '';
+    const rows = [['Date','Start time','End time','Title','Assign to (role)','Location','Type','Notes']];
+    list.forEach(e => rows.push([e.date, e.time||'', e.time?addMin(e.time,e.dur):'', e.title, e.who, nm(e.site), e.kind, e.note]));
+    return rows.map(r => r.map(csvCell).join(',')).join('\r\n')+'\r\n';
+  }
+  function download(name, type, text){
+    const a = h('a',{href:URL.createObjectURL(new Blob([text],{type})), download:name});
+    document.body.append(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    toast('Downloaded '+name);
+  }
+  function teamsPayload(e){
+    return {type:'message', attachments:[{contentType:'application/vnd.microsoft.card.adaptive', contentUrl:null, content:{
+      $schema:'http://adaptivecards.io/schemas/adaptive-card.json', type:'AdaptiveCard', version:'1.4',
+      body:[{type:'TextBlock', text:e.kind, size:'Small', color:'Accent', weight:'Bolder'},
+            {type:'TextBlock', text:e.title, wrap:true, weight:'Bolder', size:'Medium'},
+            {type:'FactSet', facts:[{title:'When', value:fmtDate(e.date)+(e.time?' · '+e.time+' CT':'')},{title:'For', value:e.who}]},
+            {type:'TextBlock', text:e.note, wrap:true}],
+      actions:[{type:'Action.OpenUrl', title:'Open in Steady Shift', url:appUrl(e)}]}}]};
+  }
+  function chatPayload(e){ return {text:'*'+e.kind+'*: '+e.title+'\nWhen: '+fmtDate(e.date)+(e.time?' · '+e.time+' CT':'')+' · For: '+e.who+'\n'+e.note+'\n<'+appUrl(e)+'|Open in Steady Shift>'}; }
+
+  R.sync = v => {
+    v.append(head('Connect your tools', 'Sync and calendar', 'Send what gets decided here to the calendar, scheduling tool and team chat your home already uses. Test version: sample data only.'));
+    const ev = syncEvents();
+    v.append(h('div',{class:'card calm'}, h('b',null,'What leaves the app'),
+      h('p',{class:'small'},'Only the task, the home, the role and a link back. Resident names, resident codes and report details never go into a calendar, a spreadsheet or a chat message. People open the link and sign in to see more.')));
+    const list = h('div',{class:'list'});
+    ev.forEach(e => list.append(h('div',{class:'item'},
+      h('div',{class:'meta'}, h('span',{class:'chip'},e.kind), h('span',{class:'chip grey'},e.who), h('span',null,fmtDate(e.date)+(e.time?' · '+e.time+' CT':' · all day'))),
+      h('b',null,e.title),
+      h('div',{class:'row'},
+        h('a',{class:'btn ghost sm',href:gcalUrl(e),target:'_blank',rel:'noopener'},'Google Calendar'),
+        h('a',{class:'btn ghost sm',href:outlookUrl(e),target:'_blank',rel:'noopener'},'Outlook'),
+        h('button',{class:'btn quiet sm',type:'button',onclick:()=>download('steady-shift-'+e.id+'.ics','text/calendar',toIcs([e]))},'.ics file')))));
+    v.append(h('div',{class:'card'}, h('h2',null,'Coming up from the app ('+ev.length+')'),
+      h('p',{class:'small muted'},['owner','multi'].includes(S.tier)?'All your homes.':'For '+site().name+'. Switch homes at the top, or view as owner for every home.'),
+      ev.length ? list : h('p',{class:'muted'},'Nothing scheduled from the app right now.'),
+      h('div',{class:'row'},
+        h('button',{class:'btn sm',type:'button',onclick:()=>download('steady-shift-calendar.ics','text/calendar',toIcs(ev)),disabled:!ev.length},'Download all (.ics)'),
+        h('button',{class:'btn ghost sm',type:'button',onclick:()=>download('steady-shift-tasks.csv','text/csv',toCsv(ev)),disabled:!ev.length},'Spreadsheet or shift tool (.csv)')),
+      h('p',{class:'small muted'},'The .ics file opens in Google Calendar, Outlook and Apple Calendar. The .csv opens in Google Sheets or Excel, and is a starting point for importing tasks into scheduling tools such as When I Work or Deputy (each tool names its columns a little differently).')));
+
+    // Team chat demo
+    const sel = h('select',{id:'syncEv'}, ev.map((e,i) => h('option',{value:i},e.title)));
+    const dest = h('select',{id:'syncDest'}, h('option',{value:'teams'},'Microsoft Teams (Workflows webhook)'), h('option',{value:'gchat'},'Google Chat (space webhook)'));
+    const url = h('input',{type:'password',id:'syncUrl',placeholder:'Paste a test webhook link (optional)',autocomplete:'off'});
+    const pre = h('pre',{class:'small',style:'white-space:pre-wrap;overflow:auto;max-height:18rem;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:.8rem;margin:0'});
+    const preview = h('div',{class:'item'});
+    const payload = () => { const e = ev[+sel.value]; return e ? (dest.value==='teams' ? teamsPayload(e) : chatPayload(e)) : null; };
+    function show(){
+      const p = payload(); pre.textContent = p ? JSON.stringify(p, null, 2) : '';
+      preview.textContent = ''; const e = ev[+sel.value];
+      if (e) preview.append(h('div',{class:'meta'},h('span',{class:'chip'},dest.value==='teams'?'Teams card':'Chat message'),h('span',null,e.kind)), h('b',null,e.title), h('span',{class:'small'},fmtDate(e.date)+(e.time?' · '+e.time+' CT':'')+' · For: '+e.who), h('span',{class:'small'},e.note), h('a',{class:'small',href:e.link},'Open in Steady Shift'));
+    }
+    sel.addEventListener('change', show); dest.addEventListener('change', show); show();
+    const curl = () => "curl -X POST -H 'Content-Type: application/json' --data '"+JSON.stringify(payload()).replace(/'/g,"'\\''")+"' '"+(url.value.trim()||'PASTE_WEBHOOK_LINK_HERE')+"'";
+    const sendBtn = h('button',{class:'btn ghost sm',type:'button',onclick:async ()=>{
+      const u = url.value.trim();
+      if (!/^https:\/\/([a-z0-9-]+\.)*(logic\.azure\.com|powerplatform\.com|chat\.googleapis\.com)(:443)?\//i.test(u)){ toast('Paste a Teams Workflows or Google Chat webhook link first'); return; }
+      try { await fetch(u, {method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain'}, body:JSON.stringify(payload())}); toast('Sent. Check the channel. If nothing shows, use the copy command below.'); }
+      catch(err){ toast('The browser blocked it. Use the copy command instead.'); }
+    }},'Try sending');
+    v.append(h('div',{class:'card'}, h('h2',null,'Team chat alert (demo)'),
+      h('p',{class:'small'},'Post a decision to a Teams channel or a Google Chat space so the right shift sees it without a group text.'),
+      h('label',{for:'syncEv'},'Which item'), sel, h('label',{for:'syncDest'},'Where'), dest,
+      h('h3',null,'What the team would see'), preview,
+      h('label',{for:'syncUrl'},'Test webhook link'), url,
+      h('p',{class:'small muted'},'Kept on this page only, never saved. In the real app the link is stored on our server, encrypted, and messages are sent from there.'),
+      h('div',{class:'row'}, sendBtn, h('button',{class:'btn quiet sm',type:'button',onclick:e=>copy(curl(), e.target)},'Copy test command'), h('button',{class:'btn quiet sm',type:'button',onclick:e=>copy(pre.textContent, e.target)},'Copy message')),
+      h('details',null,h('summary',{class:'small'},'Message format'), pre),
+      h('details',null,h('summary',{class:'small'},'How to get a test link'),
+        h('ul',{class:'small'},
+          h('li',null,'Teams: in the channel, open Workflows, pick "Send webhook alerts to a channel", and copy the link it gives you.'),
+          h('li',null,'Google Chat: in the space, open Apps and integrations, then Webhooks, add one, and copy the link.'),
+          h('li',null,'Use a test channel. Sample data only.')))));
+
+    v.append(h('div',{class:'card soft'}, h('h2',null,'Coming next'),
+      h('ul',{class:'small'},
+        h('li',null,'A live calendar feed each manager subscribes to once, so new items appear on their own.'),
+        h('li',null,'Two-way sign-in to Google Workspace and Microsoft 365, set up by the owner.'),
+        h('li',null,'Scheduling tools: open shifts and call-in coverage pushed to When I Work, Deputy and similar.'),
+        h('li',null,'Health record systems only after the privacy foundation and signed agreements are in place.'))));
   };
 
   // Owner view
