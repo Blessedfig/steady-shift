@@ -227,6 +227,14 @@ footer{padding-block:2rem;font-size:.88rem;color:var(--muted)}
 /* workbook components on the site */
 .top .btn{min-height:44px;padding:.55em 1.1em;font-size:.98rem}
 .top-right{display:flex;align-items:center;gap:1.25rem;flex-wrap:wrap}
+.btn.sm{min-height:44px;font-size:.95rem;padding:.55em 1em}
+.hdr-signin{min-height:44px;padding:.55em 1em;font-size:.95rem}
+.appbar{background:var(--pine-soft);border-bottom:1px solid var(--line)}
+.appbar .wrap{display:flex;align-items:center;justify-content:space-between;gap:.6rem 1rem;flex-wrap:wrap;padding-block:.65rem}
+.appbar-btns{display:flex;gap:.6rem;flex-wrap:wrap}
+.appbar .btn.ghost{background:var(--surface)}
+@media (max-width:560px){.top-right{gap:.5rem}.top .btn{padding:.55em .8em;font-size:.92rem;min-height:44px}.appbar-btns{width:100%}.appbar-btns .btn{flex:1 1 auto}}
+@media (max-width:420px){.hdr-signin{display:none}}
 .ebar{display:flex;align-items:center;justify-content:center;gap:.5rem;min-height:48px;border:2px solid var(--red);color:var(--red);border-radius:12px;font:800 1rem/1 var(--display)}
 .ebar svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .promises{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1rem;margin-top:2rem}
@@ -289,10 +297,16 @@ footer nav a:hover{color:var(--pine)}
         <a href="demo.html">See a demo</a>
         <a href="get-app.html">Get the app</a>
       </nav>
+      <a class="btn ghost hdr-signin" href="app/">Sign in</a>
       <a class="btn primary" href="#pilot">Try it early</a>
     </div>
   </div>
 </header>
+
+<div class="appbar"><div class="wrap">
+  <span><b>Testing the app?</b> Sign in with the email you were invited with.</span>
+  <span class="appbar-btns"><a class="btn primary sm" href="app/">Open the app</a><a class="btn ghost sm" href="get-app.html">Get it on your phone</a></span>
+</div></div>
 
 <div class="notice"><div class="wrap">First draft for review. Anything tagged <span class="draft">Draft</span> is a placeholder or a guess we still need to confirm before showing it to a facility.</div></div>
 
@@ -312,6 +326,7 @@ footer nav a:hover{color:var(--pine)}
         <a href="#multisite">I run several sites</a>
       </div>
       <p><a href="demo.html" style="font-weight:600">Or see a demo with sample data →</a></p>
+      <div class="cta-row"><a class="btn primary" href="app/">Open the app</a><a class="btn ghost" href="get-app.html">Get it on your phone</a></div>
     </div>
 
     <div class="hero-visual">
