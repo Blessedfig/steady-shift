@@ -35,7 +35,7 @@
 
   // ---------- saved test state (this browser only) ----------
   const KEY = 'ss-app-v1';
-  function fresh(){ const s = JSON.parse(JSON.stringify(D.SEED)); return Object.assign(s,{tier:'caregiver', site:'maple', survey:{}, tour:{}, watch:{}, policies:[], orgProcs:[], oncall:{fallok:false,medq:false,callin:true}}); }
+  function fresh(){ const s = JSON.parse(JSON.stringify(D.SEED)); return Object.assign(s,{tier:'caregiver', site:'maple', survey:{}, tour:{}, watch:{}, policies:[], orgProcs:[], pulse:{}, oncall:{fallok:false,medq:false,callin:true}}); }
   let S;
   try { S = JSON.parse(localStorage.getItem(KEY)) || fresh(); } catch(e){ S = fresh(); }
   for (const k in fresh()) if (!(k in S)) S[k] = fresh()[k];
@@ -69,14 +69,15 @@
     sites:{t:'All sites', ic:'🏘️'},
     handoff:{t:'Hand-off packet', ic:'🧾'},
     mytraining:{t:'My training', ic:'🎓'},
-    procedures:{t:'Company procedures', ic:'🗂️'}
+    procedures:{t:'Company procedures', ic:'🗂️'},
+    review:{t:'Feedback review', ic:'👍'}
   };
   const NAV = {
     caregiver:['home','check','whatif','report','night','behavior','cards','mytraining'],
-    manager:['home','inbox','questions','check','whatif','report','night','behavior','team','survey','decide','ask','cards','watch','procedures'],
+    manager:['home','inbox','questions','check','whatif','report','night','behavior','team','review','survey','decide','ask','cards','watch','procedures'],
     rn:['home','delegations','check','whatif','cards','night','behavior','watch'],
-    owner:['home','owner','whatif','procedures','survey','questions','decide','ask','watch','cards'],
-    multi:['home','sites','owner','whatif','procedures','survey','watch','ask','cards'],
+    owner:['home','owner','review','whatif','procedures','survey','questions','decide','ask','watch','cards'],
+    multi:['home','sites','owner','review','whatif','procedures','survey','watch','ask','cards'],
     family:['home','check','night','behavior','handoff','cards','watch']
   };
 
@@ -108,6 +109,7 @@
   function go(v){ if (location.hash === '#/'+v) route(); else location.hash = '#/'+v; }
   let current = 'home', param = '';
   function route(){
+    logDropoff();
     const m = (location.hash||'').match(/^#\/([a-z]+)(?:\/(.*))?/);
     current = m && VIEWS[m[1]] ? m[1] : 'home';
     param = m && m[2] ? decodeURIComponent(m[2]) : '';
@@ -156,6 +158,7 @@
       if (D.ASK_TOPICS.some(a=>a.id===r.id)) row.append(h('a',{class:'btn ghost sm',href:'#/ask/'+r.id},'Ask the Regulator'));
       c.append(row);
     }
+    if (!opts.compact) c.append(rateBar('check', r.id, r.q));
     c.append(h('p',{class:'foot'},'Not legal advice. Check with your licensing specialist or attorney for your situation.'));
     return c;
   }
@@ -194,6 +197,7 @@
     const t = S.tier;
     if (t === 'owner') return R.owner(v, true);
     if (t === 'multi') return R.sites(v, true);
+    const pc = pulseCard(); if (pc) v.append(pc);
     if (t === 'caregiver') homeCaregiver(v);
     if (t === 'manager') homeManager(v);
     if (t === 'rn') homeRN(v);
@@ -357,8 +361,9 @@
       h('label',{class:'f'},'What you did',f.did),
       h('label',{class:'f'},'Who you told, and when',f.told),
       h('div',{class:'row'},h('button',{class:'btn',type:'submit'},'Make it professional'),ex));
+    f.raw.addEventListener('input', () => { if (f.raw.value.trim()) pending = {area:'report', step:'Typed a note but did not make the report'}; });
     form.addEventListener('submit', e => {
-      e.preventDefault(); out.textContent = '';
+      e.preventDefault(); out.textContent = ''; pending = null;
       if (!f.raw.value.trim()){ f.raw.focus(); return; }
       const r = rewrite({res:f.res.value, when:f.when.value, where:f.where.value, who:f.who.value, raw:f.raw.value, did:f.did.value, told:f.told.value});
       showRewrite(out, r, true);
@@ -436,20 +441,30 @@
     // highlight flagged words
     const parts = r.text.split(new RegExp('('+r.flags.map(f=>f.w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')','gi'));
     if (r.flags.length) parts.forEach((p,i) => pre.append(i % 2 ? h('mark',{class:'flag'},p) : p)); else pre.textContent = r.text;
-    const card = h('div',{class:'card'}, h('h2',null,'Professional version'), h('p',{class:'small muted'},'Templated rewrite for testing. Read it, fix anything that is not exactly what happened.'), pre);
+    const ed = h('textarea',{style:'min-height:18rem;font-size:.95rem',hidden:true,'aria-label':'Edit the report'}); ed.value = r.text;
+    const card = h('div',{class:'card'}, h('h2',null,'Professional version'), h('p',{class:'small muted'},'Templated rewrite for testing. Read it, fix anything that is not exactly what happened.'), pre, ed);
     const row = h('div',{class:'row noprint'});
+    let editLogged = false;
+    const finalText = () => {
+      const t = ed.value;
+      if (!editLogged && t.trim() !== r.text.trim()){ const d = editSummary(r.text, t); if (d.n) { signal({type:'edit', area:'report', ref:(r.routes.map(x=>x.type).join(', ')||'General'), label:'Report rewrite ('+(r.routes.map(x=>x.type).join(', ')||'general')+')', added:d.added, removed:d.removed}); editLogged = true; } }
+      return t;
+    };
+    const eb = h('button',{class:'btn ghost sm',type:'button'},'Edit');
+    eb.addEventListener('click',()=>{ ed.hidden = !ed.hidden; pre.hidden = !ed.hidden; eb.textContent = ed.hidden ? 'Edit' : 'Done editing'; if (ed.hidden){ pre.textContent = ed.value; } else ed.focus(); });
     const cb = h('button',{class:'btn ghost sm',type:'button'},'Copy');
-    cb.addEventListener('click',()=>copy(r.text, cb));
+    cb.addEventListener('click',()=>copy(finalText(), cb));
+    row.append(eb);
     row.append(cb, h('button',{class:'btn ghost sm',type:'button',onclick:()=>window.print()},'Print'));
     if (canSend){
       const sb = h('button',{class:'btn sm',type:'button'},'Send to my manager');
       sb.addEventListener('click',()=>{
-        S.reports.push({id:uid(), site:S.site, at:new Date().toISOString(), type:r.routes.map(x=>x.type).join(', ')||'General', status:'Waiting for manager', resident:r.x.res, raw:r.x.raw, clean:r.text, by:tier().name+' (you)'}); save();
+        S.reports.push({id:uid(), site:S.site, at:new Date().toISOString(), type:r.routes.map(x=>x.type).join(', ')||'General', status:'Waiting for manager', resident:r.x.res, raw:r.x.raw, clean:finalText(), by:tier().name+' (you)'}); save();
         sb.disabled = true; sb.textContent = 'Sent'; toast('Sent privately to the manager\'s review list.');
       });
       row.append(sb);
     }
-    card.append(row); out.append(card);
+    card.append(row, rateBar('report', 'rw-'+uid(), 'Report rewrite ('+(r.routes.map(x=>x.type).join(', ')||'general')+')')); out.append(card);
     if (r.flags.length || r.missing.length) out.append(h('div',{class:'card warn'}, h('h3',null,'Check before sending'),
       h('ul',null, r.flags.map(f => h('li',null,h('b',null,'"'+f.w+'": '),f.why)), r.missing.map(m => h('li',null,h('b',null,'Missing: '),m)))));
     if (r.changes.length) out.append(h('details',{class:'card'}, h('summary',{style:'cursor:pointer;font-weight:700'},'What we changed ('+r.changes.length+')'), h('ul',null,r.changes.map(c=>h('li',null,c)))));
@@ -523,7 +538,7 @@
       area.append(h('div',{class:'list'}, D.TRIAGE.filter(t => !fam || !['callin','staff'].includes(t.id)).map(t => h('button',{class:'item',type:'button',onclick:()=>show(t)}, h('div',{class:'meta'},levelBadge(t.level)), h('b',null,t.name)))));
     }
     function show(t){
-      area.textContent = '';
+      area.textContent = ''; pending = {area:'night', ref:t.id, step:'Opened "'+t.name+'" but did not log it'};
       let level = t.level;
       if (level === 'morning' && ((t.id==='fall-ok' && S.oncall.fallok))) level = 'wake';
       const note = h('textarea',{style:'min-height:4.5rem',placeholder:'Short note: time, resident code, what you saw, what you did.'});
@@ -534,7 +549,7 @@
         h('label',{class:'f'},'Log it',note));
       const lb = h('button',{class:'btn',type:'button'}, level==='morning' ? 'Log it for the morning' : 'Log it');
       lb.addEventListener('click',()=>{ S.triage.push({id:t.id, site:S.site, at:new Date().toISOString(), note:note.value.trim()||'(no note)', woke:level==='now'||level==='wake'}); save();
-        card.append(h('div',{class:'card calm'}, h('b',null, level==='morning' ? 'Logged. Your manager sees it first thing in the morning.' : 'Logged.'), h('span',{class:'small'},'Thanks for handling it calmly.'))); lb.disabled = true; });
+        pending = null; card.append(h('div',{class:'card calm'}, h('b',null, level==='morning' ? 'Logged. Your manager sees it first thing in the morning.' : 'Logged.'), h('span',{class:'small'},'Thanks for handling it calmly.')), rateBar('night', t.id, t.name)); lb.disabled = true; });
       card.append(h('div',{class:'row'},lb,h('button',{class:'btn quiet',type:'button',onclick:pick},'Something else')));
       area.append(card);
     }
@@ -558,6 +573,7 @@
         h('h3',null,'Avoid'), h('ul',null, b.avoid.map(s=>h('li',null,s))),
         h('p',null,h('b',null,'Write down: '),b.doc), h('p',null,h('b',null,'Get help when: '),b.escalate),
         h('div',{class:'row'}, h('a',{class:'btn ghost sm',href:'#/report'},'Write it up'), b.id==='refuse' ? h('a',{class:'btn ghost sm',href:'#/decide/C05'},'Decide and Document') : null),
+        rateBar('behavior', b.id, b.name),
         h('p',{class:'foot'},'Guidance only. The resident\'s plan and your nurse come first.'));
       area.append(c); c.scrollIntoView({behavior:'smooth',block:'start'});
     }
@@ -580,6 +596,7 @@
         list.append(h('div',{class:'item'}, h('div',{class:'meta'},h('span',null,q.cite), q.top ? h('span',{class:'chip amber'},q.top) : null), h('b',null,(i+1)+'. '+q.q), row));
       });
       const answered = Object.keys(A).length;
+      pending = answered > 0 && answered < qs.length ? {area:'survey', step:'Survey-Ready Check stopped at '+answered+' of '+qs.length} : null;
       const pts = qs.reduce((s,q,i) => s + (opts.find(o=>o[0]===A[i])||[0,0,0])[2], 0);
       const pct = Math.round(pts / (qs.length*2) * 100);
       const fixes = qs.map((q,i)=>({q,i})).filter(x => A[x.i] && A[x.i] !== 'yes');
@@ -778,7 +795,7 @@
     v.append(h('div',{class:'grid g2'},
       h('div',{class:'card'}, h('h2',null,'Top 5 things your team asked'), top.length ? h('ol',null, top.map(([id,n]) => h('li',null,ruleById(id).q+' ('+n+')'))) : h('p',{class:'muted'},'Nothing yet.'), h('p',{class:'small muted'},'Use these to plan the next training. No names attached.'), h('a',{href:'#/questions'},'Full question report')),
       h('div',{class:'card'}, h('h2',null,'Funding and rate watch'), h('ul',null, h('li',null,'Wisconsin budget items for caregiver pay and training (amounts being checked).'), h('li',null,'Medicaid payment caps proposed from 2028 may affect care manager rates.'), h('li',null,'WisCaregiver Careers can offset hiring and training costs.')), h('a',{href:'#/watch'},'Regulatory Watch'))));
-    if (isHome) v.append(tourCard());
+    if (isHome){ const pc = pulseCard(); if (pc) v.append(pc); v.append(tourCard()); }
   };
 
   // All sites (multi-site)
@@ -802,7 +819,7 @@
     v.append(f);
     if (S.policies.length) v.append(h('div',{class:'card'}, h('h2',null,'Policies sent'), h('div',{class:'list'}, S.policies.slice().reverse().map(p => h('div',{class:'item'}, h('div',{class:'meta'},h('span',null,fmtDate(p.at)),h('span',{class:'chip '+(p.acks.length===p.to.length?'calm':'amber')},p.acks.length+' of '+p.to.length+' confirmed')), h('span',null,p.text),
       p.acks.length < p.to.length ? h('button',{class:'btn quiet sm',type:'button',onclick:()=>{ const next = p.to.find(x=>!p.acks.includes(x)); p.acks.push(next); save(); route(); }},'Simulate a manager confirming') : null)))));
-    if (isHome) v.append(tourCard());
+    if (isHome){ const pc = pulseCard(); if (pc) v.append(pc); v.append(tourCard()); }
   };
 
   // Hand-off packet (family)
@@ -821,6 +838,160 @@
       const cb = h('button',{class:'btn ghost sm',type:'button'},'Copy'); cb.addEventListener('click',()=>copy(txt,cb));
       out.append(h('div',{class:'card'},h('div',{class:'out'},txt),h('div',{class:'row noprint'},cb,h('button',{class:'btn ghost sm',type:'button',onclick:()=>window.print()},'Print')))); });
     v.append(f, out);
+  };
+
+  // ---------- feedback loop: ratings, edits, empty searches, drop-offs, monthly pulse ----------
+  // Signals stay in this browser (test data). Only people who opt in are recorded, text is scrubbed of names,
+  // and nothing changes the guidance until a person reviews it in the owner's Feedback review queue.
+  const AREA = {whatif:'What-if scenario', survey:'Survey-Ready Check', check:'Procedure answer', report:'Report rewrite', behavior:'Behavior guide', night:'Night help', pulse:'Monthly pulse'};
+  let pending = null; // a started-but-unfinished task, logged as a drop-off if the person leaves the screen
+  function scrubNote(t){
+    let s = String(t||'');
+    Object.values(D.RESIDENTS).flat().forEach(r => { if (r.nick !== 'Mom') s = s.replace(new RegExp('\\b'+r.nick+'\\b','g'), r.code); });
+    s = s.replace(/\b\d{1,2}[\/-]\d{1,2}[\/-]\d{2,4}\b/g,'[date]').replace(/\b\d{3}[- ]?\d{2,3}[- ]?\d{4}\b/g,'[number]');
+    s = s.replace(/([a-z,;:]\s+)([A-Z][a-z]{2,})\b/g, (m, pre, w) => /^(I|AM|PM|RN|LPN|CNA|DQA|MCO|PRN|DNR|AFH|CBRF|DHS|Resident|Staff|Manager|Nurse|Mom|Dad|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)$/.test(w) ? m : pre+'[name]');
+    // a capitalized word that starts a sentence is kept only if it is a common opener, so "Bob wants..." becomes "[name] wants..."
+    s = s.replace(/(^|[.!?]\s+)([A-Z][a-z]{2,})\b/g, (m, pre, w) => /^(The|This|That|These|Those|There|Then|They|Their|She|Her|His|Our|We|You|Your|It|Its|When|What|Why|How|Who|Where|Which|If|Maybe|Please|Can|Could|Would|Should|Need|Needs|Add|Make|Change|Use|Let|Also|And|But|For|Not|Too|More|Less|Some|Most|All|Any|Every|One|Two|After|Before|During|Night|Day|Morning|Evening|Shift|Staff|Resident|Residents|Family|Manager|Nurse|Owner|Caregiver|Caregivers|Report|Search|Answer|Answers|Rule|Rules|Policy|App|Great|Good|Thanks|Thank|Helpful|Confusing|Wrong|Yes|No|Okay|Our|Mom|Dad)$/.test(w) ? m : pre+'[name]');
+    return s.slice(0, 600);
+  }
+  function signal(o){
+    if (S.optin !== true) return false;
+    S.signals.push(Object.assign({id:uid(), at:new Date().toISOString(), site:S.site, tier:S.tier, status:'New', mine:true}, o)); save(); return true;
+  }
+  function consentBox(onYes){
+    return h('div',{class:'card soft',style:'gap:.5rem'},
+      h('b',null,'Help improve the guidance?'),
+      h('span',{class:'small'},'Your ratings and notes go to a review queue your owner sees, without your name. A person reviews them before any guidance changes. Please never type resident names or health details.'),
+      h('div',{class:'row'}, h('button',{class:'btn sm',type:'button',onclick:()=>{S.optin=true;save();onYes();}},'Yes, share anonymously'), h('button',{class:'btn quiet sm',type:'button',onclick:e=>{S.optin=false;save();e.target.closest('.card').replaceWith(h('p',{class:'small muted'},'OK, nothing is shared. You can change this on the Feedback review screen.'));}},'No thanks')));
+  }
+  // Thumbs up/down plus "Is this how your team handles it?" and an optional note.
+  function rateBar(area, ref, label){
+    const box = h('div',{class:'rate noprint'});
+    const done = S.signals.find(x => x.mine && x.type==='rating' && x.area===area && x.ref===ref && x.site===S.site);
+    if (done){ box.append(h('span',{class:'small muted'},'Thanks, you rated this '+(done.val==='up'?'👍':'👎')+'.')); return box; }
+    let val = null, team = null;
+    const note = h('textarea',{maxlength:'500',style:'min-height:3.5rem',placeholder:'What would make it better? No names or health details.'});
+    const more = h('div',{class:'grid',style:'gap:.5rem',hidden:true},
+      h('div',{class:'row small'}, h('span',null,'Is this how your team handles it?'), ...['Yes','No','Not sure'].map(o => h('button',{class:'chip',type:'button','aria-pressed':'false',onclick:e=>{team=o;[...e.target.parentNode.querySelectorAll('button')].forEach(b=>b.setAttribute('aria-pressed',String(b===e.target)));}},o))),
+      note, h('div',{class:'row'}, h('button',{class:'btn sm',type:'button',onclick:submit},'Send feedback')));
+    const thumbs = h('div',{class:'row small'}, h('span',null,'Was this helpful?'),
+      h('button',{class:'chip',type:'button','aria-label':'Helpful',onclick:()=>pick('up')},'👍 Yes'),
+      h('button',{class:'chip',type:'button','aria-label':'Not helpful',onclick:()=>pick('down')},'👎 Not really'));
+    box.append(thumbs, more);
+    function pick(v){
+      val = v; [...thumbs.querySelectorAll('button')].forEach((b,i)=>b.setAttribute('aria-pressed',String((i===0)===(v==='up'))));
+      if (S.optin === undefined){ more.hidden = true; if (!box.querySelector('.card')) box.append(consentBox(()=>{ box.querySelector('.card').remove(); more.hidden = false; })); return; }
+      more.hidden = false; note.focus();
+    }
+    function submit(){
+      const ok = signal({type:'rating', area, ref, label:label||ref, val, team, note:scrubNote(note.value.trim())});
+      box.textContent = ''; box.append(h('span',{class:'small muted'}, ok ? 'Thank you. It\'s in the review queue.' : 'Thanks! (Not shared, since sharing is off.)'));
+    }
+    return box;
+  }
+  // word-level change summary between the generated text and what the person ended up with
+  function editSummary(a, b){
+    const wa = a.split(/\s+/), wb = b.split(/\s+/);
+    const ca = {}; wa.forEach(w => ca[w] = (ca[w]||0)+1);
+    const added = []; wb.forEach(w => { if (ca[w]) ca[w]--; else added.push(w); });
+    const cb = {}; wb.forEach(w => cb[w] = (cb[w]||0)+1);
+    const removed = []; wa.forEach(w => { if (cb[w]) cb[w]--; else removed.push(w); });
+    return {added:scrubNote(added.join(' ')).slice(0,200), removed:scrubNote(removed.join(' ')).slice(0,200), n:added.length+removed.length};
+  }
+  function logDropoff(){
+    if (pending){ signal({type:'dropoff', area:pending.area, ref:pending.ref||'', label:pending.step}); pending = null; }
+  }
+  window.addEventListener('pagehide', logDropoff);
+
+  function pulseCard(){
+    const month = new Date().toISOString().slice(0,7);
+    S.pulse = S.pulse || {};
+    if (S.pulse[month] || sessionStorage.getItem('ss-pulse-later')) return null;
+    const q = ['owner','multi'].includes(S.tier) ? 'How much did the app help your homes this month?' : 'How much did the app help on your last shift?';
+    const note = h('input',{type:'text',maxlength:'300',placeholder:'One thing to improve (optional, no names)'});
+    let pickN = 0;
+    const scale = h('div',{class:'chips'}, [1,2,3,4,5].map(n => h('button',{class:'chip',type:'button','aria-pressed':'false','aria-label':n+' of 5',onclick:e=>{pickN=n;[...scale.children].forEach(b=>b.setAttribute('aria-pressed',String(b===e.target)));}}, n===1?'1 Not at all':n===5?'5 A lot':String(n))));
+    const c = h('div',{class:'card soft noprint'}, h('span',{class:'eyebrow'},'One question this month'), h('h3',null,q), scale, note,
+      h('div',{class:'row'},
+        h('button',{class:'btn sm',type:'button',onclick:()=>{ if(!pickN){toast('Pick a number first');return;}
+          if (S.optin === undefined){ c.append(consentBox(()=>finish())); return; } finish(); }},'Send'),
+        h('button',{class:'btn quiet sm',type:'button',onclick:()=>{ try{sessionStorage.setItem('ss-pulse-later','1')}catch(e){} c.remove(); }},'Not now')));
+    function finish(){ S.pulse[month] = pickN; save(); signal({type:'pulse', area:'pulse', ref:month, val:String(pickN), note:scrubNote(note.value.trim()), label:q}); c.replaceWith(h('div',{class:'card calm'},h('b',null,'Thanks! See you next month.'))); }
+    return c;
+  }
+
+  // Owner / manager review queue
+  R.review = v => {
+    v.append(head('Feedback review', 'What your team says about the guidance', 'Anonymous, opted-in signals. Nothing changes until a person reviews it here.'));
+    const all = ['owner','multi'].includes(S.tier) ? S.signals : forSite(S.signals);
+    const rat = all.filter(x => x.type==='rating');
+    const up = rat.filter(x => x.val==='up').length;
+    const pulses = all.filter(x => x.type==='pulse');
+    const avg = pulses.length ? (pulses.reduce((s,x)=>s+(+x.val||0),0)/pulses.length).toFixed(1) : '–';
+    const emptyQ = S.questions.filter(q => !q.id && (['owner','multi'].includes(S.tier) || q.site===S.site));
+    v.append(h('div',{class:'grid g4'},
+      h('div',{class:'card'},h('div',{class:'stat '+(rat.length&&up/rat.length>=.7?'good':'warnc')},h('b',null,rat.length?Math.round(up/rat.length*100)+'%':'–'),h('span',null,'found it helpful ('+rat.length+' ratings)'))),
+      h('div',{class:'card'},h('div',{class:'stat'},h('b',null,String(all.filter(x=>x.type==='edit').length)),h('span',null,'reports edited after the rewrite'))),
+      h('div',{class:'card'},h('div',{class:'stat warnc'},h('b',null,String(emptyQ.length)),h('span',null,'searches with no answer'))),
+      h('div',{class:'card'},h('div',{class:'stat'},h('b',null,avg),h('span',null,'monthly pulse average (of 5)')))));
+    // by area
+    const by = {}; rat.forEach(x => { const k = x.area; by[k] = by[k] || {up:0,down:0}; by[k][x.val]++; });
+    if (Object.keys(by).length) v.append(h('div',{class:'card'}, h('h2',null,'Helpful by area'), h('div',{class:'list'}, Object.entries(by).map(([k,c]) => { const n=c.up+c.down; const p=Math.round(c.up/n*100);
+      return h('div',{class:'item'}, h('div',{class:'meta'},h('b',{style:'color:var(--ink)'},AREA[k]||k),h('span',null,c.up+' 👍 · '+c.down+' 👎')), h('div',{class:'bar '+(p>=70?'calm':'amber')},h('i',{style:'width:'+p+'%'}))); }))));
+    if (emptyQ.length) v.append(h('div',{class:'card warn'}, h('h2',null,'Searches that found nothing'), h('p',{class:'small'},'Each one is a gap: a Clarity Card to write, or a house policy to add.'),
+      h('ul',null, emptyQ.slice(-8).reverse().map(q => h('li',null,'"'+scrubNote(q.q)+'" ',h('span',{class:'small muted'},fmtDate(q.at)))))));
+    // queue
+    let filter = 'New';
+    const chipsBar = h('div',{class:'chips'});
+    const list = h('div',{class:'list'});
+    const TYPE = {rating:'Rating', edit:'Edit to a rewrite', dropoff:'Drop-off', pulse:'Monthly pulse'};
+    function draw(){
+      chipsBar.textContent = '';
+      ['New','Reviewed','Guidance change proposed','All'].forEach(f => chipsBar.append(h('button',{class:'chip',type:'button','aria-pressed':String(f===filter),onclick:()=>{filter=f;draw();}}, f+' ('+(f==='All'?all.length:all.filter(x=>x.status===f).length)+')')));
+      list.textContent = '';
+      const items = all.filter(x => filter==='All' || x.status===filter).slice().reverse();
+      if (!items.length) list.append(h('p',{class:'muted'},'Nothing here.'));
+      items.forEach(x => {
+        const site0 = D.SITES.find(s=>s.id===x.site);
+        const body = [];
+        if (x.type==='rating') body.push(h('span',null,(x.val==='up'?'👍 Helpful':'👎 Not helpful')+(x.team?' · Matches how we do it: '+x.team:'')));
+        if (x.type==='edit') body.push(h('span',{class:'small'},h('b',null,'Added: '),x.added||'–'), h('span',{class:'small'},h('b',null,'Removed: '),x.removed||'–'));
+        if (x.type==='dropoff') body.push(h('span',{class:'small'},'Started but did not finish: '+x.label));
+        if (x.type==='pulse') body.push(h('span',null,'Score '+x.val+' of 5'));
+        if (x.note) body.push(h('span',{class:'small'},'"'+x.note+'"'));
+        const sel = h('select',{'aria-label':'Review status',style:'max-width:240px'}, ['New','Reviewed','Guidance change proposed'].map(s=>h('option',{selected:s===x.status},s)));
+        sel.addEventListener('change',()=>{ x.status = sel.value; x.reviewedBy = tier().name; x.reviewedAt = new Date().toISOString(); save(); draw(); });
+        const prop = h('button',{class:'btn ghost sm',type:'button'},'Propose a guidance change');
+        prop.addEventListener('click', async () => {
+          const what = prompt('What should change in the guidance? (No names or health details)', x.type==='rating' && x.note ? x.note : '');
+          if (!what) return;
+          x.status = 'Guidance change proposed'; x.proposal = scrubNote(what); x.reviewedBy = tier().name; save();
+          if (sb && user){ await sb.from('desk_items').insert({kind:'request', data:{kind:'Update', biz:'Test app guidance: '+(AREA[x.area]||x.area), when:'Whenever', text:'Reviewed feedback ('+(TYPE[x.type]||x.type)+' on '+(x.label||x.ref||'')+'):\n'+(x.note?'"'+x.note+'"\n':'')+'\nProposed change: '+x.proposal+'\n\n(From the Feedback review queue, reviewed by '+tier().name+'. Anonymous, test data.)', status:'New', reply:'', by:user.email||'', source:'test-app-review'}}); }
+          toast('Sent to the desk for Christian and Claude'); draw();
+        });
+        list.append(h('div',{class:'item'}, h('div',{class:'meta'}, h('span',{class:'chip grey'},TYPE[x.type]||x.type), h('span',null,AREA[x.area]||x.area), x.label ? h('span',null,String(x.label).slice(0,70)) : null, h('span',null,fmtDate(x.at)), site0 ? h('span',null,site0.name) : null),
+          body, x.proposal ? h('span',{class:'small'},h('b',null,'Proposed: '),x.proposal) : null, h('div',{class:'row'},sel, x.status!=='Guidance change proposed' ? prop : null)));
+      });
+    }
+    v.append(h('div',{class:'card'}, h('h2',null,'Review queue'), chipsBar, list));
+    draw();
+    // opt-in summary to the desk
+    const sumBtn = h('button',{class:'btn ghost sm',type:'button'},'Send an anonymous summary to the desk');
+    sumBtn.addEventListener('click', async () => {
+      const lines = ['Feedback summary from the test app ('+fmtDate(new Date())+', '+(['owner','multi'].includes(S.tier)?'all homes':site().name)+', anonymous test data)',
+        'Helpful: '+(rat.length?Math.round(up/rat.length*100)+'% of '+rat.length+' ratings':'no ratings'),
+        ...Object.entries(by).map(([k,c])=>'- '+(AREA[k]||k)+': '+c.up+' up, '+c.down+' down'),
+        'Edits after rewrite: '+all.filter(x=>x.type==='edit').length, 'Drop-offs: '+all.filter(x=>x.type==='dropoff').map(x=>x.label).slice(-5).join('; '),
+        'Searches with no answer: '+emptyQ.slice(-5).map(q=>'"'+scrubNote(q.q)+'"').join(', '), 'Pulse average: '+avg,
+        'Notes: '+rat.filter(x=>x.note).slice(-5).map(x=>'"'+x.note+'"').join(' | ')];
+      if (!sb || !user) return;
+      const {error} = await sb.from('desk_items').insert({kind:'request', data:{kind:'Update', biz:'Test app: feedback summary', when:'Whenever', text:lines.join('\n'), status:'New', reply:'', by:user.email||'', source:'test-app-review'}});
+      toast(error ? 'Could not send ('+(error.code||error.message)+')' : 'Summary sent to the desk');
+    });
+    const optin = h('input',{type:'checkbox',checked:S.optin===true});
+    optin.addEventListener('change',()=>{ S.optin = optin.checked; save(); toast(optin.checked?'Sharing on for this device':'Sharing off for this device'); });
+    v.append(h('div',{class:'card soft'}, h('h3',null,'Privacy'), h('label',{class:'row small'},optin,'Share my own ratings and notes anonymously (this device)'),
+      h('p',{class:'small'},'Signals never include who sent them. Notes are scrubbed of names and numbers. Ratings never train anything automatically; a reviewer decides what to change.'), sumBtn));
   };
 
   // ---------- What-if library and Company procedures (data in ../data/scenarios) ----------
@@ -912,6 +1083,7 @@
       h('div',{class:'list',style:'margin-top:.5rem'}, legal.map(l => h('div',{class:'item'}, h('div',{class:'meta'},h('b',null,LAYER_NAME[l.layer]||l.layer),statusChip(l.status), l.source && LIB.sources[l.source] ? h('a',{href:LIB.sources[l.source].url,target:'_blank',rel:'noopener'},'source') : null), h('span',{class:'small'},h('b',null,l.cite+': '),l.says))))));
     if (sc.clarity) c.append(h('div',{class:'card soft'}, h('div',{class:'chips'},labelChip(sc.clarity.label),h('span',{class:'chip grey'},'Clarity Card')), h('b',null,sc.clarity.q), h('span',null,sc.clarity.a)));
     c.append(h('div',{class:'row noprint'}, h('a',{class:'btn ghost sm',href:'#/report'},'Write it up'), h('a',{class:'btn ghost sm',href:'#/ask'},'Ask the Regulator')));
+    c.append(rateBar('whatif', sc.id, sc.title));
     c.append(h('p',{class:'foot'},LIB.disclaimer));
     return c;
   }

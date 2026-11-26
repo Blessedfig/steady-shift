@@ -363,6 +363,14 @@ window.SS_DATA = (function(){
     reports:[
       {id:'r1', site:'maple', at:'2026-11-25T19:30:00', type:'Behavior with contact', status:'Waiting for manager', resident:'M-2', raw:'Walt freaked out at supper and hit Sam cuz he wanted to go home again', clean:'', by:'Caregiver (sample)'}
     ],
+    signals:[
+      {id:'s1', type:'rating', area:'check', ref:'C02', label:'Can I set up meds in a cup or envelope for later?', val:'up', team:'Yes', note:'', site:'maple', tier:'caregiver', at:'2026-11-24T02:15:00', status:'New'},
+      {id:'s2', type:'rating', area:'check', ref:'C06', label:'Resident fell. Do I lift them or call 911?', val:'down', team:'No', note:'We call the on-call nurse first when there is no injury. Add that option.', site:'birch', tier:'caregiver', at:'2026-11-20T03:30:00', status:'New'},
+      {id:'s3', type:'rating', area:'behavior', ref:'home', label:'Wants to go home or tries to leave', val:'up', team:'Yes', note:'Walking with them works better than the door alarm.', site:'maple', tier:'caregiver', at:'2026-11-23T17:10:00', status:'New'},
+      {id:'s4', type:'edit', area:'report', ref:'Fall', label:'Report rewrite (Fall)', added:'sat herself down slowly, no injury seen', removed:'was found on the floor', site:'maple', tier:'caregiver', at:'2026-11-22T06:05:00', status:'New'},
+      {id:'s5', type:'dropoff', area:'night', ref:'callin', label:'Opened "Next shift called in sick" but did not log it', site:'birch', tier:'caregiver', at:'2026-11-25T04:40:00', status:'New'},
+      {id:'s6', type:'pulse', area:'pulse', ref:'2026-10', val:'4', note:'Night help saved me a call.', label:'How much did the app help on your last shift?', site:'maple', tier:'caregiver', at:'2026-10-30T08:00:00', status:'Reviewed'}
+    ],
     decisions:[
       {id:'d1', site:'maple', gray:'C05', choice:'Change the plan with the resident and family', why:'M-4 prefers afternoon showers. Plan updated to after lunch with a sponge bath option.', approver:'House manager', at:'2026-11-18T14:00:00'}
     ],
