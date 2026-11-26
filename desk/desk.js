@@ -1,0 +1,213 @@
+// Owner Desk: sign-in and saved data through Supabase.
+// Privacy comes from the database rules in setup.sql, not from this file.
+(function(){
+  const $=id=>document.getElementById(id);
+  function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e}
+
+  // ---------- tabs ----------
+  const tabs=[...document.querySelectorAll('[role=tab]')];
+  function show(id){
+    tabs.forEach(t=>{const on=t.getAttribute('aria-controls')===id;t.setAttribute('aria-selected',on);$(t.getAttribute('aria-controls')).hidden=!on;});
+    try{localStorage.setItem('desk-tab',id)}catch(e){}
+  }
+  const ids=tabs.map(t=>t.getAttribute('aria-controls'));
+  tabs.forEach(t=>t.addEventListener('click',()=>{const id=t.getAttribute('aria-controls');show(id);if(history.replaceState)history.replaceState(null,'','#'+id);}));
+  let start=(location.hash||'').slice(1);
+  if(!ids.includes(start)){try{start=localStorage.getItem('desk-tab')}catch(e){start=null}}
+  show(ids.includes(start)?start:'progress');
+
+  // ---------- marketing copy (static) ----------
+  const COPY=[
+    {t:'One-line pitch',b:'A shift-time helper for Wisconsin adult family homes and CBRFs: the right procedure, calm professional reports, and managers who get to sleep.'},
+    {t:'Short pitch (30 seconds)',b:'I spent years as an adult family home manager and CNA. Most citations and staff fights I saw started with small moments: a 2 AM question nobody could answer, a shift note that sounded like an accusation, a binder that was out of date. Steady Shift gives caregivers the answer from your own procedures and DHS 88 or 83, turns their quick notes into professional reports, and only wakes the manager when it really matters.'},
+    {t:'Outreach email',b:'Subject: Fewer 2 AM calls for your home\n\nHi [name],\n\nI\'m a former adult family home manager and CNA, and I\'m building a tool for homes like yours. It helps caregivers check procedures against DHS 88 and 83, write incident reports that stay factual and calm, and sort overnight questions so the manager only gets woken for real emergencies.\n\nI\'m looking for a few Wisconsin homes to try it first and help shape it. Would you have 15 minutes to see it?\n\nThank you,\n[your name]'},
+    {t:'Social post',b:'Caregiving comes first. Paperwork follows.\n\nI\'m building a tool for Wisconsin adult family homes and CBRFs that helps staff find the right procedure, document without blame, and lets managers sleep through the night.\n\nLooking for a few pilot homes. Message me if you\'d like a look.\n\nhttps://blessedfig.github.io/steady-shift/'},
+    {t:'What we never say',b:'Don\'t name or criticize any care management organization, county or competitor.\nDon\'t promise "HIPAA certified" (there is no such certificate).\nDon\'t claim customers or results we don\'t have yet.\nDon\'t say the app replaces a nurse, a manager or 911.'}
+  ];
+  const cb=$('copyBlocks');
+  COPY.forEach(c=>{
+    const d=el('div','copyblock');const bar=el('div','bar');
+    const btn=el('button','btn ghost','Copy');btn.type='button';
+    const pre=el('pre',null,c.b);
+    btn.addEventListener('click',()=>{
+      const done=()=>{btn.textContent='Copied';setTimeout(()=>btn.textContent='Copy',1500)};
+      try{navigator.clipboard.writeText(c.b).then(done,()=>selectText(pre))}catch(e){selectText(pre)}
+    });
+    bar.append(el('h3',null,c.t),btn);d.append(bar,pre);cb.append(d);
+  });
+  function selectText(n){const r=document.createRange();r.selectNodeContents(n);const s=getSelection();s.removeAllRanges();s.addRange(r);}
+
+  // ---------- screens ----------
+  const gate=$('gate'),whoEl=$('who');
+  function setGate(msg){gate.textContent=msg||'';gate.hidden=!msg}
+  function signinMsg(msg){$('signinMsg').textContent=msg||'';$('signinMsg').hidden=!msg}
+  function screen(which){$('signin').hidden=which!=='signin';$('app').hidden=which!=='app';$('signOut').hidden=which!=='app';}
+
+  const cfg=window.DESK_CONFIG||{};
+  if(!cfg.supabaseUrl||!cfg.supabaseKey||!window.supabase){
+    whoEl.textContent='Not set up yet';
+    screen('signin');$('emailForm').hidden=true;
+    signinMsg('The desk is not connected to its database yet. Christian finishes this in a few steps (see desk/README.md).');
+    return;
+  }
+  const sb=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseKey,{auth:{flowType:'implicit',persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+
+  let pendingEmail='';
+  try{pendingEmail=localStorage.getItem('desk-email')||''}catch(e){}
+  if(pendingEmail)$('email').value=pendingEmail;
+
+  $('emailForm').addEventListener('submit',async e=>{
+    e.preventDefault();signinMsg('');
+    const email=$('email').value.trim().toLowerCase();if(!email)return;
+    const b=$('sendBtn');b.disabled=true;b.textContent='Sending…';
+    const {error}=await sb.auth.signInWithOtp({email,options:{shouldCreateUser:false,emailRedirectTo:location.origin+location.pathname}});
+    b.disabled=false;b.textContent='Email me a sign-in link';
+    if(error){
+      const m=String(error.message||'');
+      if(/signups? not allowed|not found|otp_disabled/i.test(m))signinMsg('That email is not on the desk\'s list. Ask Christian to add it.');
+      else if(/rate|seconds/i.test(m))signinMsg('Please wait a minute before asking for another link.');
+      else signinMsg('Could not send the link: '+m);
+      return;
+    }
+    pendingEmail=email;try{localStorage.setItem('desk-email',email)}catch(e){}
+    $('emailForm').hidden=true;$('sent').hidden=false;
+    $('sentMsg').textContent='Check '+email+' for a sign-in email. It can take a minute, and may land in spam.';
+  });
+  $('codeForm').addEventListener('submit',async e=>{
+    e.preventDefault();signinMsg('');
+    const token=$('code').value.replace(/\D/g,'');if(!token||!pendingEmail)return;
+    const {error}=await sb.auth.verifyOtp({email:pendingEmail,token,type:'email'});
+    if(error)signinMsg('That code did not work. Codes expire after about an hour, so you may need a new one.');
+  });
+  $('restart').addEventListener('click',()=>{$('sent').hidden=true;$('emailForm').hidden=false;$('code').value='';signinMsg('')});
+  $('signOut').addEventListener('click',async()=>{await sb.auth.signOut();});
+
+  // ---------- data ----------
+  const STAGES=['New','Contacted','Demo set','Pilot','Signed','Not now'];
+  let items=[],ready=false,currentUser=null;
+  const of=k=>items.filter(i=>i.kind===k).map(i=>({...i.data,id:i.id,_created:i.created_at}));
+
+  async function load(){
+    const {data,error}=await sb.from('desk_items').select('id,kind,data,created_at').order('created_at',{ascending:true});
+    if(error){setGate('Could not load saved data ('+(error.code||error.message||'error')+'). Try reloading.');return}
+    items=data||[];ready=true;renderAll();
+  }
+  function renderAll(){renderBoard();renderMilestones();renderNotes();}
+  function report(err){setGate('That change did not save ('+(err&&(err.code||err.message)||'error')+'). Try again in a moment.')}
+  async function add(kind,data){
+    const {error}=await sb.from('desk_items').insert({kind,data});
+    if(error){report(error);return false}
+    setGate('');await load();return true;
+  }
+  async function patch(id,changes){
+    const it=items.find(i=>i.id===id);if(!it)return;
+    const {error}=await sb.from('desk_items').update({data:{...it.data,...changes},updated_at:new Date().toISOString()}).eq('id',id);
+    if(error)report(error);else setGate('');
+    await load();
+  }
+  async function remove(id){
+    const {error}=await sb.from('desk_items').delete().eq('id',id);
+    if(error)report(error);else setGate('');
+    await load();
+  }
+
+  async function onSession(session){
+    if(!session){currentUser=null;ready=false;items=[];whoEl.textContent='Not signed in';screen('signin');$('emailForm').hidden=false;$('sent').hidden=true;return}
+    if(currentUser&&currentUser.id===session.user.id)return;
+    currentUser=session.user;
+    whoEl.textContent='Signed in as '+(session.user.email||'owner');
+    const {data:ok,error}=await sb.rpc('is_desk_member');
+    if(error||!ok){
+      screen('signin');$('emailForm').hidden=true;$('sent').hidden=true;
+      signinMsg(error?'Could not check access ('+(error.code||error.message)+').':'This email is signed in but is not on the desk\'s list. Ask Christian to add it.');
+      $('signOut').hidden=false;return;
+    }
+    signinMsg('');screen('app');
+    if(location.hash&&/access_token|error/.test(location.hash))history.replaceState(null,'',location.pathname);
+    await load();
+  }
+  sb.auth.onAuthStateChange((_evt,session)=>{setTimeout(()=>onSession(session),0)});
+  sb.auth.getSession().then(({data})=>onSession(data.session));
+  // a link that failed (expired or already used) comes back with an error in the address
+  if(/error_description=/.test(location.hash)){
+    const p=new URLSearchParams(location.hash.slice(1));
+    signinMsg('That sign-in link did not work ('+(p.get('error_description')||'expired')+'). Ask for a new one below.');
+    history.replaceState(null,'',location.pathname);
+  }
+  // pick up changes Angelika or Christian made on another device
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&ready)load()});
+
+  // ---------- leads ----------
+  function renderBoard(){
+    const leads=of('lead');
+    $('leadCount').textContent=leads.filter(l=>l.stage!=='Not now').length;
+    const board=$('board');board.textContent='';
+    STAGES.forEach(st=>{
+      const col=el('div','col');const list=leads.filter(l=>(l.stage||'New')===st).sort((a,b)=>(a.nextDate||'9999').localeCompare(b.nextDate||'9999'));
+      const h=el('h3');h.append(el('span',null,st),el('span',null,String(list.length)));col.append(h);
+      if(!list.length)col.append(el('p','empty',ready?'None yet':'—'));
+      list.forEach(l=>{
+        const c=el('div','lead');
+        c.append(el('b',null,l.name||'Unnamed home'));
+        const bits=[l.type,l.pay,l.county].filter(Boolean).join(' · ');if(bits)c.append(el('span','meta',bits));
+        if(l.contact||l.reach)c.append(el('span',null,[l.contact,l.reach].filter(Boolean).join(' · ')));
+        if(l.next||l.nextDate)c.append(el('span','meta due','Next: '+[l.next,l.nextDate].filter(Boolean).join(' · ')));
+        if(l.notes){const p=el('span','meta',l.notes);p.style.whiteSpace='pre-wrap';c.append(p)}
+        const act=el('div','lead-actions');
+        const sel=el('select');sel.setAttribute('aria-label','Move '+(l.name||'home'));
+        STAGES.forEach(s=>{const o=el('option',null,s);o.value=s;if(s===(l.stage||'New'))o.selected=true;sel.append(o)});
+        sel.addEventListener('change',()=>patch(l.id,{stage:sel.value}));
+        const del=el('button','x','Remove');del.type='button';
+        let armed=false;
+        del.addEventListener('click',()=>{if(!armed){armed=true;del.textContent='Confirm';setTimeout(()=>{armed=false;del.textContent='Remove'},3000);return}remove(l.id)});
+        act.append(sel,del);c.append(act);col.append(c);
+      });
+      board.append(col);
+    });
+  }
+  $('leadForm').addEventListener('submit',async e=>{
+    e.preventDefault();if(!ready)return;
+    const v=id=>$(id).value.trim();
+    const data={name:v('lf-name'),contact:v('lf-contact'),type:v('lf-type'),pay:v('lf-pay'),county:v('lf-county'),reach:v('lf-reach'),next:v('lf-next'),nextDate:v('lf-date'),notes:v('lf-notes'),stage:'New'};
+    if(!data.name)return;
+    if(await add('lead',data)){e.target.reset();$('leadDetails').open=false}
+  });
+
+  // ---------- next steps ----------
+  function renderMilestones(){
+    const ul=$('milestoneList');ul.textContent='';const ms=of('milestone');
+    if(!ms.length){ul.append(el('li','empty',ready?'No next steps yet. Add the first one below.':'Next steps appear here once you are signed in.'));return}
+    ms.sort((a,b)=>(!!a.done-!!b.done)||String(a._created).localeCompare(String(b._created))).forEach(m=>{
+      const li=el('li',m.done?'done':'');const id='m-'+m.id;
+      const box=el('input');box.type='checkbox';box.id=id;box.checked=!!m.done;
+      box.addEventListener('change',()=>patch(m.id,{done:box.checked}));
+      const lb=el('label',null,m.text||'');lb.htmlFor=id;
+      const x=el('button','x','×');x.type='button';x.setAttribute('aria-label','Delete '+(m.text||'step'));
+      x.addEventListener('click',()=>remove(m.id));
+      li.append(box,lb,x);ul.append(li);
+    });
+  }
+  $('milestoneForm').addEventListener('submit',async e=>{
+    e.preventDefault();const i=$('milestoneInput');const t=i.value.trim();if(!t||!ready)return;
+    if(await add('milestone',{text:t,done:false}))i.value='';
+  });
+
+  // ---------- notes ----------
+  function renderNotes(){
+    const box=$('noteList');box.textContent='';const ns=of('note');
+    if(!ns.length){box.append(el('p','empty',ready?'No notes yet.':'Notes appear here once you are signed in.'));return}
+    ns.sort((a,b)=>String(b._created).localeCompare(String(a._created))).forEach(n=>{
+      const c=el('div','note');const m=el('div','meta');
+      const left=el('span');left.append(el('span','tag',n.tag||'Note'),document.createTextNode('  '+(n._created?new Date(n._created).toLocaleDateString():'')));
+      const x=el('button','x','×');x.type='button';x.setAttribute('aria-label','Delete note');
+      let armed=false;x.addEventListener('click',()=>{if(!armed){armed=true;x.textContent='Delete?';setTimeout(()=>{armed=false;x.textContent='×'},3000);return}remove(n.id)});
+      m.append(left,x);c.append(m,el('p',null,n.text||''));box.append(c);
+    });
+  }
+  $('noteForm').addEventListener('submit',async e=>{
+    e.preventDefault();const t=$('noteText');const txt=t.value.trim();if(!txt||!ready)return;
+    if(await add('note',{text:txt,tag:$('noteTag').value}))t.value='';
+  });
+
+  renderAll();
+})();
