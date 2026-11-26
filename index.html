@@ -8,37 +8,41 @@
 <title>Steady Shift</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;800&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;800&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600&display=swap">
 <style>
 /* Layout: one reading column with wide bands; the hero pairs the promise with a live 2 AM triage card. */
 :root{
-  --bg:#FAFBF9; --surface:#FFFFFF; --ink:#24352F; --muted:#5B6C66; --line:#E2E9E6;
-  --pine:#2F7D6B; --pine-soft:#E7F4EF; --night:#EAF3FB; --night-ink:#24352F; --amber:#A8670F; --amber-soft:#FDF1DE;
-  --red:#A63D32; --red-soft:#F8E4E1;
+  /* Workbook visual system: sky on white, rounded type, color held back for meaning. */
+  --bg:#F5F9FC; --surface:#FFFFFF; --ink:#1F3A52; --muted:#5A6F80; --line:#D3E1EC; --line-strong:#7891A6;
+  --pine:#1D6AA8; --pine-soft:#E8F3FC; --night:#E8F3FC; --night-ink:#1F3A52;
+  --calm:#2E7D5B; --calm-soft:#E6F2EC; --amber:#9A5B0F; --amber-soft:#FBF1E2;
+  --red:#B3261E; --red-soft:#FBE9E7;
   --display:"Nunito", "Segoe UI", system-ui, sans-serif;
   --body:"Nunito Sans", "Segoe UI", system-ui, sans-serif;
-  --mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+  --mono:var(--body);
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#0F1614; --surface:#17211E; --ink:#E4EDEA; --muted:#9DB0AA; --line:#2A3833;
-  --pine:#7CCBB5; --pine-soft:#1D302B; --night:#1A2636; --night-ink:#E4EDEA; --amber:#E7AE55; --amber-soft:#2E2414;
-  --red:#E58A7E; --red-soft:#33201D; color-scheme:dark}}
+  --bg:#141C26; --surface:#1B2532; --ink:#E6EEF5; --muted:#A9B9C7; --line:#2C3A4A; --line-strong:#6F869B;
+  --pine:#7FB8E8; --pine-soft:#1E2E40; --night:#1B2939; --night-ink:#E6EEF5;
+  --calm:#7CC9A3; --calm-soft:#1B3129; --amber:#E7AE55; --amber-soft:#2E2414;
+  --red:#F2948C; --red-soft:#3A2220; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#0F1614; --surface:#17211E; --ink:#E4EDEA; --muted:#9DB0AA; --line:#2A3833;
-  --pine:#7CCBB5; --pine-soft:#1D302B; --night:#1A2636; --night-ink:#E4EDEA; --amber:#E7AE55; --amber-soft:#2E2414;
-  --red:#E58A7E; --red-soft:#33201D; color-scheme:dark}
+  --bg:#141C26; --surface:#1B2532; --ink:#E6EEF5; --muted:#A9B9C7; --line:#2C3A4A; --line-strong:#6F869B;
+  --pine:#7FB8E8; --pine-soft:#1E2E40; --night:#1B2939; --night-ink:#E6EEF5;
+  --calm:#7CC9A3; --calm-soft:#1B3129; --amber:#E7AE55; --amber-soft:#2E2414;
+  --red:#F2948C; --red-soft:#3A2220; color-scheme:dark}
 
-body{background:var(--bg);color:var(--ink);font:400 1.0625rem/1.6 var(--body)}
+body{background:var(--bg);color:var(--ink);font:400 1.0625rem/1.5 var(--body)}
 .wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 h1,h2,h3{font-family:var(--display);line-height:1.12;text-wrap:balance;margin:0}
 h1{font-size:clamp(2.1rem,5vw,3.3rem);font-weight:800;letter-spacing:-.02em}
 h2{font-size:clamp(1.55rem,3.2vw,2.15rem);font-weight:800;letter-spacing:-.01em}
 h3{font-size:1.2rem;font-weight:800}
 p{margin:0;max-width:65ch}
-.eyebrow{font:500 .78rem/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--pine)}
+.eyebrow{font:700 1rem/1.2 var(--display);color:var(--pine)}
 .lede{font-size:1.2rem;color:var(--muted)}
 a{color:var(--pine)}
-:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+:focus-visible{outline:3px solid var(--pine);outline-offset:2px}
 section{padding-block:clamp(3rem,7vw,5rem)}
 .stack{display:grid;gap:1rem}
 .draft{display:inline-block;font:500 .7rem/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;background:var(--amber-soft);color:var(--amber);border:1px dashed var(--amber);border-radius:4px;padding:.3em .5em;vertical-align:middle;white-space:nowrap}
@@ -63,22 +67,22 @@ section{padding-block:clamp(3rem,7vw,5rem)}
 .who{display:flex;flex-wrap:wrap;gap:.5rem}
 .chip{font:500 .8rem/1 var(--mono);border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:.45em .8em;color:var(--muted)}
 .cta-row{display:flex;gap:.8rem;flex-wrap:wrap;align-items:center}
-.btn{display:inline-block;font:600 1rem/1 var(--body);padding:.85em 1.2em;border-radius:99px;text-decoration:none;border:1px solid var(--pine)}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;font:800 1.05rem/1.1 var(--display);padding:.75em 1.3em;border-radius:12px;text-decoration:none;border:1px solid var(--pine)}
 .btn.primary{background:var(--pine);color:var(--bg)}
 .btn.ghost{color:var(--pine);background:transparent}
 
 /* phone card */
 .phone{background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:28px;padding:1.2rem;display:grid;gap:.85rem;box-shadow:0 16px 36px -22px rgba(40,90,80,.35);min-width:0}
 .phone-head{display:flex;justify-content:space-between;font:500 .8rem/1 var(--mono);opacity:.75}
-.bubble{background:var(--night);border-radius:18px;padding:.75rem .85rem;font-size:.95rem;line-height:1.45}
+.bubble{background:var(--night);border-radius:16px;padding:.75rem .85rem;font-size:.95rem;line-height:1.45}
 .bubble.staff{background:var(--pine-soft)}
-.bubble small{display:block;font:500 .68rem/1.3 var(--mono);letter-spacing:.05em;text-transform:uppercase;opacity:.65;margin-bottom:.3rem}
+.bubble small{display:block;font:700 .68rem/1.3 var(--display);text-transform:none;opacity:.65;margin-bottom:.3rem}
 .tier{display:flex;align-items:center;gap:.5rem;font:500 .8rem/1.3 var(--mono)}
-.dot{width:10px;height:10px;border-radius:50%;background:#E7AE55;flex:none}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--calm);flex:none}
 .phone .muted{opacity:.7;font-size:.85rem}
 
 /* pain list */
-.pains{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:18px;overflow:hidden;margin-top:2rem}
+.pains{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:16px;overflow:hidden;margin-top:2rem}
 .pain{background:var(--surface);padding:1.25rem;display:grid;gap:.5rem;align-content:start}
 .pain .time{font:500 .8rem/1 var(--mono);color:var(--amber)}
 .pain p{font-size:.97rem;color:var(--muted)}
@@ -93,12 +97,12 @@ section{padding-block:clamp(3rem,7vw,5rem)}
 /* rewrite */
 .band{background:var(--surface);border-block:1px solid var(--line)}
 .rewrite{display:grid;grid-template-columns:1fr auto 1fr;gap:1.25rem;align-items:stretch;margin-top:2rem}
-.note{border-radius:18px;padding:1.25rem;display:grid;gap:.6rem;align-content:start;min-width:0}
-.note.before{background:var(--red-soft)}
-.note.after{background:var(--pine-soft)}
-.note .lbl{font:500 .75rem/1 var(--mono);letter-spacing:.07em;text-transform:uppercase}
-.note.before .lbl{color:var(--red)}
-.note.after .lbl{color:var(--pine)}
+.note{border-radius:16px;padding:1.25rem;display:grid;gap:.6rem;align-content:start;min-width:0}
+.note.before{background:var(--surface);border:1px dashed var(--line-strong)}
+.note.after{background:var(--calm-soft)}
+.note .lbl{font:700 .75rem/1 var(--display);text-transform:none}
+.note.before .lbl{color:var(--muted)}
+.note.after .lbl{color:var(--calm)}
 .note dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:.35rem .8rem;font-size:.95rem}
 .note dt{font-weight:600}
 .note dd{margin:0}
@@ -113,19 +117,19 @@ section{padding-block:clamp(3rem,7vw,5rem)}
 .layer:nth-child(2){margin-left:1.25rem}.layer:nth-child(3){margin-left:2.5rem}.layer:nth-child(4){margin-left:3.75rem;border-color:var(--pine);background:var(--pine-soft)}
 
 /* triage table */
-.tablebox{overflow-x:auto;margin-top:2rem;border:1px solid var(--line);border-radius:18px;background:var(--surface)}
+.tablebox{overflow-x:auto;margin-top:2rem;border:1px solid var(--line);border-radius:16px;background:var(--surface)}
 table{border-collapse:collapse;width:100%;min-width:620px;font-size:.96rem}
 th,td{text-align:left;padding:.8rem 1rem;border-bottom:1px solid var(--line);vertical-align:top}
-th{font:500 .75rem/1.2 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+th{font:700 .75rem/1.2 var(--display);text-transform:none;color:var(--muted)}
 tr:last-child td{border-bottom:0}
 .sev{display:inline-flex;align-items:center;gap:.45rem;font-weight:600;white-space:nowrap}
 .sev i{width:10px;height:10px;border-radius:50%;display:inline-block}
 
 /* roles */
 .roles{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem;margin-top:2rem}
-.role{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:1.25rem;display:grid;gap:.6rem;align-content:start}
+.role{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:1.25rem;display:grid;gap:.6rem;align-content:start}
 .role ul{margin:0;padding-left:1.1rem;font-size:.96rem;color:var(--muted);display:grid;gap:.3rem}
-.role .no{color:var(--red);font-size:.9rem}
+.role .no{color:var(--muted);font-size:.95rem}
 
 /* money */
 .money{display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-top:2rem;align-items:start}
@@ -134,7 +138,7 @@ tr:last-child td{border-bottom:0}
 .fact .n{font:700 1.5rem/1 var(--display);color:var(--pine);font-variant-numeric:tabular-nums;white-space:nowrap}
 .fact p{font-size:.96rem;color:var(--muted)}
 .fact cite{font:400 .78rem/1.4 var(--mono);font-style:normal;display:block;margin-top:.2rem;color:var(--muted)}
-.price{background:var(--surface);border:1px dashed var(--amber);border-radius:18px;padding:1.25rem;display:grid;gap:.9rem}
+.price{background:var(--surface);border:1px dashed var(--amber);border-radius:16px;padding:1.25rem;display:grid;gap:.9rem}
 .price-row{display:flex;justify-content:space-between;gap:1rem;border-bottom:1px solid var(--line);padding-bottom:.6rem;font-variant-numeric:tabular-nums}
 .price-row:last-of-type{border-bottom:0}
 .price-row b{font-family:var(--display);font-size:1.25rem}
@@ -150,7 +154,7 @@ tr:last-child td{border-bottom:0}
 .founder .eyebrow{color:var(--pine)}
 .founder p{color:var(--night-ink)}
 .founder .stack p{max-width:52ch}
-.open{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:1.25rem;display:grid;gap:.7rem}
+.open{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:1.25rem;display:grid;gap:.7rem}
 .open ol{margin:0;padding-left:1.2rem;display:grid;gap:.4rem;font-size:.95rem}
 footer{padding-block:2rem;font-size:.88rem;color:var(--muted)}
 
@@ -173,7 +177,7 @@ footer{padding-block:2rem;font-size:.88rem;color:var(--muted)}
 }
 
 /* photo frames: illustration shows at rest; a real photo in images/ fades in over it when present */
-.ph{position:relative;border-radius:24px;overflow:hidden;background:var(--night);aspect-ratio:4/3;max-width:100%}
+.ph{position:relative;border-radius:16px;overflow:hidden;background:var(--night);aspect-ratio:4/3;max-width:100%}
 .ph svg.scene{position:absolute;inset:0;width:100%;height:100%}
 .ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .4s ease}
 .ph img.ok{opacity:1}
@@ -193,10 +197,10 @@ footer{padding-block:2rem;font-size:.88rem;color:var(--muted)}
 [hidden]{display:none!important}
 /* buyer paths */
 .picker{display:flex;flex-wrap:wrap;gap:.5rem}
-.picker a{font:600 .92rem/1.2 var(--body);text-decoration:none;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:.6em 1em}
+.picker a{display:inline-flex;align-items:center;min-height:48px;font:600 1rem/1.2 var(--body);text-decoration:none;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:.6em 1em}
 .picker a:hover{border-color:var(--pine);color:var(--pine)}
 .tabs{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1.75rem}
-.tabs button{font:600 .95rem/1.2 var(--body);color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:.65em 1.1em;cursor:pointer}
+.tabs button{min-height:48px;font:700 1rem/1.2 var(--display);color:var(--ink);background:var(--surface);border:1px solid var(--line-strong);border-radius:12px;text-align:left;padding:.65em 1.1em;cursor:pointer}
 .tabs button small{display:block;font:400 .74rem/1.2 var(--mono);color:var(--muted);margin-top:.15rem}
 .tabs button[aria-selected="true"]{background:var(--pine);border-color:var(--pine);color:var(--bg)}
 .tabs button[aria-selected="true"] small{color:var(--bg);opacity:.85}
@@ -206,11 +210,11 @@ footer{padding-block:2rem;font-size:.88rem;color:var(--muted)}
 .path-main{display:grid;gap:1.1rem;min-width:0}
 .path-main h3{font-size:1.5rem}
 .tier-cols{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
-.tier-cols h4{margin:0 0 .4rem;font:500 .75rem/1 var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.tier-cols h4{margin:0 0 .4rem;font:700 .75rem/1 var(--display);text-transform:none;color:var(--muted)}
 .tier-cols ul{margin:0;padding-left:1.1rem;display:grid;gap:.35rem;font-size:.97rem}
 .tier-cols .hard li::marker{color:var(--amber)}
 .tier-cols .helps li::marker{color:var(--pine)}
-.plan{background:var(--pine-soft);border-radius:22px;padding:1.4rem;display:grid;gap:.8rem;min-width:0}
+.plan{background:var(--pine-soft);border-radius:16px;padding:1.4rem;display:grid;gap:.8rem;min-width:0}
 .plan .pname{font:800 1.25rem/1.1 var(--display)}
 .plan .pprice{font:800 2.1rem/1 var(--display);font-variant-numeric:tabular-nums}
 .plan .pprice small{font:400 .95rem/1 var(--body);color:var(--muted)}
@@ -219,6 +223,20 @@ footer{padding-block:2rem;font-size:.88rem;color:var(--muted)}
 .compare td b{font-variant-numeric:tabular-nums}
 @media (max-width:860px){.path{grid-template-columns:1fr}}
 @media (max-width:560px){.tier-cols{grid-template-columns:1fr}}
+
+/* workbook components on the site */
+.top .btn{min-height:44px;padding:.55em 1.1em;font-size:.98rem}
+.top-right{display:flex;align-items:center;gap:1.25rem;flex-wrap:wrap}
+.ebar{display:flex;align-items:center;justify-content:center;gap:.5rem;min-height:48px;border:2px solid var(--red);color:var(--red);border-radius:12px;font:800 1rem/1 var(--display)}
+.ebar svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.promises{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1rem;margin-top:2rem}
+.promise{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:1.1rem 1.2rem;display:grid;gap:.4rem;align-content:start}
+.promise p{font-size:.98rem;color:var(--muted)}
+.close{text-align:left;display:grid;gap:1rem;justify-items:start}
+@media (max-width:560px){.top .wrap{flex-wrap:nowrap}.brand .draft{display:none}}
+footer nav{display:flex;flex-wrap:wrap;gap:1.25rem;margin-bottom:.75rem}
+footer nav a{color:var(--muted);text-decoration:none;font-weight:600;min-height:48px;display:inline-flex;align-items:center}
+footer nav a:hover{color:var(--pine)}
 </style>
 
 </head>
@@ -237,12 +255,14 @@ footer{padding-block:2rem;font-size:.88rem;color:var(--muted)}
 <header class="top">
   <div class="wrap">
     <div class="brand"><span class="brand-mark" aria-hidden="true"></span>Steady Shift <span class="draft">Working name</span></div>
-    <nav aria-label="Sections">
-      <a href="#paths">Who it's for</a>
-      <a href="#features">What it does</a>
-      <a href="#plans">Plans</a>
-      <a href="#privacy">Privacy</a>
-    </nav>
+    <div class="top-right">
+      <nav aria-label="Sections">
+        <a href="#paths">Who it's for</a>
+        <a href="#features">What it does</a>
+        <a href="#plans">Plans</a>
+      </nav>
+      <a class="btn primary" href="#pilot">Try it early</a>
+    </div>
   </div>
 </header>
 
@@ -289,7 +309,7 @@ footer{padding-block:2rem;font-size:.88rem;color:var(--muted)}
         <p>You are paid through a self-directed program, or you simply stepped up. You learned the care tasks fast and often alone.</p>
         <div class="tier-cols">
           <div><h4>What's hard</h4><ul class="hard"><li>Learning medical tasks with nobody to ask</li><li>Long nights where you wonder if you should call someone</li><li>Keeping the records your plan asks for</li></ul></div>
-          <div><h4>How it helps</h4><ul class="helps"><li>Plain, step-by-step help for each care task</li><li>Your training checklist and what a nurse has signed off</li><li>A simple daily log in your own words</li><li>A hand-off sheet for a backup caregiver</li><li>A calm "call now or wait" guide for nights</li></ul></div>
+          <div><h4>How it helps</h4><ul class="helps"><li>Plain, step-by-step help for each care task</li><li>Your training checklist and what a nurse has signed off</li><li>A simple daily log in your own words</li><li>A calm "call now or wait" guide for nights</li></ul></div>
         </div>
       </div>
       <div class="plan">
@@ -306,7 +326,7 @@ footer{padding-block:2rem;font-size:.88rem;color:var(--muted)}
         <p>You might be the owner, the manager and a caregiver on the same day. One survey finding or one bad night can knock everything sideways.</p>
         <div class="tier-cols">
           <div><h4>What's hard</h4><ul class="hard"><li>The 2 AM phone call that could have waited</li><li>Shift notes that start arguments</li><li>Keeping training hours and house rules up to date</li></ul></div>
-          <div><h4>How it helps</h4><ul class="helps"><li>Procedure double-check against DHS 88 and your own policies</li><li>Calm incident reports from a quick note</li><li>Overnight triage so you only get woken for real problems</li><li>Training hour tracker (15 hours in 6 months, then 8 a year)</li><li>Your house rules kept private, never below code</li><li>Family updates you approve, for private-pay residents <span class="draft">Planned</span></li></ul></div>
+          <div><h4>How it helps</h4><ul class="helps"><li>Procedure double-check against DHS 88 and your own policies</li><li>Calm incident reports from a quick note</li><li>Overnight triage so you only get woken for real problems</li><li>Family updates you approve, for private-pay residents <span class="draft">Planned</span></li></ul></div>
         </div>
       </div>
       <div class="plan">
@@ -323,7 +343,7 @@ footer{padding-block:2rem;font-size:.88rem;color:var(--muted)}
         <p>A larger team means more turnover, more questions on every shift, and more review dates that are easy to miss.</p>
         <div class="tier-cols">
           <div><h4>What's hard</h4><ul class="hard"><li>New staff asking the same questions on every shift</li><li>Medication review dates slipping</li><li>Getting ready for a survey at the last minute</li></ul></div>
-          <div><h4>How it helps</h4><ul class="helps"><li>Procedure double-check against DHS 83 and your own policies</li><li>Medication review clocks: 30 days after admission, every 3 months, monthly and yearly</li><li>Nurse delegation records with sign-offs and renewal reminders</li><li>Question tracking by topic and shift, so training goes where it is needed</li><li>A survey-ready packet of training, delegations and policies</li></ul></div>
+          <div><h4>How it helps</h4><ul class="helps"><li>Procedure double-check against DHS 83 and your own policies</li><li>Medication review clocks: 30 days after admission, every 3 months, monthly and yearly</li><li>Nurse delegation records with sign-offs and renewal reminders</li><li>A survey-ready packet of training, delegations and policies</li></ul></div>
         </div>
       </div>
       <div class="plan">
@@ -340,7 +360,7 @@ footer{padding-block:2rem;font-size:.88rem;color:var(--muted)}
         <p>Your staff work alone, far from a supervisor. Nurse visits, competency checks and client plans all need to line up.</p>
         <div class="tier-cols">
           <div><h4>What's hard</h4><ul class="hard"><li>Caregivers alone with a hard decision</li><li>Nurse supervisory visits to schedule and prove</li><li>Competency records spread across paper and email</li></ul></div>
-          <div><h4>How it helps</h4><ul class="helps"><li>Each caregiver sees only the clients they are assigned to</li><li>Nurse visit calendar with reminders</li><li>Caregiver competency records in one place</li><li>Incident wording help from the client’s doorstep</li><li>After-hours triage that routes to the right on-call person</li></ul></div>
+          <div><h4>How it helps</h4><ul class="helps"><li>Each caregiver sees only the clients they are assigned to</li><li>Nurse visit calendar with reminders</li><li>Caregiver competency records in one place</li><li>After-hours triage that routes to the right on-call person</li></ul></div>
         </div>
       </div>
       <div class="plan">
@@ -357,7 +377,7 @@ footer{padding-block:2rem;font-size:.88rem;color:var(--muted)}
         <p>Each home slowly drifts into its own way of doing things, and you often find out about a problem at survey time.</p>
         <div class="tier-cols">
           <div><h4>What's hard</h4><ul class="hard"><li>Every home doing things a little differently</li><li>Policy changes that never reach the night shift</li><li>No clear view across homes until something goes wrong</li></ul></div>
-          <div><h4>How it helps</h4><ul class="helps"><li>One dashboard across all your sites</li><li>Send one policy to every site and see who has confirmed it</li><li>Compare training and delegation health by site</li><li>Owner money view: citations avoided, overtime, turnover</li><li>Patterns across homes, never resident names or staff blame</li></ul></div>
+          <div><h4>How it helps</h4><ul class="helps"><li>One dashboard across all your sites</li><li>Send one policy to every site and see who has confirmed it</li><li>Compare training and delegation health by site</li><li>Owner money view: citations avoided, overtime, turnover</li></ul></div>
         </div>
       </div>
       <div class="plan">
@@ -503,7 +523,8 @@ footer{padding-block:2rem;font-size:.88rem;color:var(--muted)}
       <div class="bubble"><small>Your home's procedure</small>Do not wake the resident to give it. Document the refusal on the MAR with the reason and time. Note any change in condition.</div>
       <div class="tier"><span class="dot"></span>Morning queue. No call needed unless she shows new symptoms.</div>
       <div class="bubble"><small>Still worried?</small>Tap “I need a manager now” at any time. You never get blocked from calling.</div>
-      <p class="muted">Example screen. Wording follows each home's own medication policy.</p>
+      <div class="ebar" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>Emergency</div>
+      <p class="muted">Example screen. The emergency button is on every staff screen, one tap away.</p>
 </div>    </div>
     <div class="tablebox">
       <table>
@@ -537,7 +558,7 @@ footer{padding-block:2rem;font-size:.88rem;color:var(--muted)}
 <section id="money" aria-labelledby="money-h">
   <div class="wrap">
     <span class="eyebrow">Cost</span>
-    <h2 id="money-h">Small monthly cost, big peace of mind.</h2>
+    <h2 id="money-h">The real numbers, without the scare tactics.</h2>
     <div class="money">
       <div class="facts">
         <div class="fact"><span class="n">$10–$1,000</span><div><p>CBRF forfeiture per violation, per day.</p><cite>Wis. Stat. s. 50.03(5g)(c)</cite></div></div>
@@ -583,6 +604,19 @@ footer{padding-block:2rem;font-size:.88rem;color:var(--muted)}
   </div>
 </section>
 
+<section aria-labelledby="prom-h">
+  <div class="wrap">
+    <span class="eyebrow">Our promises</span>
+    <h2 id="prom-h">What we will never do.</h2>
+    <div class="promises">
+      <div class="promise"><h3>No games with your staff</h3><p>No streaks, badges, points or rankings. Training shows what's left, not a score.</p></div>
+      <div class="promise"><h3>No blame built in</h3><p>Reports describe what happened, never who is at fault. Questions show up as patterns, not names.</p></div>
+      <div class="promise"><h3>No hidden emergency</h3><p>The emergency button is on every staff screen. Nobody needs permission to call 911.</p></div>
+      <div class="promise"><h3>No tricks at checkout</h3><p>No pre-checked add-ons, no guilt-trip wording and no hidden cancel button.</p></div>
+    </div>
+  </div>
+</section>
+
 <svg class="hills" viewBox="0 0 1200 70" preserveAspectRatio="none" aria-hidden="true"><path d="M0 70 V40 C150 5 300 5 450 30 S750 60 900 30 S1100 0 1200 25 V70Z"/></svg>
 <section id="pilot" class="founder" aria-labelledby="pilot-h">
   <div class="wrap">
@@ -591,6 +625,7 @@ footer{padding-block:2rem;font-size:.88rem;color:var(--muted)}
       <h2 id="pilot-h">Made by someone who has worked the night shift.</h2>
       <p>Built by a former adult family home manager and CNA who watched good homes get cited, good managers burn out, and good caregivers leave over problems a better tool could have caught.</p>
       <p>We're looking for a small group of Wisconsin homes, agencies and family caregivers to try it first and shape what it becomes.</p>
+      <p>Whatever size you are, you'll start with a real person, a short setup and your own policies already in place.</p>
       <p><b>Contact:</b> <span class="draft">To add</span></p>
     </div>
     <div class="open">
@@ -605,7 +640,7 @@ footer{padding-block:2rem;font-size:.88rem;color:var(--muted)}
   </div>
 </section>
 
-<footer><div class="wrap"><p id="credits" hidden></p>Steady Shift is a working name. This app supports staff judgment and your home's procedures. It does not replace medical advice, legal advice or a call to 911.</div></footer>
+<footer><div class="wrap"><nav aria-label="Footer"><a href="#paths">Who it's for</a><a href="#features">What it does</a><a href="#plans">Plans</a><a href="#privacy">Privacy</a><a href="#pilot">Try it early</a></nav><p id="credits" hidden></p>Steady Shift is a working name. This app supports staff judgment and your home's procedures. It does not replace medical advice, legal advice or a call to 911.</div></footer>
 
 <script>
 // Fade in real photos when they exist in images/; otherwise the drawn scene stays.
