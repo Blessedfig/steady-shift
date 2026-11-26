@@ -1,0 +1,6 @@
+scenario_id,role,step_order,step_text,notify_key,notify_within_hours,source_document,version,effective_date
+WI-FALL-02,caregiver,1,Check for injury before moving the resident.,manager,8,Sample Co. Falls Procedure,2.1,2026-01-01
+WI-FALL-02,caregiver,2,Use the gait belt and two staff to help the resident up.,,,Sample Co. Falls Procedure,2.1,2026-01-01
+WI-FALL-02,manager,1,Call the family or guardian before the end of the day.,rep,12,Sample Co. Falls Procedure,2.1,2026-01-01
+WI-FALL-02,manager,2,Send the incident form to the care manager.,mco,72,Sample Co. Falls Procedure,2.1,2026-01-01
+WI-MISS-01,caregiver,1,Search the building and yard for up to 10 minutes.,police,0,Sample Co. Missing Resident,1.0,2026-01-01

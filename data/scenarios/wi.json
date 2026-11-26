@@ -1,0 +1,3998 @@
+{
+ "schema_version": "1.0",
+ "library": "Steady Shift what-if scenario library",
+ "jurisdiction": {
+  "country": "US",
+  "state": "WI",
+  "county": null,
+  "city": null
+ },
+ "checked": "2026-11-26",
+ "disclaimer": "Guidance built from public rules. Not legal advice. Rules marked unverified or open need checking with DQA, your licensing agency, MCO, or an attorney.",
+ "status_legend": {
+  "verified": "Read in the source on the checked date",
+  "unverified": "From an earlier summary or general knowledge; not re-read",
+  "open": "Sources conflict or are silent; ask DQA or counsel",
+  "house": "A house procedure, not a law; a company can change it"
+ },
+ "layers": [
+  "federal",
+  "state",
+  "county",
+  "city",
+  "payer",
+  "org",
+  "house"
+ ],
+ "levels": {
+  "now": "Call 911 now",
+  "wake": "Call the manager",
+  "nurse": "Call the on-call nurse",
+  "morning": "Can wait for morning"
+ },
+ "notify_keys": {
+  "911": "911 / EMS / fire",
+  "police": "Law enforcement",
+  "manager": "House or on-call manager",
+  "owner": "Owner or licensee",
+  "nurse": "On-call nurse",
+  "physician": "Resident's physician or prescriber",
+  "rep": "Guardian, legal representative, family per plan, placing agency",
+  "mco": "MCO care team (Family Care IDT)",
+  "dqa": "DHS Division of Quality Assurance",
+  "licensing": "AFH licensing agency (county or DHS)",
+  "coroner": "Coroner or medical examiner",
+  "aps": "County elder adult / adult at risk agency",
+  "health": "Local health department",
+  "ombudsman": "Long-term care ombudsman",
+  "court": "Court",
+  "crisis": "Crisis line",
+  "hospice": "Hospice",
+  "insurer": "Insurer"
+ },
+ "sources": {
+  "DHS88": {
+   "title": "Wis. Admin. Code ch. DHS 88 (adult family homes)",
+   "url": "https://docs.legis.wisconsin.gov/code/admin_code/dhs/030/88.pdf",
+   "layer": "state",
+   "note": "Read in full 2026-11-26. Footer says Register May 2011; rewrite targeted for 2029."
+  },
+  "DHS83": {
+   "title": "Wis. Admin. Code ch. DHS 83 (CBRFs), s. 83.12 reporting",
+   "url": "https://docs.legis.wisconsin.gov/document/administrativecode/DHS%2083.12(1)(c)",
+   "layer": "state",
+   "note": "83.12 read 2026-11-26."
+  },
+  "P02007": {
+   "title": "DQA P-02007 Reporting Requirements for Assisted Living Facilities (09/2026)",
+   "url": "https://dhs.wisconsin.gov/publications/p02007.pdf",
+   "layer": "state",
+   "note": "Public DQA guidance. Read 2026-11-26."
+  },
+  "DEATH": {
+   "title": "DHS: Reporting of client, patient or resident death (F-62470)",
+   "url": "https://www.dhs.wisconsin.gov/regulations/report-death/proc-reportingdeath.htm",
+   "layer": "state",
+   "note": "Revised April 10, 2026. Read 2026-11-26."
+  },
+  "F00161": {
+   "title": "DQA F-00161 Caregiver Misconduct Reporting Requirements Worksheet",
+   "url": "https://uwosh.edu/ccdet/wp-content/uploads/sites/150/2018/10/RepReqWrksheet-f00161.pdf",
+   "layer": "state",
+   "note": "Form dated 12/2014. Check DQA for the current version."
+  },
+  "S4690": {
+   "title": "Wis. Stat. s. 46.90 (elder adults at risk)",
+   "url": "https://docs.legis.wisconsin.gov/statutes/statutes/46/90/4/ad",
+   "layer": "state",
+   "note": "Read 2026-11-26."
+  },
+  "OMBUD": {
+   "title": "Board on Aging and Long Term Care: Ombudsman FAQ",
+   "url": "https://boaltc.wi.gov/Pages/FAQ/Ombudsman.aspx",
+   "layer": "state",
+   "note": "Intake 1-800-815-0015. Age 60+ (under 60 only for managed care issues)."
+  },
+  "INCL_AFH": {
+   "title": "Inclusa Scope of Service: Adult Family Home (09/27/2024)",
+   "url": "https://www.inclusa.org/wp-content/uploads/Scope-of-Service_Adult-Family-Home_FC_FCP.pdf",
+   "layer": "payer",
+   "note": "Public. Applies to Inclusa members only."
+  },
+  "INCL_CBRF": {
+   "title": "Inclusa Scope of Service: CBRF 9+ beds (09/27/2024)",
+   "url": "https://www.inclusa.org/wp-content/uploads/Scope-of-Service_Community-Based-Residential-Facilty_-9-or-more-bed_FC_FCP.pdf",
+   "layer": "payer",
+   "note": "Public. Applies to Inclusa members only."
+  },
+  "FCCONTRACT": {
+   "title": "Family Care / Partnership contract 2026 (Art. V.J Member Safety and Risk)",
+   "url": "https://www.dhs.wisconsin.gov/familycare/mcos/fc-fcp-2026-contract.pdf",
+   "layer": "payer",
+   "note": "Art. V.J not yet read. MCO-to-DHS timelines unverified."
+  },
+  "ACCESS": {
+   "title": "42 CFR 441.302(a)(6) HCBS incident management system (Access Rule)",
+   "url": "https://www.ecfr.gov/current/title-42/section-441.302",
+   "layer": "federal",
+   "note": "States must have it by July 9, 2027. Verified in the Rulebook."
+  },
+  "SETTINGS": {
+   "title": "42 CFR 441.301(c)(4) HCBS Settings Rule",
+   "url": "https://www.ecfr.gov/current/title-42/section-441.301",
+   "layer": "federal",
+   "note": "Payment condition for Medicaid waiver residents."
+  }
+ },
+ "scenarios": [
+  {
+   "id": "WI-FALL-01",
+   "title": "Resident fell and is hurt, hit their head, or can't get up",
+   "category": "Falls and injuries",
+   "level": "now",
+   "triage": [
+    {
+     "ask": "Head strike, bleeding, new pain, can't move a limb, on blood thinners, or acting different?",
+     "yes": "now",
+     "no": "WI-FALL-02"
+    }
+   ],
+   "roles": {
+    "caregiver": [
+     "Call 911. Don't lift or move them.",
+     "Keep them warm and still. Stay with them.",
+     "Check the code status (DNR) sheet and send the face sheet with EMS.",
+     "Call the manager after 911."
+    ],
+    "manager": [
+     "Call the family or guardian and the physician (CBRF: immediately).",
+     "Call the MCO care team within 24 hours for Family Care members.",
+     "If admitted or seen in the ER: file the state report (CBRF 3 working days, AFH 24 hours).",
+     "Start a fall review: footwear, lighting, meds, toileting, time of day."
+    ],
+    "owner": [
+     "Confirm the state report was filed on time.",
+     "Look at fall trends across the home monthly, not blame."
+    ]
+   },
+   "notify": [
+    {
+     "key": "911",
+     "who": "911 / EMS",
+     "clock": "Now",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "Safety first",
+     "status": "verified",
+     "required": true
+    },
+    {
+     "key": "rep",
+     "who": "Guardian or legal representative",
+     "clock": "Immediately",
+     "settings": [
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "DHS 83.12(5)(a)",
+     "status": "verified",
+     "required": true,
+     "hours": 0,
+     "source": "DHS83"
+    },
+    {
+     "key": "physician",
+     "who": "Resident's physician",
+     "clock": "Immediately",
+     "settings": [
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "DHS 83.12(5)(a)",
+     "status": "verified",
+     "required": true,
+     "hours": 0,
+     "source": "DHS83"
+    },
+    {
+     "key": "rep",
+     "who": "Guardian and placing agency (if any)",
+     "clock": "Promptly (no hour limit in the code)",
+     "settings": [
+      "afh"
+     ],
+     "layer": "state",
+     "cite": "DHS 88.07(2)(b)6",
+     "status": "verified",
+     "required": true,
+     "source": "DHS88"
+    },
+    {
+     "key": "mco",
+     "who": "MCO care team (IDT: care manager or nurse) for Family Care members",
+     "clock": "Within 24 hours. Phone, not voicemail, if unresolved or serious harm",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "payer",
+     "cite": "Inclusa Scope of Service s. 7.5 (AFH and CBRF)",
+     "status": "verified",
+     "required": true,
+     "hours": 24,
+     "source": "INCL_AFH"
+    },
+    {
+     "key": "dqa",
+     "who": "DQA (form F-02208 self-report)",
+     "clock": "Within 3 working days, in writing",
+     "settings": [
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "DHS 83.12(4)(c) (if ER treatment or hospital admission)",
+     "status": "verified",
+     "required": true,
+     "business_days": 3,
+     "source": "DHS83"
+    },
+    {
+     "key": "licensing",
+     "who": "AFH licensing agency (county or DHS)",
+     "clock": "Within 24 hours",
+     "settings": [
+      "afh"
+     ],
+     "layer": "state",
+     "cite": "DHS 88.03(5)(e)1 (accident requiring hospitalization)",
+     "status": "verified",
+     "required": true,
+     "hours": 24,
+     "source": "DHS88"
+    },
+    {
+     "key": "manager",
+     "who": "House manager or on-call manager",
+     "clock": "Right after 911",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "house",
+     "cite": "House procedure",
+     "status": "house",
+     "required": false
+    }
+   ],
+   "document": [
+    "Time found, where, position, what they said",
+    "Vitals if trained",
+    "What you did and who you called, with times",
+    "Witnesses (names go in the manager-only field)"
+   ],
+   "wording": {
+    "casual": "Found Ruth on the floor again, she probably tried to get up alone",
+    "professional": "At 2:40 AM, resident M-1 was found sitting on the floor beside the bed. Resident stated she was trying to reach the bathroom. 911 was called at 2:42 AM."
+   },
+   "legal": [
+    {
+     "layer": "federal",
+     "cite": "42 CFR 441.302(a)(6)",
+     "says": "States must run an HCBS incident management system by July 9, 2027. Falls with injury are a standard critical incident type.",
+     "status": "verified",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "source": "ACCESS"
+    },
+    {
+     "layer": "state",
+     "cite": "DHS 83.12(4)(c), 83.12(5)(a)",
+     "says": "CBRF: written report to DQA within 3 working days if ER or hospital; notify physician and legal representative immediately.",
+     "status": "verified",
+     "settings": [
+      "cbrf"
+     ],
+     "source": "DHS83"
+    },
+    {
+     "layer": "state",
+     "cite": "DHS 88.03(5)(e)1, 88.07(2)(b)6",
+     "says": "AFH: licensing agency within 24 hours if hospitalized; tell guardian and placing agency about injuries.",
+     "status": "verified",
+     "settings": [
+      "afh"
+     ],
+     "source": "DHS88"
+    },
+    {
+     "layer": "payer",
+     "cite": "Inclusa Scope of Service s. 7.5",
+     "says": "All member incidents to the IDT within 24 hours.",
+     "status": "verified",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "source": "INCL_AFH"
+    },
+    {
+     "layer": "city",
+     "cite": "Local fire department",
+     "says": "Some departments bill lift-assist calls. Ask yours (see Ask the Regulator).",
+     "status": "open",
+     "settings": [
+      "afh",
+      "cbrf"
+     ]
+    }
+   ],
+   "clarity": {
+    "q": "Do I lift a resident after a fall or call 911?",
+    "a": "If there is any sign of injury, a head strike, or you aren't sure: call 911 and don't lift. No Wisconsin rule says always or never lift; your written house procedure decides the no-injury case.",
+    "label": "reading"
+   },
+   "settings": [
+    "afh",
+    "cbrf"
+   ],
+   "checked": "2026-11-26"
+  },
+  {
+   "id": "WI-FALL-02",
+   "title": "Resident fell, no injury, up and comfortable",
+   "category": "Falls and injuries",
+   "level": "morning",
+   "triage": [
+    {
+     "ask": "Any pain, new confusion, or head strike in the next hours?",
+     "yes": "WI-FALL-01",
+     "no": "morning"
+    }
+   ],
+   "roles": {
+    "caregiver": [
+     "Check for injury before moving.",
+     "Help up using your trained lift method or equipment.",
+     "Check on them every hour until morning.",
+     "Write it up before end of shift."
+    ],
+    "manager": [
+     "Read the report first thing.",
+     "Tell the family or guardian as the plan says (CBRF: any incident, immediately).",
+     "Send to the MCO care team within 24 hours for Family Care members.",
+     "Two falls in 30 days: start a care plan review."
+    ],
+    "owner": [
+     "See the monthly fall count per home."
+    ]
+   },
+   "notify": [
+    {
+     "key": "rep",
+     "who": "Guardian or legal representative",
+     "clock": "Immediately",
+     "settings": [
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "DHS 83.12(5)(a)",
+     "status": "verified",
+     "required": true,
+     "hours": 0,
+     "source": "DHS83"
+    },
+    {
+     "key": "physician",
+     "who": "Resident's physician",
+     "clock": "Immediately",
+     "settings": [
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "DHS 83.12(5)(a)",
+     "status": "verified",
+     "required": true,
+     "hours": 0,
+     "source": "DHS83"
+    },
+    {
+     "key": "rep",
+     "who": "Guardian and placing agency (if any)",
+     "clock": "Promptly (no hour limit in the code)",
+     "settings": [
+      "afh"
+     ],
+     "layer": "state",
+     "cite": "DHS 88.07(2)(b)6",
+     "status": "verified",
+     "required": true,
+     "source": "DHS88"
+    },
+    {
+     "key": "mco",
+     "who": "MCO care team (IDT: care manager or nurse) for Family Care members",
+     "clock": "Within 24 hours. Phone, not voicemail, if unresolved or serious harm",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "payer",
+     "cite": "Inclusa Scope of Service s. 7.5 (AFH and CBRF)",
+     "status": "verified",
+     "required": true,
+     "hours": 24,
+     "source": "INCL_AFH"
+    },
+    {
+     "key": "manager",
+     "who": "House manager or on-call manager",
+     "clock": "Morning queue, unless your on-call rules say wake",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "house",
+     "cite": "House procedure",
+     "status": "house",
+     "required": false
+    }
+   ],
+   "document": [
+    "Same as any fall: time, place, what was seen, what was done",
+    "Hourly checks"
+   ],
+   "wording": {
+    "casual": "Hank slid out of his chair, no big deal",
+    "professional": "At 7:15 PM, resident M-4 slid from his recliner to the floor. No visible injury. Resident denied pain. Assisted up with a gait belt by two staff."
+   },
+   "legal": [
+    {
+     "layer": "state",
+     "cite": "DHS 83.12(5)(a)",
+     "says": "CBRF: 'an incident or injury' means notify physician and legal representative immediately, even without injury.",
+     "status": "verified",
+     "settings": [
+      "cbrf"
+     ],
+     "source": "DHS83"
+    },
+    {
+     "layer": "state",
+     "cite": "DHS 88.07(2)(b)6",
+     "says": "AFH: guardian and placing agency told of significant changes and injuries.",
+     "status": "verified",
+     "settings": [
+      "afh"
+     ],
+     "source": "DHS88"
+    },
+    {
+     "layer": "payer",
+     "cite": "Inclusa s. 7.5",
+     "says": "All incidents to the IDT within 24 hours. A message is fine when resolved with no serious harm.",
+     "status": "verified",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "source": "INCL_AFH"
+    }
+   ],
+   "clarity": {
+    "q": "Do I report a fall with no injury?",
+    "a": "Yes, inside the home and to the care team. CBRF rules say any incident goes to the physician and representative immediately. Inclusa wants all incidents within 24 hours. DQA only needs a report if there was ER or hospital care.",
+    "label": "rule"
+   },
+   "settings": [
+    "afh",
+    "cbrf"
+   ],
+   "checked": "2026-11-26"
+  },
+  {
+   "id": "WI-INJ-01",
+   "title": "Bruise, skin tear or injury nobody saw happen",
+   "category": "Falls and injuries",
+   "level": "wake",
+   "roles": {
+    "caregiver": [
+     "Make sure the resident is safe and comfortable.",
+     "Tell the manager today. Don't guess at causes in writing.",
+     "Describe size, color, location. Photo only if your policy allows."
+    ],
+    "manager": [
+     "Start an internal investigation today: who worked, what changed, any equipment.",
+     "Use the DQA misconduct worksheet (F-00161) to decide if it must be reported.",
+     "If it can't be explained and isn't minor: report to DQA within 7 calendar days.",
+     "Keep the investigation file even if not reported (30 most recent)."
+    ],
+    "owner": [
+     "Make sure investigations are done without accusing anyone before facts."
+    ]
+   },
+   "notify": [
+    {
+     "key": "dqa",
+     "who": "DQA Misconduct Reporting System (F-62447)",
+     "clock": "Within 7 calendar days of knowing, if the worksheet says report",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "DHS 13.05, DHS 83.12(3)(b); F-00161",
+     "status": "verified",
+     "required": true,
+     "hours": 168,
+     "source": "F00161"
+    },
+    {
+     "key": "rep",
+     "who": "Guardian or legal representative",
+     "clock": "Immediately",
+     "settings": [
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "DHS 83.12(5)(a)",
+     "status": "verified",
+     "required": true,
+     "hours": 0,
+     "source": "DHS83"
+    },
+    {
+     "key": "physician",
+     "who": "Resident's physician",
+     "clock": "Immediately",
+     "settings": [
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "DHS 83.12(5)(a)",
+     "status": "verified",
+     "required": true,
+     "hours": 0,
+     "source": "DHS83"
+    },
+    {
+     "key": "rep",
+     "who": "Guardian and placing agency (if any)",
+     "clock": "Promptly (no hour limit in the code)",
+     "settings": [
+      "afh"
+     ],
+     "layer": "state",
+     "cite": "DHS 88.07(2)(b)6",
+     "status": "verified",
+     "required": true,
+     "source": "DHS88"
+    },
+    {
+     "key": "mco",
+     "who": "MCO care team (IDT: care manager or nurse) for Family Care members",
+     "clock": "Within 24 hours. Phone, not voicemail, if unresolved or serious harm",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "payer",
+     "cite": "Inclusa Scope of Service s. 7.5 (AFH and CBRF)",
+     "status": "verified",
+     "required": true,
+     "hours": 24,
+     "source": "INCL_AFH"
+    }
+   ],
+   "document": [
+    "Exact description and measurements",
+    "Body map",
+    "Investigation steps and who was asked",
+    "Worksheet answers"
+   ],
+   "wording": {
+    "casual": "Someone must have been rough with June, she has a bruise",
+    "professional": "A 3 cm purple bruise was observed on resident M-3's left forearm at 8:00 AM. Cause unknown. Resident does not recall an injury. Manager notified at 8:10 AM."
+   },
+   "legal": [
+    {
+     "layer": "state",
+     "cite": "DHS 13.05; F-00161",
+     "says": "Injury of unknown source is investigated like possible misconduct. Report to DQA within 7 calendar days unless the worksheet rules it out.",
+     "status": "verified",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "source": "F00161"
+    },
+    {
+     "layer": "state",
+     "cite": "DHS 83.12(3)(b)",
+     "says": "CBRF: document and report unexplained or suspicious injuries under 83.12(2).",
+     "status": "verified",
+     "settings": [
+      "cbrf"
+     ],
+     "source": "DHS83"
+    },
+    {
+     "layer": "state",
+     "cite": "DHS 88.11(1)",
+     "says": "AFH: suspected abuse or neglect goes to the licensing agency immediately.",
+     "status": "verified",
+     "settings": [
+      "afh"
+     ],
+     "source": "DHS88"
+    }
+   ],
+   "clarity": {
+    "q": "Do I have to report a bruise nobody can explain?",
+    "a": "Investigate first, then use the DQA worksheet. If you can't explain it and it isn't minor, it goes to DQA within 7 calendar days.",
+    "label": "rule"
+   },
+   "settings": [
+    "afh",
+    "cbrf"
+   ],
+   "checked": "2026-11-26"
+  },
+  {
+   "id": "WI-HLTH-01",
+   "title": "Resident seems sick or different (new confusion, fever, vomiting)",
+   "category": "Health changes",
+   "level": "nurse",
+   "triage": [
+    {
+     "ask": "Trouble breathing, chest pain, not responding, stroke signs?",
+     "yes": "now",
+     "no": "nurse"
+    }
+   ],
+   "roles": {
+    "caregiver": [
+     "Take vitals if trained.",
+     "Call the on-call nurse with what you see. If worse: 911.",
+     "Write down when it started."
+    ],
+    "manager": [
+     "CBRF: notify the physician and legal representative immediately of a significant change.",
+     "AFH: tell the guardian and placing agency; illness over 3 days counts.",
+     "Report the change of condition to the MCO care team.",
+     "Start a service plan review if it lasts."
+    ],
+    "owner": [
+     "No action unless it becomes a pattern or a hospital stay."
+    ]
+   },
+   "notify": [
+    {
+     "key": "nurse",
+     "who": "On-call nurse",
+     "clock": "Now",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "house",
+     "cite": "House procedure",
+     "status": "house",
+     "required": false
+    },
+    {
+     "key": "rep",
+     "who": "Guardian or legal representative",
+     "clock": "Immediately",
+     "settings": [
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "DHS 83.12(5)(a)",
+     "status": "verified",
+     "required": true,
+     "hours": 0,
+     "source": "DHS83"
+    },
+    {
+     "key": "physician",
+     "who": "Resident's physician",
+     "clock": "Immediately",
+     "settings": [
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "DHS 83.12(5)(a)",
+     "status": "verified",
+     "required": true,
+     "hours": 0,
+     "source": "DHS83"
+    },
+    {
+     "key": "rep",
+     "who": "Guardian and placing agency (if any)",
+     "clock": "Promptly. Illness over 3 days or needing treatment counts",
+     "settings": [
+      "afh"
+     ],
+     "layer": "state",
+     "cite": "DHS 88.07(2)(b)6",
+     "status": "verified",
+     "required": true,
+     "source": "DHS88"
+    },
+    {
+     "key": "mco",
+     "who": "MCO care team",
+     "clock": "Change in needs: report it (Inclusa s. 7.2); incidents within 24 hours",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "payer",
+     "cite": "Inclusa Scope of Service s. 7.2",
+     "status": "verified",
+     "required": true,
+     "source": "INCL_AFH"
+    }
+   ],
+   "document": [
+    "Symptoms with times",
+    "Vitals",
+    "Who you called and what they said"
+   ],
+   "wording": {
+    "casual": "Walt is acting weird and super out of it",
+    "professional": "At 4:00 PM, resident M-2 was more confused than his usual baseline, unable to name the day. Temp 100.8 F. On-call nurse notified at 4:10 PM."
+   },
+   "legal": [
+    {
+     "layer": "state",
+     "cite": "DHS 83.12(5)(a)",
+     "says": "CBRF: significant change in physical or mental condition, notify physician and legal representative immediately.",
+     "status": "verified",
+     "settings": [
+      "cbrf"
+     ],
+     "source": "DHS83"
+    },
+    {
+     "layer": "state",
+     "cite": "DHS 88.07(2)(b)5-6",
+     "says": "AFH: observe and document changes; tell guardian and placing agency of serious illness, illness over 3 days, or treatment needed.",
+     "status": "verified",
+     "settings": [
+      "afh"
+     ],
+     "source": "DHS88"
+    }
+   ],
+   "clarity": {
+    "q": "When does a change of condition need a call?",
+    "a": "CBRF: right away, to the doctor and the legal representative. AFH: promptly to the guardian and placing agency when it's serious, lasts over 3 days, or needs treatment.",
+    "label": "rule"
+   },
+   "settings": [
+    "afh",
+    "cbrf"
+   ],
+   "checked": "2026-11-26"
+  },
+  {
+   "id": "WI-HLTH-02",
+   "title": "Resident goes to the ER or is admitted to the hospital",
+   "category": "Health changes",
+   "level": "wake",
+   "roles": {
+    "caregiver": [
+     "Send the face sheet, med list and code status with EMS.",
+     "Call the manager.",
+     "Write what happened before transport."
+    ],
+    "manager": [
+     "Call family or guardian and the physician (CBRF: immediately).",
+     "Call the MCO care team within 24 hours.",
+     "If it came from an accident or injury: state report (CBRF 3 working days to DQA, AFH 24 hours to licensing agency).",
+     "Plan for return: new orders, equipment, bed hold."
+    ],
+    "owner": [
+     "Track hospital transfers per month."
+    ]
+   },
+   "notify": [
+    {
+     "key": "rep",
+     "who": "Guardian or legal representative",
+     "clock": "Immediately",
+     "settings": [
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "DHS 83.12(5)(a)",
+     "status": "verified",
+     "required": true,
+     "hours": 0,
+     "source": "DHS83"
+    },
+    {
+     "key": "physician",
+     "who": "Resident's physician",
+     "clock": "Immediately",
+     "settings": [
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "DHS 83.12(5)(a)",
+     "status": "verified",
+     "required": true,
+     "hours": 0,
+     "source": "DHS83"
+    },
+    {
+     "key": "rep",
+     "who": "Guardian and placing agency (if any)",
+     "clock": "Promptly (no hour limit in the code)",
+     "settings": [
+      "afh"
+     ],
+     "layer": "state",
+     "cite": "DHS 88.07(2)(b)6",
+     "status": "verified",
+     "required": true,
+     "source": "DHS88"
+    },
+    {
+     "key": "mco",
+     "who": "MCO care team (IDT: care manager or nurse) for Family Care members",
+     "clock": "Within 24 hours. Phone, not voicemail, if unresolved or serious harm",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "payer",
+     "cite": "Inclusa Scope of Service s. 7.5 (AFH and CBRF)",
+     "status": "verified",
+     "required": true,
+     "hours": 24,
+     "source": "INCL_AFH"
+    },
+    {
+     "key": "dqa",
+     "who": "DQA (form F-02208 self-report)",
+     "clock": "Within 3 working days, in writing",
+     "settings": [
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "DHS 83.12(4)(c) (only if from an incident or accident with serious injury)",
+     "status": "verified",
+     "required": true,
+     "business_days": 3,
+     "source": "DHS83"
+    },
+    {
+     "key": "licensing",
+     "who": "AFH licensing agency (county or DHS)",
+     "clock": "Within 24 hours",
+     "settings": [
+      "afh"
+     ],
+     "layer": "state",
+     "cite": "DHS 88.03(5)(e)1 (accident requiring hospitalization)",
+     "status": "verified",
+     "required": true,
+     "hours": 24,
+     "source": "DHS88"
+    }
+   ],
+   "document": [
+    "Reason for transfer",
+    "Time EMS called and left",
+    "Papers sent"
+   ],
+   "wording": {
+    "casual": "Lois went to the hospital, couldn't breathe",
+    "professional": "At 6:05 AM, resident B-2 reported shortness of breath; oxygen saturation 86%. 911 called at 6:07 AM. Transported to the hospital at 6:25 AM with face sheet and medication list."
+   },
+   "legal": [
+    {
+     "layer": "state",
+     "cite": "DHS 83.12(4)(c)",
+     "says": "CBRF: DQA report only when an incident or accident caused serious injury needing ER or hospital.",
+     "status": "verified",
+     "settings": [
+      "cbrf"
+     ],
+     "source": "DHS83"
+    },
+    {
+     "layer": "state",
+     "cite": "DHS 88.03(5)(e)1",
+     "says": "AFH: accident requiring hospitalization goes to the licensing agency within 24 hours.",
+     "status": "verified",
+     "settings": [
+      "afh"
+     ],
+     "source": "DHS88"
+    },
+    {
+     "layer": "payer",
+     "cite": "Inclusa s. 7.5",
+     "says": "Incidents to the IDT within 24 hours. Illness-only hospital visits are not spelled out; call anyway.",
+     "status": "open",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "source": "INCL_AFH"
+    }
+   ],
+   "clarity": {
+    "q": "Is every hospital visit a state report?",
+    "a": "No. The state wants accidents and injuries that needed the ER or hospital. A visit for illness alone is a family, physician and care team call, not a DQA report.",
+    "label": "rule"
+   },
+   "settings": [
+    "afh",
+    "cbrf"
+   ],
+   "checked": "2026-11-26"
+  },
+  {
+   "id": "WI-DEATH-01",
+   "title": "Expected death (hospice or natural causes)",
+   "category": "Deaths",
+   "level": "wake",
+   "roles": {
+    "caregiver": [
+     "Follow the hospice plan: call hospice first if enrolled.",
+     "Don't call 911 for an expected death on hospice with a DNR, unless your hospice says to.",
+     "Call the manager."
+    ],
+    "manager": [
+     "Call the guardian and family, and the people listed for emergencies.",
+     "Record date, time, circumstances and who the body was released to (AFH).",
+     "Tell the MCO care team.",
+     "Natural deaths are not reported to the state unless restraint, psychotropics, suicide or an accident was involved."
+    ],
+    "owner": [
+     "Support staff. Offer time off or a debrief."
+    ]
+   },
+   "notify": [
+    {
+     "key": "hospice",
+     "who": "Hospice (if enrolled)",
+     "clock": "Now",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "house",
+     "cite": "Hospice plan",
+     "status": "house",
+     "required": false
+    },
+    {
+     "key": "rep",
+     "who": "Guardian and people in the emergency contact list",
+     "clock": "Immediately",
+     "settings": [
+      "afh"
+     ],
+     "layer": "state",
+     "cite": "DHS 88.03(5)(e)2, 88.09(1)(d)3",
+     "status": "verified",
+     "required": true,
+     "hours": 0,
+     "source": "DHS88"
+    },
+    {
+     "key": "rep",
+     "who": "Guardian or legal representative",
+     "clock": "Immediately",
+     "settings": [
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "DHS 83.12(5)(a)",
+     "status": "verified",
+     "required": true,
+     "hours": 0,
+     "source": "DHS83"
+    },
+    {
+     "key": "mco",
+     "who": "MCO care team (IDT: care manager or nurse) for Family Care members",
+     "clock": "Within 24 hours. Phone, not voicemail, if unresolved or serious harm",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "payer",
+     "cite": "Inclusa Scope of Service s. 7.5 (AFH and CBRF)",
+     "status": "verified",
+     "required": true,
+     "hours": 24,
+     "source": "INCL_AFH"
+    },
+    {
+     "key": "coroner",
+     "who": "County coroner or medical examiner",
+     "clock": "If the death is reportable under Wis. Stat. 979.01 (for example no physician seen recently, accident, unexplained)",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "county",
+     "cite": "Wis. Stat. 979.01",
+     "status": "unverified",
+     "required": true
+    }
+   ],
+   "document": [
+    "Time of death and who pronounced",
+    "Who was called, with times",
+    "Who the body was released to"
+   ],
+   "wording": {
+    "casual": "Pearl passed peacefully overnight",
+    "professional": "Resident B-7 was found without respirations at 3:10 AM during a scheduled check. Hospice was notified at 3:12 AM and the hospice nurse pronounced death at 4:05 AM."
+   },
+   "legal": [
+    {
+     "layer": "state",
+     "cite": "DHS 83.12(1)(c)",
+     "says": "CBRF: natural deaths are not reported to DQA.",
+     "status": "verified",
+     "settings": [
+      "cbrf"
+     ],
+     "source": "DHS83"
+    },
+    {
+     "layer": "state",
+     "cite": "DHS 88.03(5) Note, 88.03(5)(e)2",
+     "says": "AFH: natural deaths not reported to the licensing agency; still notify the guardian and listed persons immediately and record release of the body.",
+     "status": "verified",
+     "settings": [
+      "afh"
+     ],
+     "source": "DHS88"
+    },
+    {
+     "layer": "county",
+     "cite": "Wis. Stat. 979.01",
+     "says": "Certain deaths must be reported to the coroner or medical examiner. Check your county's office rules.",
+     "status": "unverified",
+     "settings": [
+      "afh",
+      "cbrf"
+     ]
+    }
+   ],
+   "clarity": {
+    "q": "Do we report a natural death to the state?",
+    "a": "No, unless restraint, psychotropic medication, suicide or an accident may be involved. Families and guardians are always told right away.",
+    "label": "rule"
+   },
+   "settings": [
+    "afh",
+    "cbrf"
+   ],
+   "checked": "2026-11-26"
+  },
+  {
+   "id": "WI-DEATH-02",
+   "title": "Unexpected death, or death after an accident, restraint, psychotropic med, or suspected suicide",
+   "category": "Deaths",
+   "level": "now",
+   "roles": {
+    "caregiver": [
+     "Call 911 unless a valid DNR applies. Start CPR if full code.",
+     "Don't move or clean anything if it may be an accident or suicide.",
+     "Call the manager after 911."
+    ],
+    "manager": [
+     "Call law enforcement and the coroner or medical examiner as directed.",
+     "Restraint, psychotropic or suicide related: DHS form F-62470 within 24 hours of the death or learning of it.",
+     "Accident, other cause: CBRF report within 3 working days; AFH licensing agency within 24 hours (conservative reading).",
+     "Notify guardian, family and MCO."
+    ],
+    "owner": [
+     "Call your insurer and, if needed, an attorney.",
+     "Arrange staff support."
+    ]
+   },
+   "notify": [
+    {
+     "key": "911",
+     "who": "911 / law enforcement",
+     "clock": "Now",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "Safety and law",
+     "status": "verified",
+     "required": true
+    },
+    {
+     "key": "dqa",
+     "who": "DHS death reporting (form F-62470)",
+     "clock": "Within 24 hours of the death or learning of it, if restraint, seclusion, psychotropic meds or suicide may be related",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "DHS death reporting page; DHS 83.12(1)(a); Wis. Stat. 50.035(5)",
+     "status": "verified",
+     "required": true,
+     "hours": 24,
+     "source": "DEATH"
+    },
+    {
+     "key": "dqa",
+     "who": "DQA (CBRF, other accident or injury death)",
+     "clock": "Within 3 working days",
+     "settings": [
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "DHS 83.12(1)(b)",
+     "status": "verified",
+     "required": true,
+     "business_days": 3,
+     "source": "DHS83"
+    },
+    {
+     "key": "licensing",
+     "who": "AFH licensing agency",
+     "clock": "Within 24 hours (accidental and reportable deaths)",
+     "settings": [
+      "afh"
+     ],
+     "layer": "state",
+     "cite": "DHS 88.03(5)(e)1-2",
+     "status": "verified",
+     "required": true,
+     "hours": 24,
+     "source": "DHS88"
+    },
+    {
+     "key": "coroner",
+     "who": "Coroner or medical examiner",
+     "clock": "Immediately for accident, suicide or unexplained death",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "county",
+     "cite": "Wis. Stat. 979.01",
+     "status": "unverified",
+     "required": true
+    },
+    {
+     "key": "rep",
+     "who": "Guardian or legal representative",
+     "clock": "Immediately",
+     "settings": [
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "DHS 83.12(5)(a)",
+     "status": "verified",
+     "required": true,
+     "hours": 0,
+     "source": "DHS83"
+    },
+    {
+     "key": "rep",
+     "who": "Guardian and listed persons",
+     "clock": "Immediately",
+     "settings": [
+      "afh"
+     ],
+     "layer": "state",
+     "cite": "DHS 88.03(5)(e)2",
+     "status": "verified",
+     "required": true,
+     "hours": 0,
+     "source": "DHS88"
+    },
+    {
+     "key": "mco",
+     "who": "MCO care team (IDT: care manager or nurse) for Family Care members",
+     "clock": "Within 24 hours. Phone, not voicemail, if unresolved or serious harm",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "payer",
+     "cite": "Inclusa Scope of Service s. 7.5 (AFH and CBRF)",
+     "status": "verified",
+     "required": true,
+     "hours": 24,
+     "source": "INCL_AFH"
+    }
+   ],
+   "document": [
+    "Exact times",
+    "Scene as found",
+    "Restraint, med or behavior history in the last days",
+    "Everyone notified"
+   ],
+   "wording": {
+    "casual": "Earl died, we think he took something",
+    "professional": "Resident B-5 was found unresponsive at 11:40 PM. 911 called at 11:41 PM; CPR started per full-code status. Law enforcement arrived at 11:52 PM."
+   },
+   "legal": [
+    {
+     "layer": "state",
+     "cite": "DHS death reporting page; Wis. Stat. 50.035(5)",
+     "says": "Deaths related to restraint, seclusion, psychotropic medication or suicide: DHS within 24 hours.",
+     "status": "verified",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "source": "DEATH"
+    },
+    {
+     "layer": "state",
+     "cite": "DHS 88.03(5)(e)1 vs (e)2",
+     "says": "AFH rule lists accidental death as 24-hour reportable in (e)1 and 3 days in (e)2. Use 24 hours until DQA clarifies.",
+     "status": "open",
+     "settings": [
+      "afh"
+     ],
+     "source": "DHS88"
+    },
+    {
+     "layer": "county",
+     "cite": "Wis. Stat. 979.01",
+     "says": "Coroner or medical examiner notice for accident, suicide, unexplained deaths.",
+     "status": "unverified",
+     "settings": [
+      "afh",
+      "cbrf"
+     ]
+    }
+   ],
+   "clarity": {
+    "q": "Which clock applies when a resident dies unexpectedly?",
+    "a": "Restraint, psychotropic or suicide related: 24 hours to DHS. Other accidents: CBRF 3 working days; AFH the code conflicts, so use 24 hours.",
+    "label": "reading"
+   },
+   "settings": [
+    "afh",
+    "cbrf"
+   ],
+   "checked": "2026-11-26"
+  },
+  {
+   "id": "WI-MED-01",
+   "title": "Medication error (wrong med, dose, time, person, or missed)",
+   "category": "Medications",
+   "level": "nurse",
+   "triage": [
+    {
+     "ask": "Any breathing trouble, very drowsy, or not responding?",
+     "yes": "now",
+     "no": "nurse"
+    }
+   ],
+   "roles": {
+    "caregiver": [
+     "Check the resident first.",
+     "Call the on-call nurse or pharmacist now. Do not guess a fix.",
+     "Record the error and omission on the med record.",
+     "Tell the manager. Facts only."
+    ],
+    "manager": [
+     "Notify the physician (CBRF: immediately if it's an incident or change in condition).",
+     "Tell the guardian or representative.",
+     "Report to the MCO within 24 hours.",
+     "Review the med pass, not the person: was the system clear?"
+    ],
+    "owner": [
+     "Track errors as system data, not discipline counts."
+    ]
+   },
+   "notify": [
+    {
+     "key": "nurse",
+     "who": "On-call nurse or pharmacist",
+     "clock": "Now",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "house",
+     "cite": "House procedure",
+     "status": "house",
+     "required": false
+    },
+    {
+     "key": "rep",
+     "who": "Guardian or legal representative",
+     "clock": "Immediately",
+     "settings": [
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "DHS 83.12(5)(a)",
+     "status": "verified",
+     "required": true,
+     "hours": 0,
+     "source": "DHS83"
+    },
+    {
+     "key": "physician",
+     "who": "Resident's physician",
+     "clock": "Immediately",
+     "settings": [
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "DHS 83.12(5)(a)",
+     "status": "verified",
+     "required": true,
+     "hours": 0,
+     "source": "DHS83"
+    },
+    {
+     "key": "rep",
+     "who": "Guardian and placing agency (if any)",
+     "clock": "Promptly (no hour limit in the code)",
+     "settings": [
+      "afh"
+     ],
+     "layer": "state",
+     "cite": "DHS 88.07(2)(b)6",
+     "status": "verified",
+     "required": true,
+     "source": "DHS88"
+    },
+    {
+     "key": "mco",
+     "who": "MCO care team (IDT: care manager or nurse) for Family Care members",
+     "clock": "Within 24 hours. Phone, not voicemail, if unresolved or serious harm",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "payer",
+     "cite": "Inclusa Scope of Service s. 7.5 (AFH and CBRF)",
+     "status": "verified",
+     "required": true,
+     "hours": 24,
+     "source": "INCL_AFH"
+    }
+   ],
+   "document": [
+    "What was given, when, by whom (manager-only field)",
+    "Resident's condition and checks after",
+    "Who advised what"
+   ],
+   "wording": {
+    "casual": "I gave Gus the wrong pills by accident, my bad",
+    "professional": "At 8:05 AM, resident B-9 received the 8 AM medications prepared for another resident. On-call nurse notified at 8:08 AM; instructed to monitor vitals every hour for 4 hours. Physician notified at 8:30 AM."
+   },
+   "legal": [
+    {
+     "layer": "state",
+     "cite": "DHS 88.07(3)(e)1",
+     "says": "AFH: record errors and omissions on the medication record. No state reporting rule for med errors found.",
+     "status": "verified",
+     "settings": [
+      "afh"
+     ],
+     "source": "DHS88"
+    },
+    {
+     "layer": "state",
+     "cite": "DHS 83.12(5)(a)",
+     "says": "CBRF: an incident or change in condition means notify physician and representative immediately. No separate DQA med-error report found.",
+     "status": "verified",
+     "settings": [
+      "cbrf"
+     ],
+     "source": "DHS83"
+    },
+    {
+     "layer": "state",
+     "cite": "DHS 83.12(4)(c)",
+     "says": "If the error leads to ER or hospital care: DQA within 3 working days.",
+     "status": "verified",
+     "settings": [
+      "cbrf"
+     ],
+     "source": "DHS83"
+    },
+    {
+     "layer": "payer",
+     "cite": "Inclusa s. 7.5",
+     "says": "Incident to the IDT within 24 hours.",
+     "status": "verified",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "source": "INCL_AFH"
+    }
+   ],
+   "clarity": {
+    "q": "Do med errors go to the state?",
+    "a": "Not by themselves. Record them, call the nurse, physician and representative, and tell the MCO. If it leads to ER or hospital care, the injury report rules apply.",
+    "label": "reading"
+   },
+   "settings": [
+    "afh",
+    "cbrf"
+   ],
+   "checked": "2026-11-26"
+  },
+  {
+   "id": "WI-MED-02",
+   "title": "Resident refuses medication",
+   "category": "Medications",
+   "level": "nurse",
+   "roles": {
+    "caregiver": [
+     "Respect the refusal. Don't hide meds in food unless ordered and consented.",
+     "Offer again later per the plan.",
+     "Record the refusal and the reason given."
+    ],
+    "manager": [
+     "CBRF: repeated refusals go to the prescriber.",
+     "AFH: if a court order requires the med, notify the court and physician.",
+     "Talk with the resident about why. Update the plan."
+    ],
+    "owner": [
+     "Nothing unless it becomes a pattern."
+    ]
+   },
+   "notify": [
+    {
+     "key": "physician",
+     "who": "Prescriber",
+     "clock": "After 2 refusals in a row (CBRF)",
+     "settings": [
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "DHS 83.37(1)(k)",
+     "status": "unverified",
+     "required": true,
+     "source": "P02007"
+    },
+    {
+     "key": "court",
+     "who": "Court and responsible physician",
+     "clock": "If the med is court-ordered and not taken",
+     "settings": [
+      "afh"
+     ],
+     "layer": "state",
+     "cite": "DHS 88.07(3)(b)",
+     "status": "verified",
+     "required": true,
+     "source": "DHS88"
+    }
+   ],
+   "document": [
+    "Each refusal, time and reason",
+    "What was offered"
+   ],
+   "wording": {
+    "casual": "Pearl won't take her pills again, being stubborn",
+    "professional": "At 8:00 PM, resident B-7 declined her evening medications, stating she felt nauseated. Offered again at 8:45 PM; declined. Nurse notified at 9:00 PM."
+   },
+   "legal": [
+    {
+     "layer": "state",
+     "cite": "DHS 88.10(3)(q), 88.07(3)(b)",
+     "says": "Right to refuse unless court-ordered.",
+     "status": "verified",
+     "settings": [
+      "afh"
+     ],
+     "source": "DHS88"
+    },
+    {
+     "layer": "state",
+     "cite": "DHS 83.37(1)(k)",
+     "says": "CBRF prescriber notice after refusals. Cited from the earlier Rulebook, not re-read today.",
+     "status": "unverified",
+     "settings": [
+      "cbrf"
+     ]
+    }
+   ],
+   "clarity": {
+    "q": "Can I make a resident take their meds?",
+    "a": "No. Adults may refuse unless a court ordered the medication. Offer, record, and tell the nurse or prescriber.",
+    "label": "rule"
+   },
+   "settings": [
+    "afh",
+    "cbrf"
+   ],
+   "checked": "2026-11-26"
+  },
+  {
+   "id": "WI-MISS-01",
+   "title": "Resident is missing or left without anyone knowing",
+   "category": "Missing resident",
+   "level": "now",
+   "roles": {
+    "caregiver": [
+     "Quick search: rooms, bathrooms, closets, yard, cars. 10 minutes at most.",
+     "Call the police with a description and photo.",
+     "Call the manager. Keep others supervised."
+    ],
+    "manager": [
+     "Notify guardian and family.",
+     "MCO within 24 hours.",
+     "CBRF: DQA within 3 working days. AFH: licensing agency within 24 hours.",
+     "After return: health check, plan review, door and supervision review that respects rights."
+    ],
+    "owner": [
+     "Review the incident without blame. Check if alarms or staffing played a role."
+    ]
+   },
+   "notify": [
+    {
+     "key": "police",
+     "who": "Local police or sheriff",
+     "clock": "Immediately on discovering the resident is missing",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "DHS 83.12(4)(a)",
+     "status": "verified",
+     "required": true,
+     "hours": 0,
+     "source": "DHS83"
+    },
+    {
+     "key": "dqa",
+     "who": "DQA (form F-02208 self-report)",
+     "clock": "Within 3 working days, in writing",
+     "settings": [
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "DHS 83.12(4)(a)",
+     "status": "verified",
+     "required": true,
+     "business_days": 3,
+     "source": "DHS83"
+    },
+    {
+     "key": "licensing",
+     "who": "AFH licensing agency (county or DHS)",
+     "clock": "Within 24 hours",
+     "settings": [
+      "afh"
+     ],
+     "layer": "state",
+     "cite": "DHS 88.03(5)(e)1 (missing from the home)",
+     "status": "verified",
+     "required": true,
+     "hours": 24,
+     "source": "DHS88"
+    },
+    {
+     "key": "rep",
+     "who": "Guardian or legal representative",
+     "clock": "Immediately",
+     "settings": [
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "DHS 83.12(5)(a)",
+     "status": "verified",
+     "required": true,
+     "hours": 0,
+     "source": "DHS83"
+    },
+    {
+     "key": "rep",
+     "who": "Guardian and placing agency (if any)",
+     "clock": "Promptly (no hour limit in the code)",
+     "settings": [
+      "afh"
+     ],
+     "layer": "state",
+     "cite": "DHS 88.07(2)(b)6",
+     "status": "verified",
+     "required": true,
+     "source": "DHS88"
+    },
+    {
+     "key": "mco",
+     "who": "MCO care team (IDT: care manager or nurse) for Family Care members",
+     "clock": "Within 24 hours. Phone, not voicemail, if unresolved or serious harm",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "payer",
+     "cite": "Inclusa Scope of Service s. 7.5 (AFH and CBRF)",
+     "status": "verified",
+     "required": true,
+     "hours": 24,
+     "source": "INCL_AFH"
+    },
+    {
+     "key": "manager",
+     "who": "House manager or on-call manager",
+     "clock": "Right after police",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "house",
+     "cite": "House procedure",
+     "status": "house",
+     "required": false
+    }
+   ],
+   "document": [
+    "Last seen time and by whom",
+    "Clothes and description",
+    "Search steps with times",
+    "Time found and condition"
+   ],
+   "wording": {
+    "casual": "Earl took off again during shift change",
+    "professional": "At 2:50 PM, resident B-5 could not be located during a scheduled check. Last seen at 2:30 PM in the common room. Police notified at 3:02 PM."
+   },
+   "legal": [
+    {
+     "layer": "state",
+     "cite": "DHS 83.12(4)(a)",
+     "says": "CBRF: law enforcement immediately; DQA within 3 working days. Exception for a competent resident who chooses not to share where they are.",
+     "status": "verified",
+     "settings": [
+      "cbrf"
+     ],
+     "source": "DHS83"
+    },
+    {
+     "layer": "state",
+     "cite": "DHS 88.03(5)(e)1",
+     "says": "AFH: licensing agency within 24 hours.",
+     "status": "verified",
+     "settings": [
+      "afh"
+     ],
+     "source": "DHS88"
+    },
+    {
+     "layer": "federal",
+     "cite": "42 CFR 441.301(c)(4)",
+     "says": "HCBS settings: freedom of movement. Door alarms or restrictions need to be in the person's plan.",
+     "status": "verified",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "source": "SETTINGS"
+    },
+    {
+     "layer": "county",
+     "cite": "County silver alert and police procedures",
+     "says": "Some counties use a missing vulnerable adult alert. Ask your sheriff.",
+     "status": "open",
+     "settings": [
+      "afh",
+      "cbrf"
+     ]
+    }
+   ],
+   "clarity": {
+    "q": "How long do I search before calling police?",
+    "a": "Call police as soon as you know the resident is missing. A short building and yard search is fine, but the CBRF rule says immediately.",
+    "label": "rule"
+   },
+   "settings": [
+    "afh",
+    "cbrf"
+   ],
+   "checked": "2026-11-26"
+  },
+  {
+   "id": "WI-FIRE-01",
+   "title": "Fire, smoke, or evacuation",
+   "category": "Building and weather",
+   "level": "now",
+   "roles": {
+    "caregiver": [
+     "Get everyone out to the meeting place. Close doors behind you.",
+     "Call 911 from outside.",
+     "Count residents. Never go back in.",
+     "Call the manager."
+    ],
+    "manager": [
+     "Arrange temporary shelter and meds.",
+     "Notify guardians, family and MCO.",
+     "CBRF: DQA within 3 working days for fire or evacuation. AFH: licensing agency within 72 hours if the fire department responded.",
+     "Fire reports also go to DQA Plan Review on form F-62500."
+    ],
+    "owner": [
+     "Call insurance. Plan repairs before residents return."
+    ]
+   },
+   "notify": [
+    {
+     "key": "911",
+     "who": "911 / fire department",
+     "clock": "Now",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "Safety",
+     "status": "verified",
+     "required": true
+    },
+    {
+     "key": "dqa",
+     "who": "DQA (fire or catastrophe) and DQA Plan Review (form F-62500)",
+     "clock": "Within 3 working days",
+     "settings": [
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "DHS 83.12(4)(e)-(f); P-02007",
+     "status": "verified",
+     "required": true,
+     "business_days": 3,
+     "source": "P02007"
+    },
+    {
+     "key": "licensing",
+     "who": "AFH licensing agency",
+     "clock": "Within 72 hours if the fire department assisted",
+     "settings": [
+      "afh"
+     ],
+     "layer": "state",
+     "cite": "DHS 88.05(4)(e)",
+     "status": "verified",
+     "required": true,
+     "hours": 72,
+     "source": "DHS88"
+    },
+    {
+     "key": "licensing",
+     "who": "AFH licensing agency (damage that may be a hazard)",
+     "clock": "Within 7 days",
+     "settings": [
+      "afh"
+     ],
+     "layer": "state",
+     "cite": "DHS 88.03(5)(d)",
+     "status": "verified",
+     "required": true,
+     "hours": 168,
+     "source": "DHS88"
+    },
+    {
+     "key": "rep",
+     "who": "Guardian or legal representative",
+     "clock": "Immediately",
+     "settings": [
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "DHS 83.12(5)(a)",
+     "status": "verified",
+     "required": true,
+     "hours": 0,
+     "source": "DHS83"
+    },
+    {
+     "key": "rep",
+     "who": "Guardian and placing agency (if any)",
+     "clock": "Promptly (no hour limit in the code)",
+     "settings": [
+      "afh"
+     ],
+     "layer": "state",
+     "cite": "DHS 88.07(2)(b)6",
+     "status": "verified",
+     "required": true,
+     "source": "DHS88"
+    },
+    {
+     "key": "mco",
+     "who": "MCO care team (IDT: care manager or nurse) for Family Care members",
+     "clock": "Within 24 hours. Phone, not voicemail, if unresolved or serious harm",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "payer",
+     "cite": "Inclusa Scope of Service s. 7.5 (AFH and CBRF)",
+     "status": "verified",
+     "required": true,
+     "hours": 24,
+     "source": "INCL_AFH"
+    }
+   ],
+   "document": [
+    "Times: alarm, call, all out",
+    "Head count",
+    "Where residents went"
+   ],
+   "wording": {
+    "casual": "Kitchen fire, everybody out, crazy night",
+    "professional": "At 6:15 PM, the kitchen smoke alarm sounded due to a stovetop fire. All 4 residents evacuated to the front yard meeting point by 6:17 PM. Fire department arrived at 6:24 PM."
+   },
+   "legal": [
+    {
+     "layer": "state",
+     "cite": "DHS 88.05(4)",
+     "says": "AFH: evacuation plan, semi-annual drills, 2-minute evacuation evaluation, report fire within 72 hours.",
+     "status": "verified",
+     "settings": [
+      "afh"
+     ],
+     "source": "DHS88"
+    },
+    {
+     "layer": "state",
+     "cite": "DHS 83.12(4)(e)-(f); P-02007",
+     "says": "CBRF: fire, catastrophe, or evacuation to DQA within 3 working days.",
+     "status": "verified",
+     "settings": [
+      "cbrf"
+     ],
+     "source": "P02007"
+    },
+    {
+     "layer": "city",
+     "cite": "Local fire code and inspection",
+     "says": "Your municipality may inspect and set alarm rules.",
+     "status": "open",
+     "settings": [
+      "afh",
+      "cbrf"
+     ]
+    }
+   ],
+   "clarity": {
+    "q": "How fast do we report a fire?",
+    "a": "CBRF: DQA within 3 working days. AFH: licensing agency within 72 hours if the fire department came.",
+    "label": "rule"
+   },
+   "settings": [
+    "afh",
+    "cbrf"
+   ],
+   "checked": "2026-11-26"
+  },
+  {
+   "id": "WI-BLDG-01",
+   "title": "Power outage, no heat or water, or severe weather",
+   "category": "Building and weather",
+   "level": "wake",
+   "triage": [
+    {
+     "ask": "Smoke, gas smell, or anyone unsafe from heat or cold right now?",
+     "yes": "now",
+     "no": "wake"
+    }
+   ],
+   "roles": {
+    "caregiver": [
+     "Check residents on oxygen or powered equipment first.",
+     "Use flashlights, not candles.",
+     "Keep residents warm or cool. Follow the building sheet.",
+     "Call the manager if not fixed in 1 hour."
+    ],
+    "manager": [
+     "Call the utility. Decide on relocation if over a few hours in extreme weather.",
+     "Check refrigerated meds and food.",
+     "If residents are moved: CBRF DQA report within 3 working days; AFH damage that may be a hazard within 7 days."
+    ],
+    "owner": [
+     "Approve generator, hotel or relocation costs."
+    ]
+   },
+   "notify": [
+    {
+     "key": "manager",
+     "who": "House manager or on-call manager",
+     "clock": "If not fixed within 1 hour",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "house",
+     "cite": "House procedure",
+     "status": "house",
+     "required": false
+    },
+    {
+     "key": "dqa",
+     "who": "DQA (evacuation and relocation)",
+     "clock": "Within 3 working days if residents were relocated",
+     "settings": [
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "DHS 83.12(4)(f)",
+     "status": "verified",
+     "required": true,
+     "business_days": 3,
+     "source": "DHS83"
+    },
+    {
+     "key": "licensing",
+     "who": "AFH licensing agency",
+     "clock": "Within 7 days if damage may be a hazard",
+     "settings": [
+      "afh"
+     ],
+     "layer": "state",
+     "cite": "DHS 88.03(5)(d)",
+     "status": "verified",
+     "required": true,
+     "hours": 168,
+     "source": "DHS88"
+    }
+   ],
+   "document": [
+    "Start and end times",
+    "Temperatures",
+    "What was done for each resident"
+   ],
+   "wording": {
+    "casual": "Power's out, it's freezing in here",
+    "professional": "Power outage began at 1:10 AM. Indoor temperature 62 F at 2:00 AM. Residents given extra blankets; resident on oxygen switched to portable tank at 1:15 AM."
+   },
+   "legal": [
+    {
+     "layer": "state",
+     "cite": "DHS 83.12(4)(f)",
+     "says": "CBRF: evacuation and temporary relocation reported within 3 working days.",
+     "status": "verified",
+     "settings": [
+      "cbrf"
+     ],
+     "source": "DHS83"
+    },
+    {
+     "layer": "state",
+     "cite": "DHS 88.03(5)(d)",
+     "says": "AFH: damage that may present a hazard reported within 7 days.",
+     "status": "verified",
+     "settings": [
+      "afh"
+     ],
+     "source": "DHS88"
+    },
+    {
+     "layer": "county",
+     "cite": "County emergency management",
+     "says": "Warming and cooling centers, and medical-needs registries for oxygen users, vary by county.",
+     "status": "open",
+     "settings": [
+      "afh",
+      "cbrf"
+     ]
+    }
+   ],
+   "clarity": {
+    "q": "Do we report a power outage?",
+    "a": "Not by itself. It becomes a report if residents are evacuated or relocated (CBRF) or the building is damaged in a way that may be a hazard (AFH).",
+    "label": "rule"
+   },
+   "settings": [
+    "afh",
+    "cbrf"
+   ],
+   "checked": "2026-11-26"
+  },
+  {
+   "id": "WI-POL-01",
+   "title": "Police were called to the home",
+   "category": "Building and weather",
+   "level": "wake",
+   "roles": {
+    "caregiver": [
+     "Safety first. Follow officers' directions.",
+     "Call the manager."
+    ],
+    "manager": [
+     "CBRF: DQA within 3 working days if the event put residents or staff at risk.",
+     "Notify guardians of residents involved.",
+     "MCO within 24 hours if a member was involved."
+    ],
+    "owner": [
+     "Review if a pattern is developing."
+    ]
+   },
+   "notify": [
+    {
+     "key": "dqa",
+     "who": "DQA",
+     "clock": "Within 3 working days",
+     "settings": [
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "DHS 83.12(4)(b)",
+     "status": "verified",
+     "required": true,
+     "business_days": 3,
+     "source": "DHS83"
+    },
+    {
+     "key": "rep",
+     "who": "Guardian or legal representative",
+     "clock": "Immediately",
+     "settings": [
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "DHS 83.12(5)(a)",
+     "status": "verified",
+     "required": true,
+     "hours": 0,
+     "source": "DHS83"
+    },
+    {
+     "key": "rep",
+     "who": "Guardian and placing agency (if any)",
+     "clock": "Promptly (no hour limit in the code)",
+     "settings": [
+      "afh"
+     ],
+     "layer": "state",
+     "cite": "DHS 88.07(2)(b)6",
+     "status": "verified",
+     "required": true,
+     "source": "DHS88"
+    },
+    {
+     "key": "mco",
+     "who": "MCO care team (IDT: care manager or nurse) for Family Care members",
+     "clock": "Within 24 hours. Phone, not voicemail, if unresolved or serious harm",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "payer",
+     "cite": "Inclusa Scope of Service s. 7.5 (AFH and CBRF)",
+     "status": "verified",
+     "required": true,
+     "hours": 24,
+     "source": "INCL_AFH"
+    }
+   ],
+   "document": [
+    "Why police were called",
+    "Officer name or badge and case number",
+    "Outcome"
+   ],
+   "wording": {
+    "casual": "Cops came because Roy's son was screaming at staff",
+    "professional": "At 5:30 PM, a visitor became verbally aggressive toward staff and refused to leave. Police were called at 5:35 PM and the visitor left with officers at 5:50 PM. No residents were harmed."
+   },
+   "legal": [
+    {
+     "layer": "state",
+     "cite": "DHS 83.12(4)(b)",
+     "says": "CBRF: law enforcement called for an incident that jeopardizes resident or staff safety, DQA within 3 working days.",
+     "status": "verified",
+     "settings": [
+      "cbrf"
+     ],
+     "source": "DHS83"
+    },
+    {
+     "layer": "state",
+     "cite": "DHS 88",
+     "says": "AFH: no separate police-call report found; report under abuse, restraint, or death rules if they apply.",
+     "status": "verified",
+     "settings": [
+      "afh"
+     ],
+     "source": "DHS88"
+    }
+   ],
+   "clarity": {
+    "q": "Do we report every police visit?",
+    "a": "CBRF: when the call was about something that put residents or staff at risk, yes, within 3 working days. AFH: only if another reporting rule applies.",
+    "label": "rule"
+   },
+   "settings": [
+    "afh",
+    "cbrf"
+   ],
+   "checked": "2026-11-26"
+  },
+  {
+   "id": "WI-ILL-01",
+   "title": "Contagious illness or outbreak (flu, COVID, norovirus, scabies)",
+   "category": "Health changes",
+   "level": "nurse",
+   "roles": {
+    "caregiver": [
+     "Use gloves and handwashing. Keep the sick resident's items separate.",
+     "Tell the nurse and manager."
+    ],
+    "manager": [
+     "Call the local health department for any outbreak.",
+     "Category I diseases: call immediately. Category II: within 72 hours.",
+     "Tell families and the MCO. Limit spread with the least restriction possible."
+    ],
+    "owner": [
+     "Approve supplies and extra staffing."
+    ]
+   },
+   "notify": [
+    {
+     "key": "health",
+     "who": "Local health department",
+     "clock": "Outbreaks and Category I: immediately by phone. Category II: within 72 hours",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "county",
+     "cite": "Wis. Admin. Code ch. DHS 145; P-02007",
+     "status": "verified",
+     "required": true,
+     "hours": 0,
+     "source": "P02007"
+    }
+   ],
+   "document": [
+    "Who is sick, onset dates",
+    "Steps taken"
+   ],
+   "wording": {
+    "casual": "Half the house has the stomach bug",
+    "professional": "Between 11/20 and 11/22, 3 of 4 residents and 1 staff member developed vomiting and diarrhea. Local health department notified 11/22 at 9:00 AM."
+   },
+   "legal": [
+    {
+     "layer": "county",
+     "cite": "DHS 145; P-02007",
+     "says": "Reports go to the local (county or city) health officer.",
+     "status": "verified",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "source": "P02007"
+    },
+    {
+     "layer": "federal",
+     "cite": "42 CFR 441.301(c)(4)",
+     "says": "Visitor limits during an outbreak must be time-limited and justified; HCBS rights still apply.",
+     "status": "unverified",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "source": "SETTINGS"
+    }
+   ],
+   "clarity": {
+    "q": "Who do we tell about an outbreak?",
+    "a": "Your local health department, right away for an outbreak. They guide next steps.",
+    "label": "rule"
+   },
+   "settings": [
+    "afh",
+    "cbrf"
+   ],
+   "checked": "2026-11-26"
+  },
+  {
+   "id": "WI-BEH-01",
+   "title": "Resident hits or hurts another resident",
+   "category": "Behavior and aggression",
+   "level": "wake",
+   "roles": {
+    "caregiver": [
+     "Separate them calmly. Check both for injury.",
+     "Get the nurse for any injury; 911 if serious.",
+     "Write what you saw, not what you think caused it."
+    ],
+    "manager": [
+     "Notify both residents' guardians (CBRF: immediately for abuse allegations).",
+     "Abuse by a resident follows elder adult at risk or adult at risk rules (s. 46.90, 55.043), not caregiver misconduct.",
+     "MCO within 24 hours for both if members.",
+     "Update both behavior support plans."
+    ],
+    "owner": [
+     "Check staffing at that time of day."
+    ]
+   },
+   "notify": [
+    {
+     "key": "rep",
+     "who": "Legal representatives of both residents",
+     "clock": "Immediately for an abuse allegation",
+     "settings": [
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "DHS 83.12(5)(b)",
+     "status": "verified",
+     "required": true,
+     "hours": 0,
+     "source": "DHS83"
+    },
+    {
+     "key": "licensing",
+     "who": "AFH licensing agency",
+     "clock": "Immediately if you suspect abuse",
+     "settings": [
+      "afh"
+     ],
+     "layer": "state",
+     "cite": "DHS 88.11(1)",
+     "status": "verified",
+     "required": true,
+     "hours": 0,
+     "source": "DHS88"
+    },
+    {
+     "key": "aps",
+     "who": "County elder adult or adult at risk agency",
+     "clock": "When required by s. 46.90 or 55.043 (see that scenario)",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "county",
+     "cite": "Wis. Stat. 46.90(4)(ad); DHS 83.12(2)(b)",
+     "status": "verified",
+     "required": true,
+     "source": "S4690"
+    },
+    {
+     "key": "mco",
+     "who": "MCO care team (IDT: care manager or nurse) for Family Care members",
+     "clock": "Within 24 hours. Phone, not voicemail, if unresolved or serious harm",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "payer",
+     "cite": "Inclusa Scope of Service s. 7.5 (AFH and CBRF)",
+     "status": "verified",
+     "required": true,
+     "hours": 24,
+     "source": "INCL_AFH"
+    }
+   ],
+   "document": [
+    "What each person did, in order",
+    "Injuries",
+    "How it ended"
+   ],
+   "wording": {
+    "casual": "Walt went off and hit Gus for no reason",
+    "professional": "At 5:20 PM in the dining room, resident M-2 struck resident M-4 once on the upper arm with an open hand. Staff separated the residents. No visible injury to M-4."
+   },
+   "legal": [
+    {
+     "layer": "state",
+     "cite": "DHS 83.12(2)(b)",
+     "says": "CBRF: allegations against a non-caregiver or resident follow s. 46.90 and 55.043.",
+     "status": "verified",
+     "settings": [
+      "cbrf"
+     ],
+     "source": "DHS83"
+    },
+    {
+     "layer": "state",
+     "cite": "DHS 88.11(1)",
+     "says": "AFH: suspected abuse or neglect to the licensing agency immediately; crimes to law enforcement.",
+     "status": "verified",
+     "settings": [
+      "afh"
+     ],
+     "source": "DHS88"
+    }
+   ],
+   "clarity": {
+    "q": "Is resident-on-resident contact abuse I must report?",
+    "a": "It may be. Notify representatives and the licensing agency (AFH) right away, then follow the adult at risk rules. Don't label it in writing; describe it.",
+    "label": "reading"
+   },
+   "settings": [
+    "afh",
+    "cbrf"
+   ],
+   "checked": "2026-11-26"
+  },
+  {
+   "id": "WI-BEH-02",
+   "title": "Resident is aggressive toward staff",
+   "category": "Behavior and aggression",
+   "level": "wake",
+   "roles": {
+    "caregiver": [
+     "Step back and give space. Don't restrain.",
+     "Get help or call 911 if anyone is in danger.",
+     "Get first aid for yourself. Report your injury."
+    ],
+    "manager": [
+     "Check on the staff member. Workers' comp report if hurt.",
+     "Review triggers and update the behavior plan.",
+     "Tell the representative and MCO."
+    ],
+    "owner": [
+     "Make sure the injured worker is supported, not blamed."
+    ]
+   },
+   "notify": [
+    {
+     "key": "rep",
+     "who": "Guardian or legal representative",
+     "clock": "Immediately",
+     "settings": [
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "DHS 83.12(5)(a)",
+     "status": "verified",
+     "required": true,
+     "hours": 0,
+     "source": "DHS83"
+    },
+    {
+     "key": "rep",
+     "who": "Guardian and placing agency (if any)",
+     "clock": "Promptly (no hour limit in the code)",
+     "settings": [
+      "afh"
+     ],
+     "layer": "state",
+     "cite": "DHS 88.07(2)(b)6",
+     "status": "verified",
+     "required": true,
+     "source": "DHS88"
+    },
+    {
+     "key": "mco",
+     "who": "MCO care team (IDT: care manager or nurse) for Family Care members",
+     "clock": "Within 24 hours. Phone, not voicemail, if unresolved or serious harm",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "payer",
+     "cite": "Inclusa Scope of Service s. 7.5 (AFH and CBRF)",
+     "status": "verified",
+     "required": true,
+     "hours": 24,
+     "source": "INCL_AFH"
+    },
+    {
+     "key": "insurer",
+     "who": "Workers' compensation carrier",
+     "clock": "If a worker is hurt (follow your carrier's timeline)",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "Wis. Stat. ch. 102",
+     "status": "unverified",
+     "required": false
+    }
+   ],
+   "document": [
+    "What happened before (trigger)",
+    "What was tried",
+    "Injuries to anyone"
+   ],
+   "wording": {
+    "casual": "Roy punched me in the face during cares",
+    "professional": "At 7:45 PM during evening cares, resident C-3 struck caregiver on the left cheek with a closed fist. Caregiver stepped back and left the room. Manager notified at 7:50 PM."
+   },
+   "legal": [
+    {
+     "layer": "state",
+     "cite": "DHS 88.10(3)(n); DHS 83",
+     "says": "No restraint except a true emergency (see restraint scenario).",
+     "status": "verified",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "source": "DHS88"
+    },
+    {
+     "layer": "federal",
+     "cite": "OSHA General Duty Clause",
+     "says": "Employers must address known workplace violence hazards.",
+     "status": "unverified",
+     "settings": [
+      "afh",
+      "cbrf"
+     ]
+    }
+   ],
+   "clarity": {
+    "q": "Can I hold a resident who is hitting me?",
+    "a": "Only in an emergency to prevent injury, and it must be reported. Step away and get help first.",
+    "label": "rule"
+   },
+   "settings": [
+    "afh",
+    "cbrf"
+   ],
+   "checked": "2026-11-26"
+  },
+  {
+   "id": "WI-RESTR-01",
+   "title": "Staff physically held or restrained a resident in an emergency",
+   "category": "Behavior and aggression",
+   "level": "wake",
+   "roles": {
+    "caregiver": [
+     "Use the least force for the shortest time. Release as soon as safe.",
+     "Call for emergency help if needed.",
+     "Tell the manager now."
+    ],
+    "manager": [
+     "AFH: report to the licensing agency by the next business day with what happened and outcomes.",
+     "CBRF: document it in the record; DQA only if another rule applies.",
+     "Continued or planned use needs DHS approval (P-02572) and MCO review.",
+     "Check for injury to everyone."
+    ],
+    "owner": [
+     "Make sure staff are trained and that a plan exists so it doesn't repeat."
+    ]
+   },
+   "notify": [
+    {
+     "key": "licensing",
+     "who": "AFH licensing agency",
+     "clock": "By the next business day",
+     "settings": [
+      "afh"
+     ],
+     "layer": "state",
+     "cite": "DHS 88.10(3)(n)2",
+     "status": "verified",
+     "required": true,
+     "business_days": 1,
+     "source": "DHS88"
+    },
+    {
+     "key": "911",
+     "who": "Law enforcement or emergency help",
+     "clock": "As soon as possible during the emergency",
+     "settings": [
+      "afh"
+     ],
+     "layer": "state",
+     "cite": "DHS 88.10(3)(n)2",
+     "status": "verified",
+     "required": true,
+     "hours": 0,
+     "source": "DHS88"
+    },
+    {
+     "key": "rep",
+     "who": "Guardian or legal representative",
+     "clock": "Immediately",
+     "settings": [
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "DHS 83.12(5)(a)",
+     "status": "verified",
+     "required": true,
+     "hours": 0,
+     "source": "DHS83"
+    },
+    {
+     "key": "rep",
+     "who": "Guardian and placing agency (if any)",
+     "clock": "Promptly (no hour limit in the code)",
+     "settings": [
+      "afh"
+     ],
+     "layer": "state",
+     "cite": "DHS 88.07(2)(b)6",
+     "status": "verified",
+     "required": true,
+     "source": "DHS88"
+    },
+    {
+     "key": "mco",
+     "who": "MCO care team (IDT: care manager or nurse) for Family Care members",
+     "clock": "Within 24 hours. Phone, not voicemail, if unresolved or serious harm",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "payer",
+     "cite": "Inclusa Scope of Service s. 7.5 (AFH and CBRF)",
+     "status": "verified",
+     "required": true,
+     "hours": 24,
+     "source": "INCL_AFH"
+    }
+   ],
+   "document": [
+    "Why it was needed",
+    "Type and length of hold",
+    "Injuries",
+    "Outcome"
+   ],
+   "wording": {
+    "casual": "Had to hold Earl down, he was going nuts",
+    "professional": "At 9:10 PM, resident B-5 attempted to strike another resident with a chair. Two staff held his arms for approximately 30 seconds until he set the chair down. No injuries observed."
+   },
+   "legal": [
+    {
+     "layer": "state",
+     "cite": "DHS 88.10(3)(n)",
+     "says": "AFH: freedom from restraint and seclusion; emergency hold only to prevent injury, report next business day.",
+     "status": "verified",
+     "settings": [
+      "afh"
+     ],
+     "source": "DHS88"
+    },
+    {
+     "layer": "state",
+     "cite": "Wis. Stat. 50.09(1)(k); P-02007",
+     "says": "CBRF: emergency restraint documented in the record; no DQA report unless another category applies.",
+     "status": "verified",
+     "settings": [
+      "cbrf"
+     ],
+     "source": "P02007"
+    },
+    {
+     "layer": "payer",
+     "cite": "Family Care contract (restrictive measures)",
+     "says": "MCOs report approved restrictive measures quarterly; any planned measure needs approval (P-02572).",
+     "status": "unverified",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "source": "FCCONTRACT"
+    }
+   ],
+   "clarity": {
+    "q": "When can staff restrain a resident?",
+    "a": "Only in an emergency to prevent injury. AFHs report it by the next business day. Any planned restraint needs DHS approval first.",
+    "label": "rule"
+   },
+   "settings": [
+    "afh",
+    "cbrf"
+   ],
+   "checked": "2026-11-26"
+  },
+  {
+   "id": "WI-BEH-03",
+   "title": "Resident talks about wanting to die or hurting themselves",
+   "category": "Behavior and aggression",
+   "level": "wake",
+   "triage": [
+    {
+     "ask": "Do they have a plan or the means right now, or have they hurt themselves?",
+     "yes": "now",
+     "no": "wake"
+    }
+   ],
+   "roles": {
+    "caregiver": [
+     "Stay with them. Listen. Don't argue or promise secrecy.",
+     "Remove obvious means if safe to do.",
+     "Call the manager now. 911 or 988 if in danger."
+    ],
+    "manager": [
+     "Call the nurse or crisis line (988, or county crisis).",
+     "Tell the guardian and physician.",
+     "Plan supervision and follow-up with a mental health provider."
+    ],
+    "owner": [
+     "Make sure staff have crisis training."
+    ]
+   },
+   "notify": [
+    {
+     "key": "crisis",
+     "who": "988 Suicide and Crisis Lifeline or county crisis line",
+     "clock": "Now if any risk",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "county",
+     "cite": "County crisis services",
+     "status": "verified",
+     "required": false
+    },
+    {
+     "key": "rep",
+     "who": "Guardian or legal representative",
+     "clock": "Immediately",
+     "settings": [
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "DHS 83.12(5)(a)",
+     "status": "verified",
+     "required": true,
+     "hours": 0,
+     "source": "DHS83"
+    },
+    {
+     "key": "physician",
+     "who": "Resident's physician",
+     "clock": "Immediately",
+     "settings": [
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "DHS 83.12(5)(a)",
+     "status": "verified",
+     "required": true,
+     "hours": 0,
+     "source": "DHS83"
+    },
+    {
+     "key": "rep",
+     "who": "Guardian and placing agency (if any)",
+     "clock": "Promptly (no hour limit in the code)",
+     "settings": [
+      "afh"
+     ],
+     "layer": "state",
+     "cite": "DHS 88.07(2)(b)6",
+     "status": "verified",
+     "required": true,
+     "source": "DHS88"
+    },
+    {
+     "key": "mco",
+     "who": "MCO care team (IDT: care manager or nurse) for Family Care members",
+     "clock": "Within 24 hours. Phone, not voicemail, if unresolved or serious harm",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "payer",
+     "cite": "Inclusa Scope of Service s. 7.5 (AFH and CBRF)",
+     "status": "verified",
+     "required": true,
+     "hours": 24,
+     "source": "INCL_AFH"
+    }
+   ],
+   "document": [
+    "Their exact words",
+    "What you did",
+    "Who you called"
+   ],
+   "wording": {
+    "casual": "June keeps saying she wants to be dead, probably just a bad day",
+    "professional": "At 3:00 PM, resident M-3 stated, 'I don't want to be here anymore.' Staff stayed with resident and notified the manager at 3:05 PM."
+   },
+   "legal": [
+    {
+     "layer": "county",
+     "cite": "Wis. Stat. 51.15 and county crisis",
+     "says": "County crisis teams handle emergency mental health response.",
+     "status": "unverified",
+     "settings": [
+      "afh",
+      "cbrf"
+     ]
+    }
+   ],
+   "clarity": {
+    "q": "Is a passive statement about dying an emergency?",
+    "a": "Treat it seriously every time. Call the manager now; call 988 or 911 if there's a plan or means.",
+    "label": "reading"
+   },
+   "settings": [
+    "afh",
+    "cbrf"
+   ],
+   "checked": "2026-11-26"
+  },
+  {
+   "id": "WI-ABUSE-01",
+   "title": "Someone says a caregiver abused or neglected a resident",
+   "category": "Abuse, neglect, money",
+   "level": "wake",
+   "roles": {
+    "caregiver": [
+     "Make sure the resident is safe right now.",
+     "Tell the manager or designated reporter today. You may also report directly.",
+     "Don't investigate or confront the coworker."
+    ],
+    "manager": [
+     "Protect residents immediately: the accused staff member is off resident contact pending review.",
+     "Notify the legal representative immediately (CBRF) and the licensing agency immediately (AFH).",
+     "Investigate and document. Use the F-00161 worksheet.",
+     "Report to DQA's Misconduct Reporting System within 7 calendar days if it meets the definitions.",
+     "Call police if a crime may have happened."
+    ],
+    "owner": [
+     "Don't retaliate against reporters. Keep it confidential and factual."
+    ]
+   },
+   "notify": [
+    {
+     "key": "dqa",
+     "who": "DQA Misconduct Reporting System (F-62447)",
+     "clock": "Within 7 calendar days of knowing",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "DHS 13.05; DHS 83.12(2)(a)2",
+     "status": "verified",
+     "required": true,
+     "hours": 168,
+     "source": "F00161"
+    },
+    {
+     "key": "rep",
+     "who": "Legal representative",
+     "clock": "Immediately (abuse or neglect)",
+     "settings": [
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "DHS 83.12(5)(b)",
+     "status": "verified",
+     "required": true,
+     "hours": 0,
+     "source": "DHS83"
+    },
+    {
+     "key": "licensing",
+     "who": "AFH licensing agency",
+     "clock": "Immediately",
+     "settings": [
+      "afh"
+     ],
+     "layer": "state",
+     "cite": "DHS 88.11(1)",
+     "status": "verified",
+     "required": true,
+     "hours": 0,
+     "source": "DHS88"
+    },
+    {
+     "key": "police",
+     "who": "Law enforcement",
+     "clock": "Immediately if a crime may have occurred",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "DHS 88.11(1); DHS 83.12(2)(c)",
+     "status": "verified",
+     "required": true,
+     "hours": 0,
+     "source": "DHS88"
+    },
+    {
+     "key": "mco",
+     "who": "MCO care team (IDT: care manager or nurse) for Family Care members",
+     "clock": "Within 24 hours. Phone, not voicemail, if unresolved or serious harm",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "payer",
+     "cite": "Inclusa Scope of Service s. 7.5 (AFH and CBRF)",
+     "status": "verified",
+     "required": true,
+     "hours": 24,
+     "source": "INCL_AFH"
+    },
+    {
+     "key": "owner",
+     "who": "Owner or licensee",
+     "clock": "Same day, privately",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "house",
+     "cite": "House procedure",
+     "status": "house",
+     "required": false
+    }
+   ],
+   "document": [
+    "Who reported, what they said, when",
+    "Steps to protect residents",
+    "Investigation notes",
+    "Worksheet result"
+   ],
+   "wording": {
+    "casual": "Sam was rough with Walt again, everyone knows it",
+    "professional": "At 10:00 AM, a caregiver reported observing another staff member pull resident M-2's arm firmly during a transfer at 7:30 AM. Resident has no visible injury. Staff member removed from resident care pending review."
+   },
+   "legal": [
+    {
+     "layer": "state",
+     "cite": "DHS 13.05; F-00161",
+     "says": "Protect immediately, investigate, report to DQA within 7 calendar days when required.",
+     "status": "verified",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "source": "F00161"
+    },
+    {
+     "layer": "state",
+     "cite": "Wis. Stat. 46.90(4)(b)",
+     "says": "No retaliation against good-faith reporters; retaliation within 120 days is presumed.",
+     "status": "verified",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "source": "S4690"
+    },
+    {
+     "layer": "payer",
+     "cite": "Inclusa s. 7.5",
+     "says": "Incident to the IDT within 24 hours; tell the MCO when you notify a regulator.",
+     "status": "verified",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "source": "INCL_AFH"
+    }
+   ],
+   "clarity": {
+    "q": "Who decides if it's reportable?",
+    "a": "The facility investigates and uses the DQA worksheet. When in doubt, report. Good-faith reporters are protected.",
+    "label": "rule"
+   },
+   "settings": [
+    "afh",
+    "cbrf"
+   ],
+   "checked": "2026-11-26"
+  },
+  {
+   "id": "WI-ABUSE-02",
+   "title": "Resident's money or belongings are missing",
+   "category": "Abuse, neglect, money",
+   "level": "morning",
+   "roles": {
+    "caregiver": [
+     "Help look. Don't accuse anyone.",
+     "Tell the manager."
+    ],
+    "manager": [
+     "Search and check records.",
+     "CBRF: notify the legal representative within 72 hours for suspected misappropriation.",
+     "If a caregiver may be involved: misconduct worksheet; DQA within 7 calendar days when required.",
+     "Police for theft."
+    ],
+    "owner": [
+     "Review how resident funds and valuables are tracked."
+    ]
+   },
+   "notify": [
+    {
+     "key": "rep",
+     "who": "Legal representative",
+     "clock": "Within 72 hours (misappropriation)",
+     "settings": [
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "DHS 83.12(5)(b)",
+     "status": "verified",
+     "required": true,
+     "hours": 72,
+     "source": "DHS83"
+    },
+    {
+     "key": "licensing",
+     "who": "AFH licensing agency",
+     "clock": "Immediately if you suspect financial exploitation",
+     "settings": [
+      "afh"
+     ],
+     "layer": "state",
+     "cite": "DHS 88.11(1); 88.10(3)(m)",
+     "status": "verified",
+     "required": true,
+     "hours": 0,
+     "source": "DHS88"
+    },
+    {
+     "key": "dqa",
+     "who": "DQA Misconduct Reporting System",
+     "clock": "Within 7 calendar days if a caregiver may be responsible",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "DHS 13.05",
+     "status": "verified",
+     "required": true,
+     "hours": 168,
+     "source": "F00161"
+    },
+    {
+     "key": "police",
+     "who": "Police",
+     "clock": "If theft is suspected",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "DHS 83.12(2)(c)",
+     "status": "verified",
+     "required": false,
+     "source": "DHS83"
+    }
+   ],
+   "document": [
+    "What is missing, value, last seen",
+    "Search steps"
+   ],
+   "wording": {
+    "casual": "Ruth's ring got stolen, probably the new girl",
+    "professional": "Resident M-1 reported at 9:00 AM that her gold ring was not in her jewelry box. Last seen by resident on 11/24. Room searched with resident's permission; not found."
+   },
+   "legal": [
+    {
+     "layer": "state",
+     "cite": "DHS 83.12(5)(b)",
+     "says": "CBRF: misappropriation, legal representative within 72 hours.",
+     "status": "verified",
+     "settings": [
+      "cbrf"
+     ],
+     "source": "DHS83"
+    },
+    {
+     "layer": "state",
+     "cite": "DHS 13.05",
+     "says": "Caregiver misappropriation is reportable misconduct.",
+     "status": "verified",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "source": "F00161"
+    }
+   ],
+   "clarity": {
+    "q": "Is a missing item always a report?",
+    "a": "Not always. Search first. If a caregiver may have taken it, use the misconduct worksheet; theft goes to police.",
+    "label": "reading"
+   },
+   "settings": [
+    "afh",
+    "cbrf"
+   ],
+   "checked": "2026-11-26"
+  },
+  {
+   "id": "WI-ABUSE-03",
+   "title": "Family member or visitor may be harming or exploiting a resident",
+   "category": "Abuse, neglect, money",
+   "level": "wake",
+   "roles": {
+    "caregiver": [
+     "Keep the resident safe. Tell the manager today."
+    ],
+    "manager": [
+     "Report to the county elder adult at risk (60+) or adult at risk agency, or law enforcement.",
+     "Tell the guardian, unless the guardian is the suspected person.",
+     "Document facts. Respect the resident's right to visitors unless there's a safety plan."
+    ],
+    "owner": [
+     "Support the manager. Don't confront the family member directly."
+    ]
+   },
+   "notify": [
+    {
+     "key": "aps",
+     "who": "County elder adult at risk or adult at risk agency, or law enforcement",
+     "clock": "Promptly. The statute sets no hour limit; it has a 24-hour response duty on the county",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "county",
+     "cite": "Wis. Stat. 46.90(4)(ad); 55.043",
+     "status": "verified",
+     "required": true,
+     "source": "S4690"
+    },
+    {
+     "key": "licensing",
+     "who": "AFH licensing agency",
+     "clock": "Immediately",
+     "settings": [
+      "afh"
+     ],
+     "layer": "state",
+     "cite": "DHS 88.11(1)",
+     "status": "verified",
+     "required": true,
+     "hours": 0,
+     "source": "DHS88"
+    },
+    {
+     "key": "mco",
+     "who": "MCO care team (IDT: care manager or nurse) for Family Care members",
+     "clock": "Within 24 hours. Phone, not voicemail, if unresolved or serious harm",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "payer",
+     "cite": "Inclusa Scope of Service s. 7.5 (AFH and CBRF)",
+     "status": "verified",
+     "required": true,
+     "hours": 24,
+     "source": "INCL_AFH"
+    }
+   ],
+   "document": [
+    "What you saw or heard, word for word",
+    "Dates and times"
+   ],
+   "wording": {
+    "casual": "Pearl's son is draining her account",
+    "professional": "On 11/20, resident B-7 told staff her son has her debit card and she has not received her spending money for two weeks."
+   },
+   "legal": [
+    {
+     "layer": "state",
+     "cite": "Wis. Stat. 46.90(4)(ad)",
+     "says": "Employees of DHS-licensed entities must report when the elder adult is at imminent risk and can't decide, or others are at risk. Immunity for good faith.",
+     "status": "verified",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "source": "S4690"
+    },
+    {
+     "layer": "county",
+     "cite": "County adult protective services",
+     "says": "Each county runs intake. Put your county's number in the home's settings.",
+     "status": "verified",
+     "settings": [
+      "afh",
+      "cbrf"
+     ]
+    }
+   ],
+   "clarity": {
+    "q": "Where do I report abuse by a family member?",
+    "a": "Your county's elder adult at risk or adult at risk agency, or the police. AFHs also tell the licensing agency immediately.",
+    "label": "rule"
+   },
+   "settings": [
+    "afh",
+    "cbrf"
+   ],
+   "checked": "2026-11-26"
+  },
+  {
+   "id": "WI-STAFF-01",
+   "title": "Next shift no-show or call-in, not enough staff",
+   "category": "Staffing",
+   "level": "wake",
+   "roles": {
+    "caregiver": [
+     "Don't leave residents alone. Stay until relieved or the manager says otherwise.",
+     "Work through the call-in list.",
+     "Call the manager if not covered by the time your rules say."
+    ],
+    "manager": [
+     "Fill the shift or come in.",
+     "If a resident can't self-evacuate, someone must be in the home.",
+     "Log the gap. Tell the MCO if services in a plan couldn't be given."
+    ],
+    "owner": [
+     "Approve overtime or agency staff. Look at the backup plan."
+    ]
+   },
+   "notify": [
+    {
+     "key": "manager",
+     "who": "House manager or on-call manager",
+     "clock": "When the call-in list fails",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "house",
+     "cite": "House procedure",
+     "status": "house",
+     "required": false
+    },
+    {
+     "key": "mco",
+     "who": "MCO care team",
+     "clock": "If planned services were missed",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "payer",
+     "cite": "Inclusa Scope of Service s. 6.6 (documented backup plan)",
+     "status": "verified",
+     "required": false,
+     "source": "INCL_AFH"
+    }
+   ],
+   "document": [
+    "Who called in, when",
+    "Who covered, hours worked"
+   ],
+   "wording": {
+    "casual": "Jess bailed again, nobody's coming",
+    "professional": "Scheduled 10 PM caregiver called at 9:15 PM to report illness. Call-in list contacted 9:20 to 9:45 PM; no coverage. Manager notified at 9:50 PM."
+   },
+   "legal": [
+    {
+     "layer": "state",
+     "cite": "DHS 88.05(4)(f); 88.04(2)(b); 88.07(1)(e)",
+     "says": "AFH: someone must be in the home when a resident can't self-evacuate, awake if continuous care is needed, and a substitute arranged when the licensee is gone overnight.",
+     "status": "verified",
+     "settings": [
+      "afh"
+     ],
+     "source": "DHS88"
+    },
+    {
+     "layer": "state",
+     "cite": "DHS 83 staffing",
+     "says": "CBRF: enough awake or asleep staff per class and residents' needs.",
+     "status": "unverified",
+     "settings": [
+      "cbrf"
+     ]
+    },
+    {
+     "layer": "payer",
+     "cite": "Inclusa s. 6.1, 6.6",
+     "says": "Adequate staffing and a documented backup plan.",
+     "status": "verified",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "source": "INCL_AFH"
+    },
+    {
+     "layer": "federal",
+     "cite": "FLSA",
+     "says": "Overtime and sleep-time pay rules apply to whoever covers.",
+     "status": "unverified",
+     "settings": [
+      "afh",
+      "cbrf"
+     ]
+    }
+   ],
+   "clarity": {
+    "q": "Can I leave when my shift ends if no one comes?",
+    "a": "Not if residents would be alone. Call the manager; staying until relieved protects residents and you.",
+    "label": "reading"
+   },
+   "settings": [
+    "afh",
+    "cbrf"
+   ],
+   "checked": "2026-11-26"
+  },
+  {
+   "id": "WI-STAFF-02",
+   "title": "Staff member seems impaired, or a worker is charged with a crime",
+   "category": "Staffing",
+   "level": "wake",
+   "roles": {
+    "caregiver": [
+     "If a coworker seems impaired, keep residents safe and call the manager now.",
+     "Don't confront them alone."
+    ],
+    "manager": [
+     "Remove from resident care. Arrange a safe ride home.",
+     "A pending charge or conviction that relates to care: AFH licensing agency within 48 hours; DQA by the next business day.",
+     "Recheck the background (caregiver law)."
+    ],
+    "owner": [
+     "Follow your HR policy. Talk to an employment lawyer before discipline."
+    ]
+   },
+   "notify": [
+    {
+     "key": "licensing",
+     "who": "AFH licensing agency",
+     "clock": "Within 48 hours of a pending charge or conviction (licensee or service provider)",
+     "settings": [
+      "afh"
+     ],
+     "layer": "state",
+     "cite": "DHS 88.03(5)(c)",
+     "status": "verified",
+     "required": true,
+     "hours": 48,
+     "source": "DHS88"
+    },
+    {
+     "key": "dqa",
+     "who": "DQA",
+     "clock": "By the next business day after learning of a charge",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "DHS 12.07(2); P-02007",
+     "status": "verified",
+     "required": true,
+     "business_days": 1,
+     "source": "P02007"
+    },
+    {
+     "key": "owner",
+     "who": "Owner or licensee",
+     "clock": "Same day",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "house",
+     "cite": "House procedure",
+     "status": "house",
+     "required": false
+    }
+   ],
+   "document": [
+    "What you saw (smell, speech, balance), not labels",
+    "Times"
+   ],
+   "wording": {
+    "casual": "Mike was totally drunk on shift",
+    "professional": "At 11:30 PM, staff member was observed with slurred speech and unsteady walking. Removed from resident care at 11:35 PM; manager arrived 12:05 AM."
+   },
+   "legal": [
+    {
+     "layer": "state",
+     "cite": "DHS 12.07(2)",
+     "says": "Caregiver background law: report charges by the next business day.",
+     "status": "verified",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "source": "P02007"
+    },
+    {
+     "layer": "state",
+     "cite": "DHS 88.03(5)(c)",
+     "says": "AFH: crime substantially related to care, licensing agency within 48 hours.",
+     "status": "verified",
+     "settings": [
+      "afh"
+     ],
+     "source": "DHS88"
+    }
+   ],
+   "clarity": {
+    "q": "A caregiver told me they were arrested. Now what?",
+    "a": "If it could relate to caregiving, report: AFH licensing agency within 48 hours, DQA by the next business day. Keep them off resident care until it's sorted.",
+    "label": "rule"
+   },
+   "settings": [
+    "afh",
+    "cbrf"
+   ],
+   "checked": "2026-11-26"
+  },
+  {
+   "id": "WI-RIGHTS-01",
+   "title": "Resident refuses care (shower, cares, appointments)",
+   "category": "Rights and choices",
+   "level": "morning",
+   "roles": {
+    "caregiver": [
+     "Respect the no. Offer again later or with another caregiver.",
+     "Never force or threaten.",
+     "Log each refusal and what was offered."
+    ],
+    "manager": [
+     "Look for the reason: pain, fear, timing, privacy.",
+     "Update the plan with the resident and guardian.",
+     "If health is at risk: involve the nurse and physician."
+    ],
+    "owner": [
+     "None unless it repeats across homes."
+    ]
+   },
+   "notify": [
+    {
+     "key": "rep",
+     "who": "Guardian or representative",
+     "clock": "When refusals put health at risk",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "DHS 88.07(2)(b)6; DHS 83.12(5)(a)",
+     "status": "verified",
+     "required": false,
+     "source": "DHS88"
+    }
+   ],
+   "document": [
+    "Each refusal and alternatives offered",
+    "Health effects"
+   ],
+   "wording": {
+    "casual": "Hank refused his shower again, being difficult",
+    "professional": "Resident M-4 declined his scheduled 9 AM shower, stating he prefers afternoons. Offered a sponge bath; declined. Re-offered at 2 PM; accepted."
+   },
+   "legal": [
+    {
+     "layer": "state",
+     "cite": "DHS 88.10(3)(e), (j); DHS 83.32",
+     "says": "Self-direction and treatment choice.",
+     "status": "verified",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "source": "DHS88"
+    },
+    {
+     "layer": "federal",
+     "cite": "42 CFR 441.301(c)(4)",
+     "says": "HCBS settings: autonomy and choice in daily activities.",
+     "status": "verified",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "source": "SETTINGS"
+    }
+   ],
+   "clarity": {
+    "q": "Is it neglect if I don't make them shower?",
+    "a": "No, if you offer, document, and work the plan. Neglect is failing to provide care, not respecting an informed no.",
+    "label": "reading"
+   },
+   "settings": [
+    "afh",
+    "cbrf"
+   ],
+   "checked": "2026-11-26"
+  },
+  {
+   "id": "WI-RIGHTS-02",
+   "title": "Guardian and resident disagree (or family members disagree)",
+   "category": "Rights and choices",
+   "level": "morning",
+   "roles": {
+    "caregiver": [
+     "Stay neutral. Don't take sides or pass messages.",
+     "Refer decisions to the manager."
+    ],
+    "manager": [
+     "Check what the guardianship covers (person, estate, limited).",
+     "Follow the guardian's legal decisions, but tell the guardian the resident's wishes.",
+     "Offer the ombudsman (60+) or Disability Rights Wisconsin (under 60).",
+     "If you think the guardian isn't acting in the person's interest, call the county."
+    ],
+    "owner": [
+     "Stay out of family politics. Back the manager."
+    ]
+   },
+   "notify": [
+    {
+     "key": "ombudsman",
+     "who": "Ombudsman (1-800-815-0015) for residents 60+",
+     "clock": "Offer anytime",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "Wis. Stat. 16.009; BOALTC",
+     "status": "verified",
+     "required": false,
+     "source": "OMBUD"
+    },
+    {
+     "key": "aps",
+     "who": "County protective services",
+     "clock": "If a guardian may be harming the resident",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "county",
+     "cite": "Wis. Stat. ch. 54, 55",
+     "status": "unverified",
+     "required": false
+    }
+   ],
+   "document": [
+    "Each person's wishes, in their words",
+    "What decision was made and by whom"
+   ],
+   "wording": {
+    "casual": "Mom wants out but the daughter says no way",
+    "professional": "Resident C-1 stated she would like to visit her sister for the weekend. Guardian stated by phone at 2:00 PM that the visit is not approved at this time. Resident informed; ombudsman contact offered."
+   },
+   "legal": [
+    {
+     "layer": "state",
+     "cite": "DHS 88.10(3)(d); 88.04(2)(e)2",
+     "says": "Presumed competent unless adjudicated; if a guardian places someone who objects, notify the county ch. 55 agency.",
+     "status": "verified",
+     "settings": [
+      "afh"
+     ],
+     "source": "DHS88"
+    },
+    {
+     "layer": "state",
+     "cite": "Wis. Stat. ch. 54",
+     "says": "Guardianship scope set by the court order.",
+     "status": "unverified",
+     "settings": [
+      "afh",
+      "cbrf"
+     ]
+    }
+   ],
+   "clarity": {
+    "q": "Who decides: the guardian or the resident?",
+    "a": "The guardian, for decisions the court gave them. The resident still has rights and a voice. Offer the ombudsman when they disagree.",
+    "label": "reading"
+   },
+   "settings": [
+    "afh",
+    "cbrf"
+   ],
+   "checked": "2026-11-26"
+  },
+  {
+   "id": "WI-COMP-01",
+   "title": "Family member complains about care",
+   "category": "Rights and choices",
+   "level": "morning",
+   "roles": {
+    "caregiver": [
+     "Listen. Thank them. Don't argue or explain away.",
+     "Share only what the release list allows.",
+     "Write the complaint down and give it to the manager."
+    ],
+    "manager": [
+     "Call back within one business day (house goal).",
+     "Follow the written grievance procedure. Give a written summary of findings and actions.",
+     "Inclusa members: formal complaints to the IDT within 48 hours.",
+     "Remind them of the ombudsman and licensing agency. No retaliation."
+    ],
+    "owner": [
+     "See complaints by theme monthly."
+    ]
+   },
+   "notify": [
+    {
+     "key": "mco",
+     "who": "MCO care team",
+     "clock": "Formal complaints within 48 hours of receipt",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "payer",
+     "cite": "Inclusa Scope of Service s. 7.3",
+     "status": "verified",
+     "required": true,
+     "hours": 48,
+     "source": "INCL_AFH"
+    },
+    {
+     "key": "manager",
+     "who": "House manager or on-call manager",
+     "clock": "Same day",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "house",
+     "cite": "House procedure",
+     "status": "house",
+     "required": false
+    }
+   ],
+   "document": [
+    "The complaint in their words",
+    "Follow-up steps",
+    "Written summary to the resident or guardian (AFH)"
+   ],
+   "wording": {
+    "casual": "Roy's daughter is mad again about laundry",
+    "professional": "On 11/25 at 4:00 PM, a family member reported that resident C-3's clothing was returned to the wrong room twice this week. Manager to follow up by 11/26."
+   },
+   "legal": [
+    {
+     "layer": "state",
+     "cite": "DHS 88.10(5)",
+     "says": "AFH: grievance procedure, written summary, access to advocates, no retaliation.",
+     "status": "verified",
+     "settings": [
+      "afh"
+     ],
+     "source": "DHS88"
+    },
+    {
+     "layer": "state",
+     "cite": "DHS 83.40 (grievances)",
+     "says": "CBRF: written grievance procedure.",
+     "status": "unverified",
+     "settings": [
+      "cbrf"
+     ]
+    },
+    {
+     "layer": "payer",
+     "cite": "Inclusa s. 7.3",
+     "says": "Formal complaints to the IDT within 48 hours.",
+     "status": "verified",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "source": "INCL_AFH"
+    }
+   ],
+   "clarity": {
+    "q": "Do we have to tell the MCO about a family complaint?",
+    "a": "For Inclusa members, a formal complaint goes to the care team within 48 hours. Check other MCOs' rules.",
+    "label": "rule"
+   },
+   "settings": [
+    "afh",
+    "cbrf"
+   ],
+   "checked": "2026-11-26"
+  },
+  {
+   "id": "WI-DISCH-01",
+   "title": "Home wants to end a resident's stay (discharge)",
+   "category": "Rights and choices",
+   "level": "morning",
+   "roles": {
+    "manager": [
+     "Check the service agreement's discharge terms.",
+     "Give 30 days' written notice to resident, guardian, service coordinator, placing agency and representative.",
+     "Help find a new place. Only skip the 30 days for an emergency to prevent harm."
+    ],
+    "owner": [
+     "Approve the decision. Get legal advice if it's contested."
+    ],
+    "caregiver": [
+     "Keep care the same during the notice period."
+    ]
+   },
+   "notify": [
+    {
+     "key": "rep",
+     "who": "Resident, guardian, service coordinator, placing agency, representative",
+     "clock": "30 days' written notice",
+     "settings": [
+      "afh"
+     ],
+     "layer": "state",
+     "cite": "DHS 88.08",
+     "status": "verified",
+     "required": true,
+     "hours": 720,
+     "source": "DHS88"
+    },
+    {
+     "key": "rep",
+     "who": "Resident or legal representative",
+     "clock": "30 days' written notice (CBRF)",
+     "settings": [
+      "cbrf"
+     ],
+     "layer": "state",
+     "cite": "DHS 83 discharge rules",
+     "status": "unverified",
+     "required": true,
+     "hours": 720
+    },
+    {
+     "key": "mco",
+     "who": "MCO care team",
+     "clock": "Right away so they can find a new provider",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "payer",
+     "cite": "Payer contract",
+     "status": "unverified",
+     "required": false
+    }
+   ],
+   "document": [
+    "Reason",
+    "Notice copies and dates",
+    "Relocation help given"
+   ],
+   "wording": {
+    "casual": "We can't handle Earl anymore",
+    "professional": "The home is giving written 30-day notice of termination of services, effective 12/27, because resident B-5's assessed needs exceed the care the facility is licensed to provide."
+   },
+   "legal": [
+    {
+     "layer": "state",
+     "cite": "DHS 88.08",
+     "says": "AFH: 30 days' written notice, except emergency termination to prevent harm.",
+     "status": "verified",
+     "settings": [
+      "afh"
+     ],
+     "source": "DHS88"
+    },
+    {
+     "layer": "state",
+     "cite": "DHS 83.29 (discharge)",
+     "says": "CBRF: 30-day notice and listed reasons.",
+     "status": "unverified",
+     "settings": [
+      "cbrf"
+     ]
+    }
+   ],
+   "clarity": {
+    "q": "How much notice do we give to discharge?",
+    "a": "30 days in writing, to everyone listed. Emergencies to prevent harm are the only exception.",
+    "label": "rule"
+   },
+   "settings": [
+    "afh",
+    "cbrf"
+   ],
+   "checked": "2026-11-26"
+  },
+  {
+   "id": "WI-SURV-01",
+   "title": "A state surveyor shows up (unannounced)",
+   "category": "Surveys and regulators",
+   "level": "wake",
+   "roles": {
+    "caregiver": [
+     "Be polite. Ask for ID. Call the manager.",
+     "Answer honestly. It's okay to say 'I'd check our procedure.'",
+     "Keep caring for residents."
+    ],
+    "manager": [
+     "Come in or join by phone. Give requested records promptly.",
+     "Inclusa members: send survey results and any plan of correction to Inclusa within 2 days after the visit.",
+     "Plan of correction by the deadline on the statement of deficiencies."
+    ],
+    "owner": [
+     "Review the statement of deficiencies and fund fixes."
+    ]
+   },
+   "notify": [
+    {
+     "key": "manager",
+     "who": "House manager or on-call manager",
+     "clock": "Now",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "house",
+     "cite": "House procedure",
+     "status": "house",
+     "required": false
+    },
+    {
+     "key": "owner",
+     "who": "Owner or licensee",
+     "clock": "Same day",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "house",
+     "cite": "House procedure",
+     "status": "house",
+     "required": false
+    },
+    {
+     "key": "mco",
+     "who": "MCO",
+     "clock": "Within 2 days after the visit ends, with any plan of correction",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "payer",
+     "cite": "Inclusa Scope of Service s. 4.7",
+     "status": "verified",
+     "required": true,
+     "hours": 48,
+     "source": "INCL_AFH"
+    }
+   ],
+   "document": [
+    "Surveyor names and times",
+    "Records provided"
+   ],
+   "wording": {
+    "casual": "State lady is here digging through everything",
+    "professional": "DQA surveyor arrived at 9:00 AM for an unannounced visit. Manager arrived at 9:20 AM. Requested records provided by 10:00 AM."
+   },
+   "legal": [
+    {
+     "layer": "state",
+     "cite": "DHS 88.03(8)(a); DHS 83",
+     "says": "Comply with department and licensing agency information requests.",
+     "status": "verified",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "source": "DHS88"
+    },
+    {
+     "layer": "payer",
+     "cite": "Inclusa s. 4.7",
+     "says": "Regulatory visit results to Inclusa within 2 days.",
+     "status": "verified",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "source": "INCL_AFH"
+    }
+   ],
+   "clarity": {
+    "q": "Do I have to let a surveyor in without the manager?",
+    "a": "Yes. Be polite, check ID, call the manager, and keep caring for residents.",
+    "label": "rule"
+   },
+   "settings": [
+    "afh",
+    "cbrf"
+   ],
+   "checked": "2026-11-26"
+  },
+  {
+   "id": "WI-MCO-01",
+   "title": "Care manager (MCO) asks for records, changes, or something that conflicts with the rule",
+   "category": "Surveys and regulators",
+   "level": "morning",
+   "roles": {
+    "caregiver": [
+     "Refer requests to the manager unless it's routine and in the plan."
+    ],
+    "manager": [
+     "Log the request with date, who, and what. Ask for it in writing.",
+     "Share records only as allowed. MCO care team is part of the member's care.",
+     "If the request conflicts with DHS 83/88, follow the licensing rule and ask the MCO to put it in writing; use Ask the Regulator."
+    ],
+    "owner": [
+     "Watch request volume and time cost per MCO."
+    ]
+   },
+   "notify": [
+    {
+     "key": "manager",
+     "who": "House manager or on-call manager",
+     "clock": "Log within the day",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "layer": "house",
+     "cite": "House procedure",
+     "status": "house",
+     "required": false
+    }
+   ],
+   "document": [
+    "Request log: date, who, what, response, proof of delivery"
+   ],
+   "wording": {
+    "casual": "Care manager wants all of June's notes by tomorrow, again",
+    "professional": "On 11/25, the care manager requested resident M-3's last 30 days of progress notes by 11/26. Request logged; records sent via secure email 11/26 at 10:00 AM."
+   },
+   "legal": [
+    {
+     "layer": "payer",
+     "cite": "Inclusa s. 7.2, 7.4",
+     "says": "Report changes in needs and needed service changes.",
+     "status": "verified",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "source": "INCL_AFH"
+    },
+    {
+     "layer": "state",
+     "cite": "DHS 88.09; Wis. Stat. 146.82",
+     "says": "Record confidentiality and release rules still apply.",
+     "status": "unverified",
+     "settings": [
+      "afh",
+      "cbrf"
+     ]
+    }
+   ],
+   "clarity": {
+    "q": "MCO rule or state rule: which wins?",
+    "a": "The licensing rule is the floor. An MCO can ask for more, not less. When they conflict, follow the stricter one and get it in writing.",
+    "label": "reading"
+   },
+   "settings": [
+    "afh",
+    "cbrf"
+   ],
+   "checked": "2026-11-26"
+  },
+  {
+   "id": "WI-OMB-01",
+   "title": "Ombudsman visits or a resident asks for an advocate",
+   "category": "Surveys and regulators",
+   "level": "morning",
+   "roles": {
+    "caregiver": [
+     "Welcome them. Residents can talk privately with the ombudsman."
+    ],
+    "manager": [
+     "Don't ask the resident what they said.",
+     "Work with the ombudsman on solutions. No retaliation."
+    ],
+    "owner": [
+     "Ask the ombudsman program for free staff training on rights."
+    ]
+   },
+   "notify": [],
+   "document": [
+    "Date of visit (no content needed)"
+   ],
+   "wording": {
+    "casual": "Ombudsman came, someone must have complained",
+    "professional": "Regional ombudsman visited on 11/25 from 1:00 to 2:00 PM and met with residents."
+   },
+   "legal": [
+    {
+     "layer": "state",
+     "cite": "DHS 88.10(5)(c); Wis. Stat. 16.009",
+     "says": "Residents have access to advocates including the ombudsman.",
+     "status": "verified",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "source": "OMBUD"
+    }
+   ],
+   "clarity": {
+    "q": "Do we have to let the ombudsman talk to residents alone?",
+    "a": "Yes. It's a resident right, and the program also offers free rights training for staff.",
+    "label": "rule"
+   },
+   "settings": [
+    "afh",
+    "cbrf"
+   ],
+   "checked": "2026-11-26"
+  },
+  {
+   "id": "WI-REC-01",
+   "title": "Someone asks for a resident's information (family, phone call, records)",
+   "category": "Surveys and regulators",
+   "level": "morning",
+   "roles": {
+    "caregiver": [
+     "Share only what the release list allows. 'I'll have the manager call you back' is always fine.",
+     "Never post or text resident details on personal phones."
+    ],
+    "manager": [
+     "Check the release and who is the legal representative.",
+     "Copies to resident, guardian or representative as soon as practicable once authorized in writing (AFH)."
+    ],
+    "owner": [
+     "Confirm whether the home is a HIPAA covered entity (it bills electronically?) and train accordingly."
+    ]
+   },
+   "notify": [],
+   "document": [
+    "What was released, to whom, authorization on file"
+   ],
+   "wording": {
+    "casual": "Gus's niece called asking about his meds",
+    "professional": "A caller identifying as resident B-9's niece requested medication information at 3:00 PM. Not on the release list; caller referred to the manager."
+   },
+   "legal": [
+    {
+     "layer": "federal",
+     "cite": "45 CFR Parts 160 and 164 (HIPAA)",
+     "says": "Applies if the home is a covered entity.",
+     "status": "unverified",
+     "settings": [
+      "afh",
+      "cbrf"
+     ]
+    },
+    {
+     "layer": "state",
+     "cite": "Wis. Stat. 146.82; DHS 88.09(1)(c); DHS 88.10(3)(c)",
+     "says": "Health record confidentiality and resident right to records.",
+     "status": "verified",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "source": "DHS88"
+    }
+   ],
+   "clarity": {
+    "q": "What can I tell a family member on the phone?",
+    "a": "Only what the release list allows. When unsure, take a message for the manager.",
+    "label": "rule"
+   },
+   "settings": [
+    "afh",
+    "cbrf"
+   ],
+   "checked": "2026-11-26"
+  }
+ ]
+}

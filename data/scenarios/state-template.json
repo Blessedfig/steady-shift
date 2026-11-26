@@ -1,0 +1,39 @@
+{
+  "schema_version": "1.0",
+  "library": "Steady Shift what-if scenario library",
+  "jurisdiction": {"country": "US", "state": "XX", "county": null, "city": null},
+  "checked": null,
+  "how_to_use": "Copy wi.json to <state>.json. Keep every scenario id pattern (XX-FALL-01 and so on) so company procedures map across states. Replace only the state layer (notify and legal entries with layer 'state', plus state-specific steps). Federal entries carry over. Mark every new entry 'unverified' until read in the source.",
+  "state_notes": {
+    "MN": {
+      "setting_types": ["Adult foster care (Minn. R. 9555.5105-.6265), 1-4 beds, 5 if all 55+", "Community residential setting (Minn. Stat. 245D, 245A)", "Assisted living (Minn. Stat. 144G, licensed since Aug 1, 2021)"],
+      "reporting": "Maltreatment of vulnerable adults goes to the Minnesota Adult Abuse Reporting Center (MAARC) under Minn. Stat. 626.557 'immediately' (within 24 hours). 245D incident reports to the case manager within 24 hours; deaths and serious injury to DHS licensing within 24 hours.",
+      "watch": "Moratorium on new corporate AFC and CRS licenses. Verify before selling.",
+      "status": "unverified"
+    },
+    "MI": {
+      "setting_types": ["Adult foster care (MCL 400.701, Mich. Admin. Code R 400.1401-1442 and R 400.14101+)", "Homes for the aged (MCL 333.21301)"],
+      "reporting": "R 400.1416a: incident report to the resident's designated representative within 48 hours; police after 30 minutes for a missing resident. Adult protective services: MCL 400.11a.",
+      "status": "partly verified in the Multi-state Rulebook"
+    },
+    "IA": {
+      "setting_types": ["Assisted living programs (Iowa Code 231C, 481 IAC 69)", "Residential care facilities (481 IAC 57)"],
+      "reporting": "Dependent adult abuse: Iowa Code 235E (facility) and 235B; mandatory reporters report to HHS within 24 hours orally, in writing within 48 hours (to verify). Critical incident reports for waiver members via the HHS IMPA system.",
+      "status": "unverified"
+    },
+    "IL": {
+      "setting_types": ["Assisted living and shared housing (210 ILCS 9, 77 Ill. Adm. Code 295)", "Supportive living (89 Ill. Adm. Code 146)", "CILA for DD (59 Ill. Adm. Code 115)"],
+      "reporting": "Part 295.2050: serious incident to IDPH within 24 hours. Adult Protective Services Act (320 ILCS 20) for abuse in the community.",
+      "status": "partly verified in the Multi-state Rulebook"
+    }
+  },
+  "county_city_checklist": [
+    "Adult protective services intake number for each county",
+    "Coroner or medical examiner reporting rules",
+    "Local health department contact for outbreaks",
+    "Fire department lift-assist and false alarm fees",
+    "Zoning or occupancy rules for group homes",
+    "Emergency management: warming and cooling centers, medical-needs registry"
+  ],
+  "scenarios": []
+}

@@ -335,13 +335,13 @@ window.SS_DATA = (function(){
   ];
 
   const ROUTES = [
-    {re:/\b(fall|fell|on the floor|found down)\b/i, type:'Fall', to:['Manager (same shift)','Family or guardian (per plan)'], cbrf:'DQA within 3 working days if ER or hospital care (DHS 83.12(4)(c))'},
+    {re:/\b(fall|fell|on the floor|found down)\b/i, type:'Fall', to:['Manager (same shift)','Family or guardian (per plan)'], cbrf:'DQA within 3 working days if ER or hospital care (DHS 83.12(4)(c))', afh:'Licensing agency within 24 hours if hospitalized (DHS 88.03(5)(e)1)'},
     {re:/\b(missed dose|wrong dose|med error|medication error|(refused|declined)\b.{0,25}\bmedications?)\b/i, type:'Medication', to:['Nurse or pharmacist (now if an error)','Manager'], cbrf:'2 refusals in a row: prescriber (DHS 83.37(1)(k))'},
-    {re:/\b(missing|left the building|eloped|couldn't find|could not find)\b/i, type:'Missing resident', to:['Police (immediately)','Manager (now)'], cbrf:'DQA within 3 working days (DHS 83.12(4)(a))'},
+    {re:/\b(missing|left the building|eloped|couldn't find|could not find)\b/i, type:'Missing resident', to:['Police (immediately)','Manager (now)'], cbrf:'DQA within 3 working days (DHS 83.12(4)(a))', afh:'Licensing agency within 24 hours (DHS 88.03(5)(e)1)'},
     {re:/\b(police|officer|sheriff)\b/i, type:'Police called', to:['Manager'], cbrf:'DQA within 3 working days (DHS 83.12(4)(b))'},
     {re:/\b(abuse|abused|neglect|neglected|stole|stolen|slapped|pushed|shoved)\b/i, type:'Possible misconduct', to:['Protect residents now','Designated reporter (today)'], cbrf:'DQA Misconduct Reporting System within 7 calendar days (DHS 13.05)', afh:'DQA Misconduct Reporting System within 7 calendar days (DHS 13.05)'},
-    {re:/\b(struck|hit|grabbed|kicked|bit|scratched)\b/i, type:'Behavior with contact', to:['Manager (same day)','Nurse if any injury'], cbrf:'If injury needs ER care: DQA within 3 working days'},
-    {re:/\b(fire|smoke)\b/i, type:'Fire', to:['911','Manager'], cbrf:'DQA within 3 working days, form F-62500 (DHS 83.12(4)(e))'}
+    {re:/\b(struck|hit|grabbed|kicked|bit|scratched)\b/i, type:'Behavior with contact', to:['Manager (same day)','Nurse if any injury'], cbrf:'If injury needs ER care: DQA within 3 working days', afh:'If abuse is suspected: licensing agency immediately (DHS 88.11(1))'},
+    {re:/\b(fire|smoke)\b/i, type:'Fire', to:['911','Manager'], cbrf:'DQA within 3 working days, form F-62500 (DHS 83.12(4)(e))', afh:'Licensing agency within 72 hours if the fire department helped (DHS 88.05(4)(e))'}
   ];
 
   // Seed records so every screen has something in it on first open.
