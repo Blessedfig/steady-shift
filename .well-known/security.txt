@@ -1,0 +1,4 @@
+Contact: mailto:owner@theblessedfigtree.com
+Expires: 2027-11-26T00:00:00Z
+Preferred-Languages: en
+Canonical: https://blessedfig.github.io/steady-shift/.well-known/security.txt
