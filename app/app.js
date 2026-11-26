@@ -35,7 +35,7 @@
 
   // ---------- saved test state (this browser only) ----------
   const KEY = 'ss-app-v1';
-  function fresh(){ const s = JSON.parse(JSON.stringify(D.SEED)); return Object.assign(s,{tier:'caregiver', site:'maple', survey:{}, tour:{}, watch:{}, policies:[], oncall:{fallok:false,medq:false,callin:true}}); }
+  function fresh(){ const s = JSON.parse(JSON.stringify(D.SEED)); return Object.assign(s,{tier:'caregiver', site:'maple', survey:{}, tour:{}, watch:{}, policies:[], orgProcs:[], oncall:{fallok:false,medq:false,callin:true}}); }
   let S;
   try { S = JSON.parse(localStorage.getItem(KEY)) || fresh(); } catch(e){ S = fresh(); }
   for (const k in fresh()) if (!(k in S)) S[k] = fresh()[k];
@@ -54,6 +54,7 @@
     check:{t:'Procedure check', ic:'✅'},
     report:{t:'Write a report', ic:'📝'},
     night:{t:'Night help', ic:'🌙'},
+    whatif:{t:'What-if library', ic:'🧭'},
     behavior:{t:'Behavior help', ic:'🤝'},
     cards:{t:'Clarity Cards', ic:'📇'},
     survey:{t:'Survey-Ready Check', ic:'📋'},
@@ -67,14 +68,15 @@
     owner:{t:'Owner view', ic:'📊'},
     sites:{t:'All sites', ic:'🏘️'},
     handoff:{t:'Hand-off packet', ic:'🧾'},
-    mytraining:{t:'My training', ic:'🎓'}
+    mytraining:{t:'My training', ic:'🎓'},
+    procedures:{t:'Company procedures', ic:'🗂️'}
   };
   const NAV = {
-    caregiver:['home','check','report','night','behavior','cards','mytraining'],
-    manager:['home','inbox','questions','check','report','night','behavior','team','survey','decide','ask','cards','watch'],
-    rn:['home','delegations','check','cards','night','behavior','watch'],
-    owner:['home','owner','survey','questions','decide','ask','watch','cards'],
-    multi:['home','sites','owner','survey','watch','ask','cards'],
+    caregiver:['home','check','whatif','report','night','behavior','cards','mytraining'],
+    manager:['home','inbox','questions','check','whatif','report','night','behavior','team','survey','decide','ask','cards','watch','procedures'],
+    rn:['home','delegations','check','whatif','cards','night','behavior','watch'],
+    owner:['home','owner','whatif','procedures','survey','questions','decide','ask','watch','cards'],
+    multi:['home','sites','owner','whatif','procedures','survey','watch','ask','cards'],
     family:['home','check','night','behavior','handoff','cards','watch']
   };
 
@@ -269,7 +271,7 @@
   }
 
   function tourCard(){
-    const items = [['check','Look up a procedure (try "pre-pour" or "shower")'],['report','Turn a casual note into a report'],['night','Walk through a night question'],['behavior','Open a behavior guide'],['cards','Browse Clarity Cards and compare AFH vs CBRF'],['survey','Run the Survey-Ready Check'],['decide','Record a gray-area decision'],['ask','Draft a question for DQA'],['watch','See upcoming rule changes'],['owner','Open the owner view'],['sites','See the multi-site view'],['delegations','Look at the RN delegation ledger']];
+    const items = [['check','Look up a procedure (try "pre-pour" or "shower")'],['whatif','Open the What-if library (try "missing")'],['procedures','Import a company procedure and see baseline flags'],['report','Turn a casual note into a report'],['night','Walk through a night question'],['behavior','Open a behavior guide'],['cards','Browse Clarity Cards and compare AFH vs CBRF'],['survey','Run the Survey-Ready Check'],['decide','Record a gray-area decision'],['ask','Draft a question for DQA'],['watch','See upcoming rule changes'],['owner','Open the owner view'],['sites','See the multi-site view'],['delegations','Look at the RN delegation ledger']];
     const done = items.filter(i => S.tour[i[0]]).length;
     return h('details',{class:'card soft noprint',open:done < items.length},
       h('summary',{style:'cursor:pointer;font:800 1.05rem var(--display)'},'Testing checklist for Angelika ('+done+' of '+items.length+' tried)'),
@@ -820,6 +822,258 @@
       out.append(h('div',{class:'card'},h('div',{class:'out'},txt),h('div',{class:'row noprint'},cb,h('button',{class:'btn ghost sm',type:'button',onclick:()=>window.print()},'Print')))); });
     v.append(f, out);
   };
+
+  // ---------- What-if library and Company procedures (data in ../data/scenarios) ----------
+  // Scenarios are plain JSON so other apps, states and companies can load them. See data/scenarios/README.md.
+  let LIB = null, LIBERR = '';
+  function loadLib(){
+    if (LIB) return Promise.resolve(LIB);
+    return fetch('../data/scenarios/wi.json',{cache:'no-cache'}).then(r => { if(!r.ok) throw new Error(r.status); return r.json(); })
+      .then(j => (LIB = j)).catch(e => { LIBERR = 'Could not load the scenario library ('+e.message+').'; return null; });
+  }
+  const STATUS = {verified:['Verified','calm'], unverified:['Unverified','amber'], open:['Open question','red'], house:['House procedure','grey'], org:['Your company','grey']};
+  const statusChip = s => { const x = STATUS[s] || [s,'grey']; return h('span',{class:'chip '+x[1]},x[0]); };
+  const LAYER_ORDER = ['federal','state','county','city','payer','org','house'];
+  const LAYER_NAME = {federal:'Federal',state:'State (Wisconsin)',county:'County',city:'City or town',payer:'Funding source (MCO)',org:'Your company',house:'House'};
+  const roleFor = () => ({caregiver:'caregiver', family:'caregiver', manager:'manager', rn:'manager', owner:'owner', multi:'owner'}[S.tier] || 'caregiver');
+  const inSetting = x => setting() === 'home' || !x.settings || x.settings.includes(setting());
+  const baseHours = x => x.hours != null ? x.hours : x.business_days != null ? x.business_days * 24 : null;
+  const orgFor = id => (S.orgProcs || []).filter(p => p.scenario_id === id);
+
+  // Compare a company's procedure with the legal baseline. Code, not AI, makes this call.
+  const RISKY = [
+    {re:/(permission|ok|okay|approval).{0,40}before.{0,20}(911|ambulance|ems)|before calling 911/i, why:'Could delay emergency care. Call 911 first, then the guardian.'},
+    {re:/do not call 911|don't call 911|never call 911/i, why:'A blanket no-911 rule can conflict with resident safety. Limit it to valid DNR or hospice plans.'},
+    {re:/(wait|hold).{0,30}(until|till).{0,15}(morning|monday|next shift).{0,40}(report|abuse|neglect|missing)/i, why:'Some reports run on an immediate or 24-hour clock.'},
+    {re:/(must|have to|required to).{0,30}(ask|tell|get approval from).{0,30}(manager|owner|supervisor).{0,40}before.{0,30}(report|calling)/i, why:'Anyone may report abuse directly. Approval steps cannot block a mandated or good-faith report (Wis. Stat. 46.90(4)).'},
+    {re:/(lock|restrain|tie|hold down|seclude)/i, why:'Restraint and seclusion are limited by DHS 88.10(3)(n) and DHS 83. Check this step.'}
+  ];
+  function compareProc(sc, proc){
+    const flags = [];
+    const base = sc.notify.filter(x => x.required && x.layer !== 'house' && inSetting(x));
+    (proc.notify || []).forEach(o => {
+      const b = base.filter(x => x.key === o.key && baseHours(x) != null);
+      if (!b.length || o.within_hours == null || o.within_hours === '') return;
+      const strict = Math.min(...b.map(baseHours));
+      const oh = Number(o.within_hours);
+      if (oh > strict) flags.push({kind:'below', text:'Tells '+(D_KEY(o.key))+(oh===0?' immediately':' within '+oh+' h')+'; the rule says '+b.find(x=>baseHours(x)===strict).clock+' ('+b.find(x=>baseHours(x)===strict).cite+').'});
+      else flags.push({kind:'ok', text:(D_KEY(o.key))+': '+oh+' h meets or beats the baseline.'});
+    });
+    const keys = new Set((proc.notify || []).map(o => o.key));
+    base.forEach(x => { if (!keys.has(x.key) && x.status !== 'house') flags.push({kind:'missing', text:'Not mentioned: '+x.who+' ('+x.clock+'). The law still applies.'}); });
+    const txt = (proc.steps || []).join(' ');
+    RISKY.forEach(r => { if (r.re.test(txt)) flags.push({kind:'below', text:r.why}); });
+    return flags;
+  }
+  const D_KEY = k => (LIB && LIB.notify_keys[k]) || k;
+  function flagBox(flags){
+    if (!flags.length) return null;
+    const below = flags.filter(f => f.kind === 'below'), miss = flags.filter(f => f.kind === 'missing');
+    return h('div',{class:'house '+(below.length ? 'gap' : 'ok')},
+      h('b',null, below.length ? below.length+' place'+(below.length>1?'s':'')+' where this falls below the legal baseline' : miss.length ? 'Nothing slower than the law. It leaves out:' : 'Meets the legal baseline'),
+      below.map(f => h('span',null,'• '+f.text)), miss.map(f => h('span',{class:'small'},'○ '+f.text)));
+  }
+
+  function scenarioCard(sc){
+    const role = {v: roleFor()};
+    const c = h('div',{class:'card'+(sc.level==='now'?' alert':'')});
+    c.append(h('div',{class:'chips'}, levelBadge(sc.level), h('span',{class:'chip grey'},sc.category), h('span',{class:'chip grey'},sc.id), h('span',{class:'chip grey'},'Checked '+fmtDate(sc.checked))));
+    c.append(h('h2',null,sc.title));
+    (sc.triage || []).forEach(t => {
+      const out = h('div');
+      const yes = () => { out.textContent=''; if (LIB.scenarios.some(s=>s.id===t.yes)) location.hash = '#/whatif/'+t.yes; else out.append(h('div',{class:'row'},levelBadge(t.yes), t.yes==='now' ? h('a',{class:'btn red sm',href:'tel:911'},'Call 911') : null)); };
+      const no = () => { out.textContent=''; if (LIB.scenarios.some(s=>s.id===t.no)) location.hash = '#/whatif/'+t.no; else out.append(h('div',{class:'row'},levelBadge(t.no), h('span',{class:'small'},'Keep going below.'))); };
+      c.append(h('div',{class:'card soft'}, h('b',null,'First: '+t.ask), h('div',{class:'row'}, h('button',{class:'btn sm '+(t.yes==='now'?'red':''),type:'button',onclick:yes},'Yes'), h('button',{class:'btn ghost sm',type:'button',onclick:no},'No')), out));
+    });
+    const stepsBox = h('div');
+    const tabs = h('div',{class:'chips'});
+    const ROLES = [['caregiver','Caregiver'],['manager','Manager'],['owner','Owner']].filter(r => sc.roles[r[0]]);
+    function drawSteps(){
+      tabs.textContent=''; ROLES.forEach(r => tabs.append(h('button',{class:'chip',type:'button','aria-pressed':String(role.v===r[0]),onclick:()=>{role.v=r[0];drawSteps();}},r[1])));
+      stepsBox.textContent='';
+      stepsBox.append(h('ol',{class:'steps'}, (sc.roles[role.v]||[]).map(s => h('li',null,h('span',null,s)))));
+      orgFor(sc.id).filter(p => !p.role || p.role === role.v).forEach(p => {
+        stepsBox.append(h('div',{class:'house'}, h('b',null,'Your company\'s procedure'+(p.source?' ('+p.source+')':'')), (p.steps||[]).map(s => h('span',null,'• '+s))), flagBox(compareProc(sc,p)));
+      });
+    }
+    if (!sc.roles[role.v]) role.v = ROLES[0][0];
+    drawSteps();
+    c.append(h('h3',null,'What to do'), tabs, stepsBox);
+    const rows = sc.notify.filter(inSetting);
+    if (rows.length) c.append(h('h3',null,'Who to tell, and by when'), h('div',{class:'tablewrap'}, h('table',{class:'t'},
+      h('thead',null,h('tr',null,['Who','When','Rule','Status'].map(x=>h('th',null,x)))),
+      h('tbody',null, rows.map(x => h('tr',null, h('td',null,x.who), h('td',null,x.clock), h('td',{class:'small'},x.cite), h('td',null,statusChip(x.status))))))));
+    if (sc.document && sc.document.length) c.append(h('h3',null,'Write down'), h('ul',null, sc.document.map(d=>h('li',null,d))));
+    if (sc.wording) c.append(h('h3',null,'Say it professionally'), h('div',{class:'grid g2'},
+      h('div',{class:'card soft',style:'box-shadow:none'},h('span',{class:'small muted'},'Casual'),h('span',null,'"'+sc.wording.casual+'"')),
+      h('div',{class:'card calm',style:'box-shadow:none'},h('span',{class:'small muted'},'Report'),h('span',null,sc.wording.professional))));
+    const legal = sc.legal.filter(inSetting).sort((a,b)=>LAYER_ORDER.indexOf(a.layer)-LAYER_ORDER.indexOf(b.layer));
+    c.append(h('details',null, h('summary',{style:'cursor:pointer;font-weight:700'},'Why: the rules, federal to local ('+legal.length+')'),
+      h('div',{class:'list',style:'margin-top:.5rem'}, legal.map(l => h('div',{class:'item'}, h('div',{class:'meta'},h('b',null,LAYER_NAME[l.layer]||l.layer),statusChip(l.status), l.source && LIB.sources[l.source] ? h('a',{href:LIB.sources[l.source].url,target:'_blank',rel:'noopener'},'source') : null), h('span',{class:'small'},h('b',null,l.cite+': '),l.says))))));
+    if (sc.clarity) c.append(h('div',{class:'card soft'}, h('div',{class:'chips'},labelChip(sc.clarity.label),h('span',{class:'chip grey'},'Clarity Card')), h('b',null,sc.clarity.q), h('span',null,sc.clarity.a)));
+    c.append(h('div',{class:'row noprint'}, h('a',{class:'btn ghost sm',href:'#/report'},'Write it up'), h('a',{class:'btn ghost sm',href:'#/ask'},'Ask the Regulator')));
+    c.append(h('p',{class:'foot'},LIB.disclaimer));
+    return c;
+  }
+
+  R.whatif = v => {
+    v.append(head('What-if library', 'What do I do if...?', 'Steps for your role, who to tell and by when, and the rule behind it. Showing '+D.SETTINGS[setting()].name+'.'));
+    const area = h('div',{class:'grid'}); v.append(area);
+    area.append(h('p',{class:'muted'},'Loading...'));
+    loadLib().then(lib => {
+      area.textContent = '';
+      if (!lib){ area.append(h('div',{class:'card alert'},LIBERR)); return; }
+      if (param){ const sc = lib.scenarios.find(s => s.id === param); if (sc){ area.append(h('a',{href:'#/whatif'},'← All scenarios'), scenarioCard(sc)); return; } }
+      const inp = h('input',{type:'search',placeholder:'Try "fall", "missing", "surveyor", "no-show"','aria-label':'Search scenarios'});
+      const cats = ['All', ...new Set(lib.scenarios.map(s=>s.category))];
+      let pick = 'All';
+      const bar = h('div',{class:'chips'}), list = h('div',{class:'list'});
+      function draw(){
+        bar.textContent=''; cats.forEach(cn => bar.append(h('button',{class:'chip',type:'button','aria-pressed':String(cn===pick),onclick:()=>{pick=cn;draw();}},cn)));
+        const q = inp.value.toLowerCase().trim();
+        list.textContent='';
+        lib.scenarios.filter(s => (pick==='All'||s.category===pick) && (!q || (s.title+' '+s.category+' '+(s.clarity?s.clarity.q:'')).toLowerCase().includes(q)) && (setting()==='home' || s.settings.includes(setting())))
+          .forEach(s => list.append(h('a',{class:'item',href:'#/whatif/'+s.id,style:'text-decoration:none;color:inherit'}, h('div',{class:'meta'},levelBadge(s.level),h('span',null,s.category), orgFor(s.id).length ? h('span',{class:'chip grey'},'Company procedure added') : null), h('b',null,s.title))));
+      }
+      inp.addEventListener('input', draw);
+      area.append(h('div',{class:'card'}, inp, bar), list);
+      const counts = {}; lib.scenarios.forEach(s => [...s.notify,...s.legal].forEach(x => counts[x.status]=(counts[x.status]||0)+1));
+      area.append(h('p',{class:'small muted'}, lib.scenarios.length+' scenarios. Rules checked '+fmtDate(lib.checked)+': '+(counts.verified||0)+' verified, '+(counts.unverified||0)+' unverified, '+(counts.open||0)+' open questions.'));
+      draw();
+    });
+  };
+
+  // ---- Company procedures: AI-assisted import, mapped onto the scenarios, checked against the baseline ----
+  const PHI = [
+    [/\b\d{3}[-. )]\s?\d{3}[-.]\d{4}\b/g,'[phone removed]'],
+    [/\b[\w.+-]+@[\w-]+\.[\w.]+\b/g,'[email removed]'],
+    [/\b\d{3}-\d{2}-\d{4}\b/g,'[number removed]'],
+    [/\b(dob|date of birth|born)\b[:\s]*\S+/gi,'[birth date removed]'],
+    [/\b(password|passcode|pin|voicemail code)\b[:\s]*\S+/gi,'[secret removed]']
+  ];
+  function scrub(t){ let n = 0; PHI.forEach(([re,rep]) => { t = t.replace(re, () => { n++; return rep; }); }); return {text:t, removed:n}; }
+  const HOURS = [[/immediately|right away|at once/i,0],[/next business day|next working day/i,24],[/within (\d+) hours?/i,m=>+m[1]],[/within (\d+) (working |business |calendar )?days?/i,m=>+m[1]*24],[/same day|same shift/i,8]];
+  const KEYWORDS = {
+    'WI-FALL-01':/fall.{0,40}(injur|hurt|head|hospital)/i, 'WI-FALL-02':/\bfall|fell\b/i, 'WI-INJ-01':/bruise|skin tear|unknown (source|cause)|unexplained injur/i,
+    'WI-HLTH-01':/change (of|in) condition|seems sick|fever|vital|emergenc/i, 'WI-HLTH-02':/hospital|emergency room|\ber\b/i, 'WI-DEATH-01':/death|died|passed away|hospice/i,
+    'WI-MED-01':/medication error|med error|wrong (dose|med)|missed dose/i, 'WI-MED-02':/refus.{0,20}med/i, 'WI-MISS-01':/missing|elope|wander|whereabouts/i,
+    'WI-FIRE-01':/fire|smoke|evacuat/i, 'WI-BLDG-01':/power|outage|heat|weather|storm|utility/i, 'WI-POL-01':/police|law enforcement/i,
+    'WI-ILL-01':/outbreak|infection|contagious|flu|covid|norovirus/i, 'WI-BEH-01':/resident.{0,20}(hit|strike|hurt).{0,20}resident|resident.to.resident/i,
+    'WI-BEH-02':/aggress|assault.{0,20}staff|workplace violence/i, 'WI-RESTR-01':/restrain|seclusion|hold/i, 'WI-BEH-03':/suicid|self.harm|wants to die/i,
+    'WI-ABUSE-01':/abuse|neglect|mistreat|misconduct/i, 'WI-ABUSE-02':/theft|stolen|missing (money|item|property)|misappropriat/i, 'WI-ABUSE-03':/exploit|family.{0,30}(harm|abuse)/i,
+    'WI-STAFF-01':/\bcall.?ins?\b|called in sick|cannot work|no.?show|short.?staff|coverage|call.?off/i, 'WI-STAFF-02':/impair|intoxicat|drug test|arrest|charged|background/i,
+    'WI-RIGHTS-01':/refus.{0,20}(care|shower|bath)/i, 'WI-RIGHTS-02':/guardian|power of attorney|poa/i, 'WI-COMP-01':/complain|grievance/i,
+    'WI-DISCH-01':/discharge|terminat.{0,20}(stay|services|admission)|30.day notice/i, 'WI-SURV-01':/survey|inspect|dqa visit|state visit/i,
+    'WI-MCO-01':/care manager|mco|inclusa|lakeland|my choice/i, 'WI-OMB-01':/ombudsman|advocate/i, 'WI-REC-01':/confidential|hipaa|release of information|records request/i
+  };
+  const WHO = [['911',/911|ambulance|ems/i],['police',/police|law enforcement|sheriff/i],['rep',/guardian|family|representative|poa/i],['physician',/physician|doctor|prescriber|md\b/i],['nurse',/nurse|rn\b/i],['mco',/care manager|mco|idt|care team|inclusa|lakeland/i],['dqa',/dqa|state|department/i],['licensing',/licensing/i],['manager',/manager|supervisor|on.call/i],['owner',/owner|administrator/i],['aps',/adult protective|aps|elder abuse/i],['health',/health department/i]];
+  function localMap(text, source){
+    const paras = text.split(/\n\s*\n|\n(?=#|\d+\.|[A-Z][A-Za-z ]{3,40}:)/).map(p => p.trim()).filter(p => p.length > 30);
+    const out = [];
+    paras.forEach(p => {
+      const ids = Object.keys(KEYWORDS).filter(id => KEYWORDS[id].test(p));
+      if (!ids.length) return;
+      const id = ids.find(x => /FALL-01|DEATH-02|ABUSE-0|MISS|RESTR/.test(x)) || ids[0];
+      const notify = [];
+      p.split(/(?<=[.;])\s+/).forEach(sent => {
+        const who = WHO.find(w => w[1].test(sent)); if (!who) return;
+        let hrs = null; for (const [re,f] of HOURS){ const m = sent.match(re); if (m){ hrs = typeof f === 'function' ? f(m) : f; break; } }
+        if (!notify.some(n => n.key === who[0])) notify.push({key:who[0], within_hours:hrs, text:sent.slice(0,160)});
+      });
+      out.push({scenario_id:id, role:'', steps:p.replace(/^[^\n.]{1,40}\n/,'').split(/(?<=[.;])\s+|\n/).map(s=>s.replace(/^[-*•\d.)\s]+/,'').trim()).filter(s=>s.length>3).slice(0,8), notify, source, confidence:'low', by:'keyword matcher'});
+    });
+    return out;
+  }
+  function parseCSV(t){
+    const rows = []; let row = [], cur = '', q = false;
+    for (let i = 0; i < t.length; i++){ const ch = t[i];
+      if (q){ if (ch === '"' && t[i+1] === '"'){ cur += '"'; i++; } else if (ch === '"') q = false; else cur += ch; }
+      else if (ch === '"') q = true; else if (ch === ','){ row.push(cur); cur=''; } else if (ch === '\n'){ row.push(cur); rows.push(row); row=[]; cur=''; } else if (ch !== '\r') cur += ch; }
+    if (cur || row.length){ row.push(cur); rows.push(row); }
+    const head = rows.shift().map(x => x.trim());
+    const byKey = {};
+    rows.filter(r => r.some(x => x.trim())).forEach(r => {
+      const o = {}; head.forEach((k,i) => o[k] = (r[i]||'').trim());
+      const k = o.scenario_id+'|'+(o.role||'');
+      const p = byKey[k] = byKey[k] || {scenario_id:o.scenario_id, role:o.role, steps:[], notify:[], source:o.source_document||'CSV import', version:o.version, effective:o.effective_date, confidence:'high', by:'template'};
+      if (o.step_text) p.steps.push(o.step_text);
+      if (o.notify_key && !p.notify.some(n=>n.key===o.notify_key)) p.notify.push({key:o.notify_key, within_hours:o.notify_within_hours===''?null:Number(o.notify_within_hours)});
+    });
+    return Object.values(byKey);
+  }
+  let aiImport = null;
+  async function aiAvailable(){
+    if (aiImport !== null) return aiImport;
+    if (!sb) return (aiImport = false);
+    try { const {data, error} = await sb.functions.invoke('procedure-import',{body:{ping:true}}); aiImport = !error && data && data.ok; } catch(e){ aiImport = false; }
+    return aiImport;
+  }
+
+  R.procedures = v => {
+    v.append(head('Company procedures', 'Bring your own procedures', 'Your procedures sit on top of the law, never under it. The app maps them to each what-if and flags any place where a step falls below the legal baseline.'));
+    const area = h('div',{class:'grid'}); v.append(area);
+    loadLib().then(async lib => {
+      if (!lib){ area.append(h('div',{class:'card alert'},LIBERR)); return; }
+      const ai = await aiAvailable();
+      const name = h('input',{type:'text',placeholder:'Document name, for example "Employee handbook 2026"','aria-label':'Document name'});
+      const txt = h('textarea',{style:'min-height:10rem',placeholder:'Paste a procedure, policy or handbook section. Leave out resident names, health details, phone numbers and passwords.'});
+      const file = h('input',{type:'file',accept:'.txt,.md,.csv,.json,text/plain'});
+      file.addEventListener('change',()=>{ const f = file.files[0]; if (!f) return; if (!name.value) name.value = f.name; f.text().then(t => { txt.value = t.slice(0,60000); }); });
+      const out = h('div',{class:'grid'});
+      const go = h('button',{class:'btn',type:'button'}, ai ? 'Map it with AI' : 'Map it (keyword demo)');
+      const sample = h('button',{class:'btn ghost sm',type:'button'},'Load a sample company handbook');
+      sample.addEventListener('click',()=>{ fetch('../data/scenarios/org-procedures-sample.txt').then(r=>r.text()).then(t=>{ txt.value = t; name.value = 'Sample company handbook'; }); });
+      go.addEventListener('click', async () => {
+        out.textContent = '';
+        const raw = txt.value.trim(); if (!raw){ toast('Paste or upload something first'); return; }
+        let items = [];
+        try {
+          if (/^\s*[\[{]/.test(raw)){ const j = JSON.parse(raw); items = (j.procedures || j).map(p => Object.assign({confidence:'high', by:'template'}, p)); }
+          else if (/^scenario_id,/i.test(raw)) items = parseCSV(raw);
+          else {
+            const s = scrub(raw);
+            if (s.removed) out.append(h('div',{class:'house gap'},h('b',null,s.removed+' private detail'+(s.removed>1?'s were':' was')+' removed before mapping'),h('span',null,'Phone numbers, emails, ID numbers, birth dates and passwords stay on your device.')));
+            if (ai){
+              go.disabled = true; go.textContent = 'Reading your document...';
+              const catalog = lib.scenarios.map(x => ({id:x.id, title:x.title, notify_keys:[...new Set(x.notify.map(n=>n.key))]}));
+              const {data, error} = await sb.functions.invoke('procedure-import',{body:{text:s.text.slice(0,60000), source:name.value||'Pasted text', catalog, keys:lib.notify_keys}});
+              go.disabled = false; go.textContent = 'Map it with AI';
+              if (error || !data || data.error){ toast('AI mapping failed. Using the keyword demo.'); items = localMap(s.text, name.value||'Pasted text'); }
+              else { items = data.procedures.map(p => Object.assign({by:'AI', source:name.value||'Pasted text'}, p)); if (data.unmapped && data.unmapped.length) out.append(h('div',{class:'house'},h('b',null,'Not matched to a scenario yet'),data.unmapped.slice(0,8).map(u=>h('span',{class:'small'},'• '+u)))); }
+            } else items = localMap(s.text, name.value||'Pasted text');
+          }
+        } catch(e){ out.append(h('div',{class:'card alert'},'Could not read that: '+e.message)); return; }
+        if (!items.length){ out.append(h('p',{class:'muted'},'Nothing matched a scenario. Try a longer section with headings.')); return; }
+        out.append(h('h2',null,'Review before saving ('+items.length+')'), h('p',{class:'small muted'},'Check each match. Change the scenario if it picked the wrong one. Nothing is saved until you press Save.'));
+        items.forEach(p => {
+          const sel = h('select',{'aria-label':'Scenario'}, lib.scenarios.map(x => h('option',{value:x.id,selected:x.id===p.scenario_id},x.id+' '+x.title)));
+          const box = h('div');
+          const draw = () => { p.scenario_id = sel.value; box.textContent=''; const sc = lib.scenarios.find(x=>x.id===p.scenario_id); if (sc) box.append(flagBox(compareProc(sc,p)) || h('span',{class:'small muted'},'No timing found to compare.')); };
+          sel.addEventListener('change', draw); draw();
+          out.append(h('div',{class:'card'}, h('div',{class:'chips'}, h('span',{class:'chip grey'},'Mapped by '+(p.by||'import')), h('span',{class:'chip '+(p.confidence==='high'?'calm':p.confidence==='medium'?'amber':'grey')},'Confidence: '+(p.confidence||'n/a'))),
+            h('label',{class:'f'},'Scenario',sel),
+            h('ul',null,(p.steps||[]).map(s=>h('li',null,s))),
+            (p.notify||[]).length ? h('p',{class:'small'},'Tells: '+p.notify.map(n => D_KEY(n.key)+(n.within_hours===0?' immediately':n.within_hours!=null?' within '+n.within_hours+' h':'')).join('; ')) : null,
+            box));
+        });
+        const save = h('button',{class:'btn',type:'button'},'Save to my company layer');
+        save.addEventListener('click',()=>{ S.orgProcs = (S.orgProcs||[]).filter(x => !items.some(i => i.scenario_id===x.scenario_id && (i.role||'')===(x.role||''))).concat(items.map(i => Object.assign({}, i, {saved:new Date().toISOString()}))); save2(); toast('Saved. Open any what-if to see it.'); route(); });
+        out.append(h('div',{class:'row'}, save));
+      });
+      area.append(h('div',{class:'card'},
+        h('h2',null,'1. Add your document'),
+        h('p',{class:'small'}, ai ? 'AI reads the text and maps each procedure to a what-if. Private details are removed on your device first. Rule checks are done by the app, not the AI.' : 'AI mapping is not switched on yet, so this uses a simple keyword matcher. Structured files (the CSV or JSON template) import exactly.'),
+        h('label',{class:'f'},'Name',name), txt, h('div',{class:'row'}, file, sample),
+        h('div',{class:'row'}, go, h('a',{class:'btn ghost sm',href:'../data/scenarios/org-procedures-template.csv',download:''},'CSV template'), h('a',{class:'btn ghost sm',href:'../data/scenarios/org-procedures-template.json',download:''},'JSON template'))), out);
+      const mine = S.orgProcs || [];
+      area.append(h('div',{class:'card'}, h('h2',null,'2. Your company layer ('+mine.length+')'),
+        mine.length ? h('div',{class:'list'}, mine.map(p => { const sc = lib.scenarios.find(x=>x.id===p.scenario_id); const fl = sc ? compareProc(sc,p).filter(f=>f.kind==='below').length : 0;
+          return h('a',{class:'item',href:'#/whatif/'+p.scenario_id,style:'text-decoration:none;color:inherit'}, h('div',{class:'meta'}, h('span',null,p.source||''), fl ? h('span',{class:'chip amber'},fl+' below baseline') : h('span',{class:'chip calm'},'OK')), h('b',null, sc ? sc.title : p.scenario_id)); }))
+        : h('p',{class:'muted small'},'Nothing yet. Import a document above.'),
+        mine.length ? h('button',{class:'btn quiet sm',type:'button',onclick:()=>{ S.orgProcs = []; save2(); route(); }},'Clear my company layer') : null));
+    });
+  };
+  const save2 = () => save();
 
   // ---------- "Ideas and fixes" chat: a guided helper that saves to the desk's Requests for Claude ----------
   // Uses the AI helper (Supabase Edge Function "app-chat") when it is set up; otherwise a scripted helper
