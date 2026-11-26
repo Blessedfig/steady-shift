@@ -1,0 +1,888 @@
+// Steady Shift test app. Sign-in reuses the Owner Desk's Supabase project.
+// Sample records live in this browser only (localStorage). Feedback is saved to the desk's Requests for Claude.
+(function(){
+  const D = window.SS_DATA;
+  const $ = id => document.getElementById(id);
+
+  // ---------- tiny element builder (never sets innerHTML from user text) ----------
+  function h(tag, attrs, ...kids){
+    const e = document.createElement(tag);
+    if (attrs) for (const k in attrs){
+      const v = attrs[k];
+      if (v == null || v === false) continue;
+      if (k === 'class') e.className = v;
+      else if (k === 'text') e.textContent = v;
+      else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+      else if (k === 'style') e.setAttribute('style', v);
+      else if (v === true) e.setAttribute(k, '');
+      else e.setAttribute(k, v);
+    }
+    for (const c of kids.flat(9)){
+      if (c == null || c === false) continue;
+      e.append(c.nodeType ? c : document.createTextNode(String(c)));
+    }
+    return e;
+  }
+  const fmtDate = s => { if(!s) return ''; const d = new Date(s); return isNaN(d) ? s : d.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}); };
+  const fmtTime = s => { const d = new Date(s); return isNaN(d) ? '' : d.toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}); };
+  const daysUntil = s => Math.ceil((new Date(s+'T12:00:00') - new Date()) / 86400000);
+  const uid = () => Math.random().toString(36).slice(2,9);
+  function toast(msg){ const t = h('div',{class:'toast',role:'status'},msg); document.body.append(t); setTimeout(()=>t.remove(),2600); }
+  function copy(text, btn){
+    const done = () => { if(btn){ const o = btn.textContent; btn.textContent = 'Copied'; setTimeout(()=>btn.textContent=o,1500);} else toast('Copied'); };
+    try { navigator.clipboard.writeText(text).then(done, ()=>toast('Select the text and copy it')); } catch(e){ toast('Select the text and copy it'); }
+  }
+
+  // ---------- saved test state (this browser only) ----------
+  const KEY = 'ss-app-v1';
+  function fresh(){ const s = JSON.parse(JSON.stringify(D.SEED)); return Object.assign(s,{tier:'caregiver', site:'maple', survey:{}, tour:{}, watch:{}, policies:[], oncall:{fallok:false,medq:false,callin:true}}); }
+  let S;
+  try { S = JSON.parse(localStorage.getItem(KEY)) || fresh(); } catch(e){ S = fresh(); }
+  for (const k in fresh()) if (!(k in S)) S[k] = fresh()[k];
+  function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} }
+
+  const site = () => D.SITES.find(s => s.id === S.site) || D.SITES[0];
+  const setting = () => site().setting;
+  const tier = () => D.TIERS.find(t => t.id === S.tier) || D.TIERS[0];
+  const residents = () => D.RESIDENTS[S.site] || [];
+  const ruleById = id => D.RULES.find(r => r.id === id);
+  const forSite = arr => arr.filter(x => x.site === S.site);
+
+  // ---------- navigation ----------
+  const VIEWS = {
+    home:{t:'Home', ic:'🏠'},
+    check:{t:'Procedure check', ic:'✅'},
+    report:{t:'Write a report', ic:'📝'},
+    night:{t:'Night help', ic:'🌙'},
+    behavior:{t:'Behavior help', ic:'🤝'},
+    cards:{t:'Clarity Cards', ic:'📇'},
+    survey:{t:'Survey-Ready Check', ic:'📋'},
+    decide:{t:'Decide and Document', ic:'⚖️'},
+    ask:{t:'Ask the Regulator', ic:'✉️'},
+    watch:{t:'Regulatory Watch', ic:'🔔'},
+    inbox:{t:'Reports to review', ic:'📥'},
+    questions:{t:'Question log', ic:'💬'},
+    team:{t:'Team training', ic:'🎓'},
+    delegations:{t:'Delegation ledger', ic:'🩺'},
+    owner:{t:'Owner view', ic:'📊'},
+    sites:{t:'All sites', ic:'🏘️'},
+    handoff:{t:'Hand-off packet', ic:'🧾'},
+    mytraining:{t:'My training', ic:'🎓'}
+  };
+  const NAV = {
+    caregiver:['home','check','report','night','behavior','cards','mytraining'],
+    manager:['home','inbox','questions','check','report','night','behavior','team','survey','decide','ask','cards','watch'],
+    rn:['home','delegations','check','cards','night','behavior','watch'],
+    owner:['home','owner','survey','questions','decide','ask','watch','cards'],
+    multi:['home','sites','owner','survey','watch','ask','cards'],
+    family:['home','check','night','behavior','handoff','cards','watch']
+  };
+
+  function renderNav(view){
+    const nav = $('nav'); nav.textContent = '';
+    const mine = NAV[S.tier];
+    nav.append(h('div',{class:'grp'},(/^[aeiou]/i.test(tier().name)?'For an ':'For a ')+tier().name.toLowerCase()));
+    mine.forEach(v => nav.append(navLink(v, view)));
+    const rest = Object.keys(VIEWS).filter(v => !mine.includes(v));
+    nav.append(h('div',{class:'grp'},'Everything else (unlocked)'));
+    rest.forEach(v => nav.append(navLink(v, view)));
+  }
+  function navLink(v, cur){ return h('a',{href:'#/'+v,'aria-current':v===cur?'page':null},h('span',{class:'ic','aria-hidden':'true'},VIEWS[v].ic),VIEWS[v].t); }
+
+  function fillSwitchers(){
+    const ts = $('tierSel'); ts.textContent = '';
+    D.TIERS.forEach(t => ts.append(h('option',{value:t.id,selected:t.id===S.tier},t.name)));
+    const ss = $('siteSel'); ss.textContent = '';
+    D.SITES.forEach(s => ss.append(h('option',{value:s.id,selected:s.id===S.site},s.name+' ('+D.SETTINGS[s.setting].short+')')));
+  }
+  $('tierSel').addEventListener('change', e => {
+    S.tier = e.target.value;
+    if (S.tier === 'family') S.site = 'family';
+    else if (S.site === 'family') S.site = 'maple';
+    save(); fillSwitchers(); go('home');
+  });
+  $('siteSel').addEventListener('change', e => { S.site = e.target.value; save(); route(); });
+
+  function go(v){ if (location.hash === '#/'+v) route(); else location.hash = '#/'+v; }
+  let current = 'home', param = '';
+  function route(){
+    const m = (location.hash||'').match(/^#\/([a-z]+)(?:\/(.*))?/);
+    current = m && VIEWS[m[1]] ? m[1] : 'home';
+    param = m && m[2] ? decodeURIComponent(m[2]) : '';
+    renderNav(current);
+    const main = $('main'); main.textContent = '';
+    const view = h('div',{class:'view'});
+    (R[current] || R.home)(view);
+    main.append(view);
+    if (S.tour) { S.tour[current] = true; save(); }
+    window.scrollTo(0,0);
+  }
+  window.addEventListener('hashchange', route);
+
+  function head(eyebrow, title, lede){ return h('div',{class:'head'}, h('span',{class:'eyebrow'},eyebrow), h('h1',null,title), lede ? h('p',{class:'muted'},lede) : null); }
+  const LABEL = {rule:['Rule says','calm'], reading:['Best reading','amber'], open:['Open question','red']};
+  function labelChip(l){ const x = LABEL[l]; return h('span',{class:'chip '+x[1]},x[0]); }
+  function settingChip(){ return h('span',{class:'chip grey'},D.SETTINGS[setting()].name); }
+
+  // ---------- rule card (Procedure check and Clarity Cards) ----------
+  function ruleCard(r, opts){
+    opts = opts || {};
+    const sets = opts.compare ? ['afh','cbrf'] : [setting()];
+    const c = h('div',{class:'card rule'});
+    c.append(h('div',{class:'chips'}, labelChip(r.label), h('span',{class:'chip grey'},r.topic), h('span',{class:'chip grey'},'Checked '+fmtDate(D.CHECKED))));
+    c.append(h('h2',null,r.q));
+    sets.forEach(st => {
+      const a = r[st];
+      c.append(h('div',{class:'grid',style:'gap:.25rem'},
+        opts.compare ? h('h4',null,D.SETTINGS[st].name) : null,
+        h('p',{class:'ans'},a.a),
+        h('p',{class:'cite'},'Source: '+a.cite)));
+    });
+    if (r.steps && !opts.compact){
+      c.append(h('h3',null,'What to do'), h('ol',{class:'steps'}, r.steps.map(s => h('li',null,h('span',null,s)))));
+    }
+    if (r.house && setting() !== 'home' && !opts.compact){
+      const f = r.house.flag;
+      c.append(h('div',{class:'house '+f},
+        h('b',null, f==='gap' ? 'Your home\'s policy may differ from the rule' : f==='house' ? 'House rule, not a state rule' : 'Your home\'s policy matches'),
+        h('span',null,r.house.text), r.house.note ? h('span',null,r.house.note) : null));
+    }
+    if (!opts.compact){
+      const row = h('div',{class:'row noprint'});
+      row.append(h('button',{class:'btn ghost sm',type:'button',onclick:()=>confused(r, c)},'This rule confused me'));
+      if (r.label === 'open' || D.GRAY.some(g=>g.id===r.id)) row.append(h('a',{class:'btn ghost sm',href:'#/decide/'+r.id},'Decide and Document'));
+      if (D.ASK_TOPICS.some(a=>a.id===r.id)) row.append(h('a',{class:'btn ghost sm',href:'#/ask/'+r.id},'Ask the Regulator'));
+      c.append(row);
+    }
+    c.append(h('p',{class:'foot'},'Not legal advice. Check with your licensing specialist or attorney for your situation.'));
+    return c;
+  }
+  function confused(r, card){
+    if (card.querySelector('.confuse')) return;
+    const box = h('form',{class:'card soft confuse'});
+    const txt = h('textarea',{maxlength:'600',placeholder:'What felt contradictory? No names or health details, please.'});
+    const from = h('select',null,['Manager','Nurse','Care manager','County','Family','Another facility','Internet'].map(o=>h('option',null,o)));
+    box.append(h('h3',null,'What confused you?'), h('p',{class:'small muted'},'Anonymous. Your manager sees the topic and count, not who asked.'),
+      txt, h('label',{class:'f'},'Who told you something different?',from),
+      h('div',{class:'row'},h('button',{class:'btn sm',type:'submit'},'Send'),h('button',{class:'btn quiet sm',type:'button',onclick:()=>box.remove()},'Cancel')));
+    box.addEventListener('submit', e => {
+      e.preventDefault();
+      if (/\b(abuse|hurt|hit|neglect|stole)\b/i.test(txt.value)){ toast('If someone may be harmed, tell your manager now. This button is not a reporting channel.'); }
+      S.confusions.push({rule:r.id, text:txt.value.trim(), from:from.value, site:S.site, at:new Date().toISOString()}); save();
+      box.replaceWith(h('div',{class:'card calm'},h('b',null,'Thanks. It\'s logged.'),h('span',{class:'small'},'When this one gets a clearer answer, you\'ll see a "you asked, here\'s the answer" note.')));
+    });
+    card.append(box); txt.focus();
+  }
+
+  function searchRules(q){
+    const words = q.toLowerCase().replace(/[^a-z0-9\s-]/g,' ').split(/\s+/).filter(w => w.length > 2 && !STOP.has(w));
+    if (!words.length) return [];
+    return D.RULES.map(r => {
+      const hay = (r.q+' '+r.keys+' '+r.topic).toLowerCase();
+      let s = 0; words.forEach(w => { if (hay.includes(w)) s += 2; else if (w.length > 4 && hay.includes(w.slice(0,-1))) s += 1; });
+      return {r, s};
+    }).filter(x => x.s > 0).sort((a,b) => b.s - a.s).map(x => x.r);
+  }
+  const STOP = new Set('the and can for how what when who our does with that this have has are was not you your they them about need into from should'.split(' '));
+
+  // ---------- views ----------
+  const R = {};
+
+  R.home = v => {
+    const t = S.tier;
+    if (t === 'owner') return R.owner(v, true);
+    if (t === 'multi') return R.sites(v, true);
+    if (t === 'caregiver') homeCaregiver(v);
+    if (t === 'manager') homeManager(v);
+    if (t === 'rn') homeRN(v);
+    if (t === 'family') homeFamily(v);
+    v.append(tourCard());
+  };
+
+  function tile(href, ic, b, span, cls){ return h('a',{class:'tile'+(cls?' '+cls:''),href:'#/'+href},h('span',{class:'ic','aria-hidden':'true'},ic),h('b',null,b),h('span',null,span)); }
+
+  function homeCaregiver(v){
+    const hr = new Date().getHours();
+    const shift = hr < 6 || hr >= 22 ? 'Night shift' : hr < 14 ? 'Day shift' : 'Evening shift';
+    v.append(head(shift+' · '+site().name, 'What do you need right now?', 'Pick one. Everything is two taps or less.'));
+    v.append(h('div',{class:'grid g2'},
+      tile('check','✅','Check a procedure','"Can I…?" "How do I…?" Answers with the rule behind them.'),
+      tile('report','📝','Write a note or report','Type it the way you\'d say it. We make it professional.'),
+      tile('night','🌙','Night help: who do I call?','Sorts what wakes the manager and what waits for morning.'),
+      tile('behavior','🤝','Behavior help','Calm, respectful ideas for hard moments.')));
+    const rs = residents();
+    v.append(h('div',{class:'card'}, h('h2',null,'Residents tonight'), h('p',{class:'small muted'},'Sample residents. Records use codes, not names.'),
+      h('div',{class:'list'}, rs.map(r => h('div',{class:'item'}, h('div',{class:'meta'},h('span',{class:'chip'},r.code),h('b',{style:'color:var(--ink)'},r.nick+' (sample)')), h('span',{class:'small'},r.note))))));
+    const mine = S.delegations.filter(d => d.site === S.site && d.cg === 'Caregiver B');
+    if (mine.length) v.append(h('div',{class:'card calm'},h('h3',null,'Tasks you\'re cleared for'), mine.map(d => h('p',null,d.task+' for '+d.res+' · review by '+fmtDate(d.review)))));
+  }
+
+  function homeManager(v){
+    v.append(head('House manager · '+site().name, 'Good morning. Here\'s what happened.', null));
+    const tri = forSite(S.triage);
+    const slept = tri.filter(x => !x.woke).length;
+    const pend = forSite(S.reports).filter(r => r.status !== 'Filed').length;
+    const qs = forSite(S.questions).length;
+    v.append(h('div',{class:'grid g3'},
+      h('div',{class:'card'},h('div',{class:'stat good'},h('b',null,String(slept)),h('span',null,'night questions handled without waking you'))),
+      h('div',{class:'card'},h('div',{class:'stat warnc'},h('b',null,String(pend)),h('span',null,'reports waiting for your review'))),
+      h('div',{class:'card'},h('div',{class:'stat'},h('b',null,String(qs)),h('span',null,'questions staff looked up this week')))));
+    v.append(h('div',{class:'card'},h('h2',null,'While you slept'),
+      tri.length ? h('div',{class:'list'}, tri.slice().reverse().map(x => {
+        const t = D.TRIAGE.find(y=>y.id===x.id) || {name:x.id,level:'morning'};
+        return h('div',{class:'item'},h('div',{class:'meta'},levelBadge(t.level),h('span',null,fmtTime(x.at))),h('b',null,t.name),h('span',{class:'small'},x.note));
+      })) : h('p',{class:'muted'},'Quiet night. Nothing logged.')));
+    v.append(h('div',{class:'grid g2'},
+      tile('inbox','📥','Review reports','Approve, or ask for more facts. No one is named in public.'),
+      tile('questions','💬','What staff asked','Patterns show where training or policy is unclear.')));
+    const soon = D.WATCH.filter(w => w.date && w.applies.includes(setting()) && daysUntil(w.date) >= 0).slice(0,2);
+    if (soon.length) v.append(h('div',{class:'card soft'},h('h3',null,'Coming up'), soon.map(w => h('p',null,h('b',null,w.title),' · in '+daysUntil(w.date)+' days')), h('a',{href:'#/watch'},'All rule changes')));
+  }
+
+  function homeRN(v){
+    v.append(head('RN · delegations across your homes', 'Your delegation queue', 'Each delegation is one record that maps to the four N 6.03(3) duties.'));
+    const exp = S.delegations.filter(d => d.status !== 'Active');
+    v.append(h('div',{class:'grid g3'},
+      h('div',{class:'card'},h('div',{class:'stat'},h('b',null,String(S.delegations.length)),h('span',null,'delegations on file'))),
+      h('div',{class:'card'},h('div',{class:'stat warnc'},h('b',null,String(exp.length)),h('span',null,'expiring or expired'))),
+      h('div',{class:'card'},h('div',{class:'stat'},h('b',null,String(new Set(S.delegations.map(d=>d.site)).size)),h('span',null,'homes you serve')))));
+    v.append(tile('delegations','🩺','Open the ledger','Renew, check competency, or pause a delegation.'));
+  }
+
+  function homeFamily(v){
+    v.append(head('Family caregiver · '+site().name, 'Today with Mom (sample)', 'Your tasks, who to call, and a hand-off packet for your helper.'));
+    S.famTasks = S.famTasks || {};
+    const tasks = ['Morning meds at 8 AM','Blood sugar check before lunch','Walk around the block if weather allows','Evening meds at 8 PM','Check smoke detector (monthly)'];
+    const ul = h('ul',{class:'tourlist'});
+    tasks.forEach((t,i) => {
+      const id = 'ft'+i; const cb = h('input',{type:'checkbox',id,checked:!!S.famTasks[t]});
+      const lb = h('label',{for:id,class:S.famTasks[t]?'done':''},t);
+      cb.addEventListener('change',()=>{ S.famTasks[t]=cb.checked; save(); lb.className = cb.checked?'done':''; });
+      ul.append(h('li',null,cb,lb));
+    });
+    v.append(h('div',{class:'card'},h('h2',null,'Today\'s tasks'),ul));
+    v.append(h('div',{class:'grid g2'},
+      tile('night','📞','Who do I call?','Sorts emergencies from nurse questions and things that can wait.'),
+      tile('handoff','🧾','Hand-off packet','One page for a weekend or respite helper.'),
+      tile('behavior','🤝','Behavior help','Calm ideas for a hard afternoon.'),
+      tile('check','✅','Check something','Plain answers with the source.')));
+  }
+
+  function tourCard(){
+    const items = [['check','Look up a procedure (try "pre-pour" or "shower")'],['report','Turn a casual note into a report'],['night','Walk through a night question'],['behavior','Open a behavior guide'],['cards','Browse Clarity Cards and compare AFH vs CBRF'],['survey','Run the Survey-Ready Check'],['decide','Record a gray-area decision'],['ask','Draft a question for DQA'],['watch','See upcoming rule changes'],['owner','Open the owner view'],['sites','See the multi-site view'],['delegations','Look at the RN delegation ledger']];
+    const done = items.filter(i => S.tour[i[0]]).length;
+    return h('details',{class:'card soft noprint',open:done < items.length},
+      h('summary',{style:'cursor:pointer;font:800 1.05rem var(--display)'},'Testing checklist for Angelika ('+done+' of '+items.length+' tried)'),
+      h('p',{class:'small'},'Switch "View as" at the top to see each plan. Every feature is unlocked. Tap "Send feedback" anywhere to tell us what to change.'),
+      h('ul',{class:'tourlist'}, items.map(i => h('li',null, h('span',{'aria-hidden':'true'},S.tour[i[0]]?'✅':'○'), h('a',{href:'#/'+i[0],class:S.tour[i[0]]?'done':''},i[1])))),
+      h('button',{class:'btn quiet sm',type:'button',onclick:()=>{ if(confirm('Reset all sample data and the checklist on this device?')){ localStorage.removeItem(KEY); location.hash='#/home'; location.reload(); } }},'Reset sample data'));
+  }
+
+  // Procedure check
+  R.check = v => {
+    v.append(head('Procedure check', 'Ask it the way you\'d ask a coworker', 'Answers come from Wisconsin rules for this home ('+D.SETTINGS[setting()].name+'), next to its own policy.'));
+    const inp = h('input',{type:'search',placeholder:'e.g. Can I pre-pour meds for the night shift?','aria-label':'Your question',value:param && !ruleById(param) ? param : ''});
+    const form = h('form',{class:'search',role:'search'},inp);
+    const out = h('div',{class:'grid'});
+    const sugg = h('div',{class:'chips'}, ['pre-pour meds','shower refusal','resident fell','PRN','training hours','visitors','missed dose'].map(s => h('button',{class:'chip',type:'button',onclick:()=>{inp.value=s;run(true);}},s)));
+    v.append(form, sugg, out);
+    let logged = '';
+    function run(log){
+      out.textContent = '';
+      const q = inp.value.trim(); if (!q) return;
+      const hits = searchRules(q);
+      if (!hits.length){
+        out.append(h('div',{class:'card warn'},h('h3',null,'No clear answer on file yet'),h('p',null,'Your question was sent to your manager\'s question log so it gets answered and added for everyone.'),h('p',{class:'small'},'If someone could be hurt, use Night help or call 911.')));
+        if (log && logged !== q){ S.questions.push({q, id:null, site:S.site, tier:S.tier, at:new Date().toISOString(), shift:shiftName()}); save(); logged = q; }
+        return;
+      }
+      if (log && logged !== q){ S.questions.push({q, id:hits[0].id, site:S.site, tier:S.tier, at:new Date().toISOString(), shift:shiftName()}); save(); logged = q; }
+      out.append(ruleCard(hits[0]));
+      if (hits.length > 1) out.append(h('div',{class:'card'},h('h3',null,'Related'), h('div',{class:'list'}, hits.slice(1,4).map(r => h('button',{class:'item',type:'button',onclick:()=>{inp.value=r.q;run(true);}},h('div',{class:'meta'},labelChip(r.label),h('span',null,r.topic)),h('b',null,r.q))))));
+    }
+    form.addEventListener('submit', e => { e.preventDefault(); run(true); });
+    let tmr; inp.addEventListener('input', () => { clearTimeout(tmr); tmr = setTimeout(()=>run(false), 250); });
+    if (param && ruleById(param)){ inp.value = ruleById(param).q; out.append(ruleCard(ruleById(param))); }
+    else if (inp.value) run(true);
+    inp.focus();
+  };
+  function shiftName(){ const hr = new Date().getHours(); return hr < 6 || hr >= 22 ? 'Night' : hr < 14 ? 'Day' : 'Evening'; }
+
+  // Clarity Cards
+  R.cards = v => {
+    v.append(head('Clarity Cards', 'One question, one plain answer, one source', 'Each card says how sure we are: Rule says, Best reading, or Open question.'));
+    const topics = ['All', ...new Set(D.RULES.map(r => r.topic))];
+    let pick = 'All', compare = false;
+    const bar = h('div',{class:'chips'});
+    const cmp = h('button',{class:'chip',type:'button','aria-pressed':'false'},'Compare AFH and CBRF');
+    const list = h('div',{class:'grid'});
+    function draw(){
+      bar.textContent = '';
+      topics.forEach(t => bar.append(h('button',{class:'chip',type:'button','aria-pressed':String(t===pick),onclick:()=>{pick=t;draw();}},t)));
+      list.textContent = '';
+      D.RULES.filter(r => pick === 'All' || r.topic === pick).forEach(r => {
+        const d = h('details',{class:'card'});
+        d.append(h('summary',{style:'cursor:pointer;list-style:none;display:grid;gap:.4rem'}, h('div',{class:'chips'},labelChip(r.label),h('span',{class:'chip grey'},r.topic),h('span',{class:'chip grey'},r.id)), h('b',{style:'font:700 1.05rem var(--display)'},r.q)));
+        d.addEventListener('toggle', () => { if (d.open && !d.dataset.full){ d.dataset.full = 1; const c = ruleCard(r,{compare}); c.classList.remove('card'); c.style.marginTop = '.5rem'; d.append(c); } });
+        list.append(d);
+      });
+    }
+    cmp.addEventListener('click', () => { compare = !compare; cmp.setAttribute('aria-pressed', String(compare)); draw(); });
+    v.append(h('div',{class:'row'},cmp, settingChip()), bar, list);
+    draw();
+  };
+
+  // Write a report
+  R.report = v => {
+    v.append(head('Write a report', 'Say what happened. We\'ll make it professional.', 'Facts only, calm wording, no blame. Nothing here goes anywhere until you send it.'));
+    const rs = residents();
+    const now = new Date(); now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    const f = {
+      res: h('select',null, h('option',{value:''},'No resident involved'), rs.map(r => h('option',{value:r.code},r.code+' ('+r.nick+', sample)'))),
+      when: h('input',{type:'datetime-local',value:now.toISOString().slice(0,16)}),
+      where: h('select',null, ['Bedroom','Bathroom','Dining room','Living room','Hallway','Kitchen','Outside','Vehicle','Other'].map(o=>h('option',null,o))),
+      who: h('input',{type:'text',placeholder:'Roles, not names: e.g. "me and one coworker"'}),
+      raw: h('textarea',{placeholder:'e.g. Walt freaked out at supper and hit Sam cuz he wanted to go home again. I think he was tired.'}),
+      did: h('textarea',{style:'min-height:4.5rem',placeholder:'e.g. gave him space, offered coffee, he calmed down in 10 min'}),
+      told: h('input',{type:'text',placeholder:'e.g. texted manager 7:45 PM'})
+    };
+    if (param && param.startsWith('behavior:')) f.raw.value = '';
+    const ex = h('button',{class:'btn quiet sm',type:'button',onclick:()=>{ f.res.value = rs[1] ? rs[1].code : ''; f.where.value='Dining room'; f.who.value='me and one coworker'; f.raw.value=(rs[1]?rs[1].nick:'He')+' freaked out at supper and hit Sam cuz he wanted to go home again. I think he was tired and lazy staff didnt help. He wouldnt take his meds after.'; f.did.value='gave him space, offered coffee, he calmed down in 10 min'; f.told.value='texted manager 7:45 PM'; }},'Fill in an example');
+    const out = h('div',{class:'grid'});
+    const form = h('form',{class:'card'},
+      h('div',{class:'grid g2'}, h('label',{class:'f'},'Resident',f.res), h('label',{class:'f'},'When',f.when), h('label',{class:'f'},'Where',f.where), h('label',{class:'f'},'Who was there',f.who)),
+      h('label',{class:'f'},'What happened, in your own words',f.raw),
+      h('label',{class:'f'},'What you did',f.did),
+      h('label',{class:'f'},'Who you told, and when',f.told),
+      h('div',{class:'row'},h('button',{class:'btn',type:'submit'},'Make it professional'),ex));
+    form.addEventListener('submit', e => {
+      e.preventDefault(); out.textContent = '';
+      if (!f.raw.value.trim()){ f.raw.focus(); return; }
+      const r = rewrite({res:f.res.value, when:f.when.value, where:f.where.value, who:f.who.value, raw:f.raw.value, did:f.did.value, told:f.told.value});
+      showRewrite(out, r, true);
+      out.scrollIntoView({behavior:'smooth',block:'start'});
+    });
+    v.append(form, out);
+  };
+
+  function sentence(s){
+    s = s.trim().replace(/\s+/g,' ');
+    if (!s) return '';
+    s = s.replace(/\bi\b/g,'I').replace(/(^|[.!?]\s+)([a-z])/g,(m,a,b)=>a+b.toUpperCase());
+    if (!/[.!?]$/.test(s)) s += '.';
+    return s;
+  }
+  function rewrite(x){
+    const changes = []; const flags = [];
+    let t = ' '+x.raw+' ';
+    let did = x.did || ''; let who = x.who || '';
+    // names of sample residents -> codes
+    (D.RESIDENTS[S.site]||[]).forEach(r => {
+      const re = new RegExp('\\b'+r.nick+'\\b','g');
+      if (re.test(t)){ t = t.replace(re,'resident '+r.code); changes.push('Replaced the name "'+r.nick+'" with resident code '+r.code+'.'); }
+    });
+    t = t.replace(/\b(didnt|dont|wouldnt|cant|wasnt|isnt|wont)\b/gi, m => m.slice(0,-1)+'\''+m.slice(-1));
+    D.WORDING.forEach(([re, rep]) => {
+      const run = s => s.replace(re, m => { if (m.toLowerCase() !== rep.toLowerCase()) changes.push('"'+m+'" → "'+rep+'"'); return rep; });
+      t = run(t); did = run(did);
+    });
+    // other capitalized words mid-sentence are possible names
+    const known = new Set(['I','AM','PM','ER','RN','LPN','CNA','DQA','MCO','PRN','DNR','EMS','OK']);
+    const names = new Set();
+    t.replace(/([^\s])?(\s*)\b([A-Z][a-z]{2,})\b/g, (m, prev, sp, w, off) => {
+      const before = t.slice(0, off + (prev ? 1 : 0)).trimEnd();
+      if (before && !/[.!?]$/.test(before) && !known.has(w) && !/^(Resident|Staff|Manager|Nurse|Mom|Dad)$/.test(w)) names.add(w);
+      return m; });
+    names.forEach(n => { const re = new RegExp('\\b'+n+'\\b','g'); t = t.replace(re,'[name removed: use a role]'); changes.push('Removed the name "'+n+'". Use a role, like coworker or visitor.'); });
+    let report = false;
+    D.FLAGS.forEach(fl => { const m = t.match(fl.re); if (m){ [...new Set(m.map(s=>s.toLowerCase()))].forEach(w => flags.push({w, why:fl.why})); if (fl.report) report = true; } });
+    const facts = sentence(t);
+    const routes = D.ROUTES.filter(r => r.re.test(x.raw+' '+facts));
+    const st = setting();
+    const missing = [];
+    if (!x.told) missing.push('Who you told and when');
+    if (!x.did) missing.push('What you did');
+    if (!/["“]/.test(x.raw) && /\b(said|says|told|yelled|asked)\b/i.test(x.raw)) missing.push('Exact words in quotes, if someone said something');
+    const lines = [
+      'INCIDENT REPORT (TEST DATA)',
+      'Home: '+site().name+' (sample, '+D.SETTINGS[st].short+')',
+      'Date and time: '+(x.when ? fmtTime(x.when) : 'not given'),
+      'Location: '+x.where,
+      'Resident: '+(x.res || 'none'),
+      'People present: '+(who ? sentence(who).replace(/\.$/,'') : 'not given'),
+      routes.length ? 'Type: '+routes.map(r=>r.type).join(', ') : null,
+      '',
+      'What happened (observed facts):',
+      facts,
+      '',
+      'Actions taken by staff:',
+      did ? sentence(did) : '(add what you did)',
+      '',
+      'Notified:',
+      x.told ? sentence(x.told) : '(add who you told and when)',
+      '',
+      'Written by: '+tier().name+' on shift, '+fmtTime(new Date())
+    ].filter(l => l !== null);
+    return {text:lines.join('\n'), changes:[...new Set(changes)], flags, report, routes, missing, x, facts};
+  }
+
+  function showRewrite(out, r, canSend){
+    if (r.report) out.append(h('div',{class:'card alert',role:'alert'},
+      h('h2',null,'This may be a mandatory report'),
+      h('ol',{class:'steps'}, ['Make sure every resident is safe right now.','Tell the person your home designates to report (usually the administrator) today.','Write facts only. The home reports to DQA within 7 calendar days (DHS 13.05).','You can also report directly to DQA or the county adult-at-risk line. Good-faith reporters are protected from retaliation.'].map(s=>h('li',null,h('span',null,s))))));
+    const pre = h('div',{class:'out'});
+    // highlight flagged words
+    const parts = r.text.split(new RegExp('('+r.flags.map(f=>f.w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')','gi'));
+    if (r.flags.length) parts.forEach((p,i) => pre.append(i % 2 ? h('mark',{class:'flag'},p) : p)); else pre.textContent = r.text;
+    const card = h('div',{class:'card'}, h('h2',null,'Professional version'), h('p',{class:'small muted'},'Templated rewrite for testing. Read it, fix anything that is not exactly what happened.'), pre);
+    const row = h('div',{class:'row noprint'});
+    const cb = h('button',{class:'btn ghost sm',type:'button'},'Copy');
+    cb.addEventListener('click',()=>copy(r.text, cb));
+    row.append(cb, h('button',{class:'btn ghost sm',type:'button',onclick:()=>window.print()},'Print'));
+    if (canSend){
+      const sb = h('button',{class:'btn sm',type:'button'},'Send to my manager');
+      sb.addEventListener('click',()=>{
+        S.reports.push({id:uid(), site:S.site, at:new Date().toISOString(), type:r.routes.map(x=>x.type).join(', ')||'General', status:'Waiting for manager', resident:r.x.res, raw:r.x.raw, clean:r.text, by:tier().name+' (you)'}); save();
+        sb.disabled = true; sb.textContent = 'Sent'; toast('Sent privately to the manager\'s review list.');
+      });
+      row.append(sb);
+    }
+    card.append(row); out.append(card);
+    if (r.flags.length || r.missing.length) out.append(h('div',{class:'card warn'}, h('h3',null,'Check before sending'),
+      h('ul',null, r.flags.map(f => h('li',null,h('b',null,'"'+f.w+'": '),f.why)), r.missing.map(m => h('li',null,h('b',null,'Missing: '),m)))));
+    if (r.changes.length) out.append(h('details',{class:'card'}, h('summary',{style:'cursor:pointer;font-weight:700'},'What we changed ('+r.changes.length+')'), h('ul',null,r.changes.map(c=>h('li',null,c)))));
+    const st = setting();
+    out.append(h('div',{class:'card soft'}, h('h3',null,'Who needs to know, and by when'),
+      r.routes.length ? h('div',{class:'list'}, r.routes.map(rt => h('div',{class:'item'}, h('b',null,rt.type), h('span',{class:'small'},'Tell: '+rt.to.join(', ')), (st==='cbrf' && rt.cbrf) || (st==='afh' && rt.afh) ? h('span',{class:'small'},'State deadline: '+(st==='cbrf'?rt.cbrf:rt.afh)) : st==='afh' && rt.cbrf ? h('span',{class:'small muted'},'AFH deadline: check DQA P-02007 (being verified)') : null)))
+      : h('p',{class:'small'},'No reportable event detected. Your manager still sees it in their review list.')));
+  }
+
+  // Reports to review (manager)
+  R.inbox = v => {
+    v.append(head('House manager', 'Reports to review', 'Staff send reports here privately. You approve, ask for more facts, or file. Nothing is posted to the team.'));
+    const rs = forSite(S.reports).slice().reverse();
+    if (!rs.length){ v.append(h('p',{class:'muted'},'No reports for this home yet. Try Write a report.')); return; }
+    rs.forEach(r => {
+      if (!r.clean) r.clean = rewrite({res:r.resident, when:r.at, where:'Dining room', who:'', raw:r.raw, did:'', told:''}).text;
+      const st = h('span',{class:'chip '+(r.status==='Filed'?'calm':r.status==='Needs more facts'?'amber':'')},r.status);
+      const c = h('div',{class:'card'}, h('div',{class:'meta row small muted'}, st, h('span',null,r.type), h('span',null,fmtTime(r.at)), h('span',null,'from '+r.by)),
+        h('details',null,h('summary',{style:'cursor:pointer'},'What the caregiver typed'),h('p',{class:'out',style:'margin-top:.5rem'},r.raw)),
+        h('div',{class:'out'},r.clean),
+        r.mgrNote ? h('p',{class:'small'},h('b',null,'Your note: '),r.mgrNote) : null);
+      const row = h('div',{class:'row'});
+      const set = (s, note) => { r.status = s; if (note != null) r.mgrNote = note; save(); route(); };
+      row.append(h('button',{class:'btn sm',type:'button',onclick:()=>set('Filed')},'Approve and file'));
+      row.append(h('button',{class:'btn ghost sm',type:'button',onclick:()=>{ const n = prompt('What facts are missing? (Goes privately to the writer)','Please add the exact words used and who was notified.'); if(n) set('Needs more facts', n); }},'Ask for more facts'));
+      c.append(row); v.append(c);
+    });
+    save();
+  };
+
+  // Question log (manager / owner)
+  R.questions = v => {
+    const all = S.tier === 'owner' || S.tier === 'multi';
+    const qs = all ? S.questions : forSite(S.questions);
+    v.append(head(all ? 'Owner report' : 'House manager', 'What staff asked', 'Counts and topics only. No names, so asking is never risky.'));
+    const by = {};
+    qs.forEach(q => { const k = q.id || 'unanswered'; by[k] = by[k] || {n:0, q:q.q, id:q.id, shifts:{}}; by[k].n++; by[k].shifts[q.shift] = (by[k].shifts[q.shift]||0)+1; });
+    const rows = Object.values(by).sort((a,b) => b.n - a.n);
+    const max = Math.max(1, ...rows.map(r => r.n));
+    v.append(h('div',{class:'card'}, h('h2',null,'Top questions'),
+      rows.length ? h('div',{class:'list'}, rows.slice(0,8).map(r => h('div',{class:'item'},
+        h('div',{class:'meta'}, r.id ? labelChip(ruleById(r.id).label) : h('span',{class:'chip amber'},'No answer on file'), h('span',null,r.n+' time'+(r.n>1?'s':'')), h('span',null,Object.entries(r.shifts).map(([s,n])=>s+' '+n).join(' · '))),
+        h('b',null, r.id ? ruleById(r.id).q : r.q),
+        h('div',{class:'bar'},h('i',{style:'width:'+Math.round(r.n/max*100)+'%'})),
+        r.id ? h('a',{class:'small',href:'#/check/'+r.id},'See the answer staff got') : h('span',{class:'small muted'},'Add your home\'s answer, or use Ask the Regulator.')))) : h('p',{class:'muted'},'No questions yet.')));
+    const conf = all ? S.confusions : forSite(S.confusions);
+    v.append(h('div',{class:'card'}, h('h2',null,'"This rule confused me"'), h('p',{class:'small muted'},'Anonymous reports from the Clarity Cards. A sign of where policy and practice drift apart.'),
+      conf.length ? h('div',{class:'list'}, conf.slice().reverse().map(c => h('div',{class:'item'}, h('div',{class:'meta'},h('span',{class:'chip grey'},c.rule),h('span',null,'heard different from: '+c.from),h('span',null,fmtDate(c.at))), h('span',null,c.text||'(no details)')))) : h('p',{class:'muted'},'None yet.')));
+    const lines = ['Question report for '+(all?'all homes':site().name)+' (test data, '+fmtDate(new Date())+')',''];
+    rows.slice(0,5).forEach((r,i) => lines.push((i+1)+'. '+(r.id?ruleById(r.id).q:r.q)+' ('+r.n+')'));
+    lines.push('','Suggested training: the top topic above at the next staff meeting.');
+    const cb = h('button',{class:'btn ghost sm',type:'button'},'Copy report for the owner');
+    cb.addEventListener('click',()=>copy(lines.join('\n'), cb));
+    v.append(h('div',{class:'row'},cb));
+  };
+
+  // Night help
+  function levelBadge(l){ return h('span',{class:'level '+l},{now:'Call 911 now',wake:'Call the manager',nurse:'Call the on-call nurse',morning:'Can wait for morning'}[l]); }
+  R.night = v => {
+    const fam = S.tier === 'family';
+    v.append(head(fam ? 'Who do I call?' : 'Night help', fam ? 'Not sure who to call?' : 'Not sure if this should wake the manager?', 'Answer one question, then pick what\'s going on.'));
+    const area = h('div',{class:'grid'});
+    v.append(h('div',{class:'card'}, h('h2',null,'Is anyone in danger right now?'),
+      h('div',{class:'row'}, h('button',{class:'btn red',type:'button',onclick:danger},'Yes, someone may be in danger'), h('button',{class:'btn ghost',type:'button',onclick:pick},'No, but I need help deciding'))), area);
+    function danger(){
+      area.textContent = '';
+      area.append(h('div',{class:'card alert',role:'alert'}, h('h2',null,'Call 911 now'), h('ol',{class:'steps'}, ['Call 911 and follow the dispatcher.','Check the code status (DNR) sheet.','Keep others safe.', fam ? 'Call the nurse or family after.' : 'Call the manager after 911.'].map(s=>h('li',null,h('span',null,s)))), h('a',{class:'btn red',href:'tel:911'},'Call 911')));
+    }
+    function pick(){
+      area.textContent = '';
+      area.append(h('div',{class:'list'}, D.TRIAGE.filter(t => !fam || !['callin','staff'].includes(t.id)).map(t => h('button',{class:'item',type:'button',onclick:()=>show(t)}, h('div',{class:'meta'},levelBadge(t.level)), h('b',null,t.name)))));
+    }
+    function show(t){
+      area.textContent = '';
+      let level = t.level;
+      if (level === 'morning' && ((t.id==='fall-ok' && S.oncall.fallok))) level = 'wake';
+      const note = h('textarea',{style:'min-height:4.5rem',placeholder:'Short note: time, resident code, what you saw, what you did.'});
+      const card = h('div',{class:'card'+(level==='now'?' alert':'')}, h('div',{class:'row'},levelBadge(level)), h('h2',null,t.name),
+        h('ol',{class:'steps'}, t.steps.map(s=>h('li',null,h('span',null,s)))),
+        h('p',null,h('b',null,'Who: '),t.who), t.clock ? h('p',{class:'small'},h('b',null,'Deadline: '),t.clock) : null,
+        t.id==='behav' ? h('a',{href:'#/behavior'},'Open Behavior help') : null,
+        h('label',{class:'f'},'Log it',note));
+      const lb = h('button',{class:'btn',type:'button'}, level==='morning' ? 'Log it for the morning' : 'Log it');
+      lb.addEventListener('click',()=>{ S.triage.push({id:t.id, site:S.site, at:new Date().toISOString(), note:note.value.trim()||'(no note)', woke:level==='now'||level==='wake'}); save();
+        card.append(h('div',{class:'card calm'}, h('b',null, level==='morning' ? 'Logged. Your manager sees it first thing in the morning.' : 'Logged.'), h('span',{class:'small'},'Thanks for handling it calmly.'))); lb.disabled = true; });
+      card.append(h('div',{class:'row'},lb,h('button',{class:'btn quiet',type:'button',onclick:pick},'Something else')));
+      area.append(card);
+    }
+    if (S.tier === 'manager' || S.tier === 'owner'){
+      const opt = (k, label) => { const cb = h('input',{type:'checkbox',checked:!!S.oncall[k]}); cb.addEventListener('change',()=>{S.oncall[k]=cb.checked;save();}); return h('label',{class:'row small'},cb,label); };
+      v.append(h('div',{class:'card soft'}, h('h3',null,'Your on-call rules'), h('p',{class:'small'},'Emergencies and missing residents always call. Choose what else wakes you.'),
+        opt('fallok','Wake me for falls even without injury'), opt('callin','Wake me if a shift is uncovered by 5 AM')));
+    }
+  };
+
+  // Behavior help
+  R.behavior = v => {
+    v.append(head('Behavior help', 'What\'s happening?', 'Ideas that respect the person\'s choices and dignity. Safety first, then calm.'));
+    const area = h('div');
+    const list = h('div',{class:'grid g2'}, D.BEHAVIORS.map(b => h('button',{class:'tile',type:'button',style:'text-align:left;cursor:pointer;font:inherit',onclick:()=>show(b)},h('b',null,b.name))));
+    v.append(list, area);
+    function show(b){
+      area.textContent = '';
+      const c = h('div',{class:'card'}, h('h2',null,b.name), h('div',{class:'card soft'},h('b',null,'First: '),b.first),
+        h('h3',null,'Try'), h('ol',{class:'steps'}, b.try.map(s=>h('li',null,h('span',null,s)))),
+        h('h3',null,'Avoid'), h('ul',null, b.avoid.map(s=>h('li',null,s))),
+        h('p',null,h('b',null,'Write down: '),b.doc), h('p',null,h('b',null,'Get help when: '),b.escalate),
+        h('div',{class:'row'}, h('a',{class:'btn ghost sm',href:'#/report'},'Write it up'), b.id==='refuse' ? h('a',{class:'btn ghost sm',href:'#/decide/C05'},'Decide and Document') : null),
+        h('p',{class:'foot'},'Guidance only. The resident\'s plan and your nurse come first.'));
+      area.append(c); c.scrollIntoView({behavior:'smooth',block:'start'});
+    }
+  };
+
+  // Survey-Ready Check
+  R.survey = v => {
+    const st = setting();
+    const qs = D.SURVEY[st];
+    v.append(head('Survey-Ready Check · '+site().name, 'Are you ready if the surveyor came tomorrow?', 'Built on DQA\'s most-cited rules for '+D.SETTINGS[st].short+'s in 2025. Answer honestly. Only you see this.'));
+    S.survey[S.site] = S.survey[S.site] || {};
+    const A = S.survey[S.site];
+    const score = h('div',{class:'card soft'});
+    const list = h('div',{class:'list'});
+    const opts = [['yes','Yes',2],['partly','Partly',1],['no','No',0],['unsure','Not sure',0]];
+    function draw(){
+      list.textContent = '';
+      qs.forEach((q,i) => {
+        const row = h('div',{class:'chips'}, opts.map(o => h('button',{class:'chip',type:'button','aria-pressed':String(A[i]===o[0]),onclick:()=>{A[i]=o[0];save();draw();}},o[1])));
+        list.append(h('div',{class:'item'}, h('div',{class:'meta'},h('span',null,q.cite), q.top ? h('span',{class:'chip amber'},q.top) : null), h('b',null,(i+1)+'. '+q.q), row));
+      });
+      const answered = Object.keys(A).length;
+      const pts = qs.reduce((s,q,i) => s + (opts.find(o=>o[0]===A[i])||[0,0,0])[2], 0);
+      const pct = Math.round(pts / (qs.length*2) * 100);
+      const fixes = qs.map((q,i)=>({q,i})).filter(x => A[x.i] && A[x.i] !== 'yes');
+      score.textContent = '';
+      score.append(h('div',{class:'grid g2'}, h('div',{class:'stat '+(pct>=80?'good':pct>=50?'':'warnc')},h('b',null,answered?pct+'%':'–'),h('span',null,'ready ('+answered+' of '+qs.length+' answered)')),
+        h('div',{class:'bar '+(pct>=80?'calm':'amber'),style:'align-self:center'},h('i',{style:'width:'+pct+'%'}))));
+      if (fixes.length){
+        const txt = 'Survey-Ready fix list, '+site().name+' (test data)\n'+fixes.map((x,n)=>(n+1)+'. '+x.q.fix+' ('+x.q.cite+')').join('\n');
+        const cb = h('button',{class:'btn ghost sm',type:'button'},'Copy fix list'); cb.addEventListener('click',()=>copy(txt,cb));
+        score.append(h('h3',null,'Your fix list'), h('ol',null, fixes.map(x => h('li',null,x.q.fix,h('span',{class:'small muted'},' ('+x.q.cite+')')))), cb);
+      }
+    }
+    v.append(score, list); draw();
+  };
+
+  // Decide and Document
+  R.decide = v => {
+    v.append(head('Decide and Document', 'When the rule is unclear, your paper trail shouldn\'t be', 'Pick the gray area, see both sides, record what you chose and why.'));
+    const area = h('div',{class:'grid'});
+    const g0 = D.GRAY.find(g => g.id === param);
+    v.append(h('div',{class:'chips'}, D.GRAY.map(g => h('button',{class:'chip',type:'button','aria-pressed':String(g0&&g0.id===g.id),onclick:()=>go('decide/'+g.id)},g.title))), area);
+    if (g0){
+      const r = ruleById(g0.id);
+      const choice = h('div',{class:'list'});
+      let picked = '';
+      g0.options.concat(['Something else (write it in "why")']).forEach((o,i) => {
+        const id = 'opt'+i; const rb = h('input',{type:'radio',name:'opt',id,value:o}); rb.addEventListener('change',()=>picked=o);
+        choice.append(h('label',{class:'item',for:id,style:'grid-template-columns:auto 1fr;align-items:center;cursor:pointer'},rb,h('span',null,o)));
+      });
+      const why = h('textarea',{placeholder:'Why this option fits this resident or situation. No names.'});
+      const appr = h('select',null,['House manager','Owner','RN','Owner and RN'].map(o=>h('option',null,o)));
+      const rev = h('input',{type:'text',value:new Date(Date.now()+90*86400000).toISOString().slice(0,10),'aria-label':'Review date'});
+      const form = h('form',{class:'card'}, h('h2',null,g0.title), r ? h('p',{class:'small muted'},r.q) : null,
+        h('div',{class:'card soft'},h('b',null,'Rules on each side'),h('p',null,g0.sides)),
+        h('h3',null,'What did you decide?'), choice, h('label',{class:'f'},'Why',why),
+        h('div',{class:'grid g2'}, h('label',{class:'f'},'Approved by',appr), h('label',{class:'f'},'Review again on',rev)),
+        h('div',{class:'row'},h('button',{class:'btn',type:'submit'},'Save the decision'), r ? h('a',{class:'btn quiet',href:'#/ask/'+g0.id},'Ask the Regulator instead') : null));
+      form.addEventListener('submit', e => { e.preventDefault(); if (!picked){ toast('Pick an option first'); return; }
+        S.decisions.push({id:uid(), site:S.site, gray:g0.id, choice:picked, why:why.value.trim(), approver:appr.value, review:rev.value, at:new Date().toISOString()}); save(); toast('Saved with today\'s date'); go('decide'); });
+      area.append(form);
+    }
+    const ds = forSite(S.decisions).slice().reverse();
+    area.append(h('div',{class:'card'}, h('h2',null,'Decisions on file'),
+      ds.length ? h('div',{class:'list'}, ds.map(d => { const g = D.GRAY.find(x=>x.id===d.gray)||{title:d.gray};
+        return h('div',{class:'item'}, h('div',{class:'meta'},h('span',null,fmtDate(d.at)),h('span',null,'approved by '+d.approver), d.review ? h('span',null,'review '+fmtDate(d.review)) : null), h('b',null,g.title), h('span',null,'Chose: '+d.choice), d.why ? h('span',{class:'small'},d.why) : null); }))
+      : h('p',{class:'muted'},'None yet.'),
+      h('button',{class:'btn ghost sm noprint',type:'button',onclick:()=>window.print()},'Print for the survey binder')));
+  };
+
+  // Ask the Regulator
+  R.ask = v => {
+    v.append(head('Ask the Regulator', 'Stop guessing. Ask once, and everyone learns.', 'A neutral question with the citations filled in. You send it yourself; we track the answer.'));
+    const t0 = D.ASK_TOPICS.find(a => a.id === param);
+    v.append(h('div',{class:'chips'}, D.ASK_TOPICS.map(a => h('button',{class:'chip',type:'button','aria-pressed':String(t0&&t0.id===a.id),onclick:()=>go('ask/'+a.id)},a.subject))));
+    if (t0){
+      const st = D.SETTINGS[setting()].name.toLowerCase();
+      const body = 'To: '+t0.to+'\nSubject: Question about '+t0.subject.toLowerCase()+'\n\nHello,\n\nI manage a '+st+' in Wisconsin and want to make sure we follow the rules correctly.\n\n'+t0.body+'\n\nA short answer or a pointer to written guidance would help us train staff consistently. Thank you for your time.\n\nKind regards,\n[Your name]\n[Home name and license number]';
+      const ta = h('textarea',{style:'min-height:16rem'}); ta.value = body;
+      const cb = h('button',{class:'btn ghost sm',type:'button'},'Copy');
+      cb.addEventListener('click',()=>copy(ta.value, cb));
+      const tb = h('button',{class:'btn sm',type:'button'},'Track this question');
+      tb.addEventListener('click',()=>{ S.asks.push({id:uid(), topic:t0.id, to:t0.to, status:'Draft', at:new Date().toISOString(), answer:''}); save(); toast('Added to your tracked questions'); go('ask'); });
+      v.append(h('div',{class:'card'}, h('h2',null,t0.subject), h('p',{class:'small muted'},'Edit anything. Nothing is sent from the app.'), ta, h('div',{class:'row'},cb,tb)));
+    }
+    const list = h('div',{class:'list'});
+    S.asks.slice().reverse().forEach(a => {
+      const t = D.ASK_TOPICS.find(x => x.id === a.topic) || {subject:a.topic};
+      const sel = h('select',{'aria-label':'Status',style:'max-width:180px'}, ['Draft','Sent','Answered'].map(s => h('option',{selected:s===a.status},s)));
+      sel.addEventListener('change',()=>{ a.status = sel.value; if (a.status==='Answered' && !a.answer){ a.answer = prompt('Paste or summarize the answer (no names):','')||''; } save(); route(); });
+      list.append(h('div',{class:'item'}, h('div',{class:'meta'},h('span',null,'to '+a.to),h('span',null,fmtDate(a.at))), h('b',null,t.subject), sel, a.answer ? h('p',{class:'small'},h('b',null,'Answer: '),a.answer) : null));
+    });
+    v.append(h('div',{class:'card'}, h('h2',null,'Tracked questions'), S.asks.length ? list : h('p',{class:'muted'},'None yet.')));
+  };
+
+  // Regulatory Watch
+  R.watch = v => {
+    v.append(head('Regulatory Watch', 'What\'s changing, and does it apply to me?', 'Sorted by the next date that matters. Each status is rechecked monthly.'));
+    let mineOnly = true;
+    const tg = h('button',{class:'chip',type:'button','aria-pressed':'true'},'Only what applies to '+D.SETTINGS[setting()].short+'s');
+    const list = h('div',{class:'list'});
+    function draw(){
+      list.textContent = '';
+      D.WATCH.filter(w => !mineOnly || w.applies.includes(setting())).sort((a,b) => (a.date||'9999').localeCompare(b.date||'9999')).forEach(w => {
+        S.watch[w.id] = S.watch[w.id] || {};
+        const dd = w.date ? daysUntil(w.date) : null;
+        const todo = h('ul',{class:'tourlist'}, w.todo.map((t,i) => { const id = w.id+'t'+i; const cb = h('input',{type:'checkbox',id,checked:!!S.watch[w.id][i]}); const lb = h('label',{for:id,class:S.watch[w.id][i]?'done':''},t); cb.addEventListener('change',()=>{S.watch[w.id][i]=cb.checked;save();lb.className=cb.checked?'done':'';}); return h('li',null,cb,lb); }));
+        list.append(h('div',{class:'card'},
+          h('div',{class:'chips'}, h('span',{class:'chip grey'},w.layer), dd!=null ? h('span',{class:'chip '+(dd<45?'amber':'')}, dd>=0 ? 'in '+dd+' days' : 'date passed') : h('span',{class:'chip grey'},'no date'), h('span',{class:'chip '+(w.check==='Verified'?'calm':'grey')},w.check)),
+          h('h3',null,w.title), h('p',{class:'small muted'},w.status), h('p',null,w.what), w.todo.length ? h('div',null,h('b',{class:'small'},'Get ready'),todo) : null));
+      });
+    }
+    tg.addEventListener('click',()=>{ mineOnly = !mineOnly; tg.setAttribute('aria-pressed',String(mineOnly)); draw(); });
+    v.append(h('div',{class:'row'},tg), list); draw();
+  };
+
+  // Team training (manager)
+  R.team = v => {
+    const st = setting();
+    v.append(head('House manager · '+site().name, 'Team training and checks', st==='afh' ? 'AFH: 15 hours within 6 months, then 8 a year (DHS 88.04(5)). Background rechecks every 4 years.' : 'CBRF: 90-day topics, then 15 CE hours a year (DHS 83.20-83.25). Background rechecks every 4 years.'));
+    const staff = (S.staff[S.site]||[]);
+    const tb = h('table',{class:'t'}, h('thead',null,h('tr',null,['Staff (sample)','Hours this year','Background recheck due','Status'].map(x=>h('th',null,x)))));
+    const body = h('tbody');
+    staff.forEach(p => {
+      const due = p.bg ? new Date(new Date(p.bg).getTime()+4*365*86400000) : null;
+      const soon = due && (due - new Date()) < 120*86400000;
+      const pct = p.need ? Math.min(100, Math.round(p.hours/p.need*100)) : 100;
+      body.append(h('tr',null, h('td',null,p.n), h('td',null, h('div',{class:'bar '+(pct>=100?'calm':'amber')},h('i',{style:'width:'+pct+'%'})), h('span',{class:'small'},p.hours+' of '+p.need)), h('td',null, due ? h('span',{class:'chip '+(soon?'amber':'grey')},fmtDate(due)) : '–'), h('td',null,p.status)));
+    });
+    tb.append(body);
+    v.append(h('div',{class:'card'}, h('div',{class:'tablewrap'},tb), h('p',{class:'small muted'},'Names are placeholders. Caregivers only see their own record.')));
+  };
+
+  // My training (caregiver)
+  R.mytraining = v => {
+    const me = (S.staff[S.site]||[])[1] || {hours:0,need:8};
+    v.append(head('My training', 'Your hours and what you\'re cleared for', 'This is yours. Only you and your manager see it.'));
+    const pct = me.need ? Math.min(100, Math.round(me.hours/me.need*100)) : 100;
+    v.append(h('div',{class:'card'}, h('div',{class:'stat '+(pct>=100?'good':'')},h('b',null,me.hours+' of '+me.need),h('span',null,'training hours this year')), h('div',{class:'bar calm'},h('i',{style:'width:'+pct+'%'}))));
+    const mine = S.delegations.filter(d => d.cg === 'Caregiver B' || (S.site==='family' && d.cg==='You'));
+    v.append(h('div',{class:'card'}, h('h2',null,'Tasks an RN cleared you for'), mine.length ? h('div',{class:'list'}, mine.map(d=>h('div',{class:'item'},h('b',null,d.task+' · '+d.res),h('span',{class:'small'},'Checked '+fmtDate(d.checked)+' · review by '+fmtDate(d.review))))) : h('p',{class:'muted'},'None yet.'),
+      h('p',{class:'small muted'},'A portable training record you keep between jobs is a planned add-on.')));
+  };
+
+  // Delegation ledger (RN)
+  R.delegations = v => {
+    v.append(head('RN delegation ledger', 'Who is cleared for what, and until when', 'Maps to N 6.03(3): match the task, direct, monitor, evaluate. N 6 sets no renewal interval; the app suggests 12 months.'));
+    const tb = h('table',{class:'t'}, h('thead',null,h('tr',null,['Home','Task','Resident','Caregiver','Competency checked','Review by','Status',''].map(x=>h('th',null,x)))));
+    const body = h('tbody');
+    S.delegations.forEach(d => {
+      const s = D.SITES.find(x=>x.id===d.site);
+      const btn = h('button',{class:'btn ghost sm',type:'button',onclick:()=>checkoff(d)},d.status==='Active'?'Review':'Renew');
+      body.append(h('tr',null, h('td',null,s?s.name:d.site), h('td',null,d.task), h('td',null,d.res), h('td',null,d.cg), h('td',null,fmtDate(d.checked)), h('td',null,fmtDate(d.review)), h('td',null,h('span',{class:'chip '+(d.status==='Active'?'calm':d.status==='Expiring'?'amber':'red')},d.status)), h('td',null,btn)));
+    });
+    tb.append(body);
+    const area = h('div');
+    v.append(h('div',{class:'card'},h('div',{class:'tablewrap'},tb)), area);
+    function checkoff(d){
+      area.textContent = '';
+      const steps = ['Explains why the task is done and what to watch for','Washes hands and gathers supplies','Checks the order and the resident code','Does the task step by step while explaining','Records it correctly','Knows when to stop and call the RN'];
+      const boxes = steps.map((s,i) => { const id='co'+i; return h('label',{class:'row',for:id},h('input',{type:'checkbox',id}),s); });
+      const f = h('form',{class:'card soft'}, h('h2',null,'Competency check-off: '+d.task), h('p',{class:'small'},d.cg+' · resident '+d.res+' · return demonstration'), boxes,
+        h('button',{class:'btn',type:'submit'},'Sign and renew for 12 months'));
+      f.addEventListener('submit', e => { e.preventDefault(); if (boxes.some(b => !b.querySelector('input').checked)){ toast('Every step needs a check before signing'); return; }
+        const t = new Date(); d.checked = t.toISOString().slice(0,10); t.setFullYear(t.getFullYear()+1); d.review = t.toISOString().slice(0,10); d.status = 'Active'; save(); toast('Signed. The caregiver sees the task as cleared.'); route(); });
+      area.append(f); f.scrollIntoView({behavior:'smooth'});
+    }
+  };
+
+  // Owner view
+  function siteStats(id){
+    const s = D.SITES.find(x=>x.id===id);
+    const A = (S.survey[id]||{}); const qs = D.SURVEY[s.setting]||[];
+    const pts = qs.reduce((t,q,i)=>t+({yes:2,partly:1}[A[i]]||0),0);
+    const ready = Object.keys(A).length ? Math.round(pts/(qs.length*2)*100) : (id==='maple'?70:id==='birch'?55:id==='cedar'?80:null);
+    const staff = S.staff[id]||[];
+    const trained = staff.length ? Math.round(staff.filter(p=>!p.need||p.hours>=p.need).length/staff.length*100) : 0;
+    return {s, ready, readySample:!Object.keys(A).length, trained,
+      night:S.triage.filter(x=>x.site===id && !x.woke).length,
+      reports:S.reports.filter(x=>x.site===id && x.status!=='Filed').length,
+      qs:S.questions.filter(x=>x.site===id).length,
+      dele:S.delegations.filter(x=>x.site===id && x.status!=='Active').length};
+  }
+  R.owner = (v, isHome) => {
+    if (S.site === 'family'){ S.site = 'maple'; save(); fillSwitchers(); }
+    const st = siteStats(S.site);
+    v.append(head('Owner view · '+site().name, 'How the home is doing', 'Patterns, not people. Resident names and raw incident text stay out unless you open a report on purpose.'));
+    v.append(h('div',{class:'grid g4'},
+      h('div',{class:'card'},h('div',{class:'stat '+(st.ready>=80?'good':'warnc')},h('b',null,st.ready!=null?st.ready+'%':'–'),h('span',null,'survey ready'+(st.readySample?' (sample)':'')))),
+      h('div',{class:'card'},h('div',{class:'stat '+(st.trained>=80?'good':'warnc')},h('b',null,st.trained+'%'),h('span',null,'staff on track with training'))),
+      h('div',{class:'card'},h('div',{class:'stat good'},h('b',null,String(st.night)),h('span',null,'night calls handled without waking the manager'))),
+      h('div',{class:'card'},h('div',{class:'stat'},h('b',null,String(st.dele)),h('span',null,'RN delegations need renewal')))));
+    // money view
+    const price = setting()==='cbrf' ? 199 : 79;
+    const inp = (val, lbl) => { const i = h('input',{type:'number',min:'0',value:String(val)}); return [i, h('label',{class:'f'},lbl,i)]; };
+    const [mgr, mgrL] = inp(35,'Manager\'s time, $ per hour');
+    const [calls, callsL] = inp(6,'Night calls avoided per month');
+    const [rep, repL] = inp(2,'Hours saved on reports per week');
+    const [cit, citL] = inp(1,'Citations avoided per year');
+    const [fine, fineL] = inp(1500,'Average cost of a citation, $ (fix time + forfeiture)');
+    const out = h('div',{class:'grid g3'});
+    function calc(){
+      const m = +mgr.value||0;
+      const monthly = (+calls.value||0)*0.75*m + (+rep.value||0)*4.3*m + ((+cit.value||0)*(+fine.value||0))/12;
+      out.textContent = '';
+      out.append(h('div',{class:'stat good'},h('b',null,'$'+Math.round(monthly).toLocaleString()),h('span',null,'estimated value per month')),
+        h('div',{class:'stat'},h('b',null,'$'+price),h('span',null,'draft plan price per month')),
+        h('div',{class:'stat '+(monthly>price?'good':'warnc')},h('b',null,(monthly/price).toFixed(1)+'×'),h('span',null,'return on the subscription')));
+    }
+    [mgr,calls,rep,cit,fine].forEach(i=>i.addEventListener('input',calc));
+    v.append(h('div',{class:'card'}, h('h2',null,'Money view'), h('p',{class:'small muted'},'Draft estimates. Change the numbers to match your home. Not a promise of savings.'),
+      h('div',{class:'grid g3'},mgrL,callsL,repL,citL,fineL), out));
+    calc();
+    // top confusions
+    const by = {}; S.questions.filter(q=>q.site===S.site && q.id).forEach(q=>by[q.id]=(by[q.id]||0)+1);
+    const top = Object.entries(by).sort((a,b)=>b[1]-a[1]).slice(0,5);
+    v.append(h('div',{class:'grid g2'},
+      h('div',{class:'card'}, h('h2',null,'Top 5 things your team asked'), top.length ? h('ol',null, top.map(([id,n]) => h('li',null,ruleById(id).q+' ('+n+')'))) : h('p',{class:'muted'},'Nothing yet.'), h('p',{class:'small muted'},'Use these to plan the next training. No names attached.'), h('a',{href:'#/questions'},'Full question report')),
+      h('div',{class:'card'}, h('h2',null,'Funding and rate watch'), h('ul',null, h('li',null,'Wisconsin budget items for caregiver pay and training (amounts being checked).'), h('li',null,'Medicaid payment caps proposed from 2028 may affect care manager rates.'), h('li',null,'WisCaregiver Careers can offset hiring and training costs.')), h('a',{href:'#/watch'},'Regulatory Watch'))));
+    if (isHome) v.append(tourCard());
+  };
+
+  // All sites (multi-site)
+  R.sites = (v, isHome) => {
+    v.append(head('Multi-site operator', 'All your homes at a glance', 'Compare health by site. Resident detail stays inside each home.'));
+    const ids = D.SITES.filter(s=>s.setting!=='home').map(s=>s.id);
+    const tb = h('table',{class:'t'}, h('thead',null,h('tr',null,['Home','Type','Survey ready','Staff trained','Reports open','Questions','Delegations to renew',''].map(x=>h('th',null,x)))));
+    const body = h('tbody');
+    ids.forEach(id => { const st = siteStats(id);
+      body.append(h('tr',null, h('td',null,h('b',null,st.s.name)), h('td',null,D.SETTINGS[st.s.setting].short), h('td',null,h('span',{class:'chip '+(st.ready>=80?'calm':'amber')},st.ready+'%')), h('td',null,st.trained+'%'), h('td',null,String(st.reports)), h('td',null,String(st.qs)), h('td',null,String(st.dele)),
+        h('td',null,h('button',{class:'btn ghost sm',type:'button',onclick:()=>{S.site=id;save();fillSwitchers();go('owner');}},'Open'))));
+    });
+    tb.append(body);
+    v.append(h('div',{class:'card'},h('div',{class:'tablewrap'},tb),h('p',{class:'small muted'},'Survey scores marked as sample until each home runs its own check.')));
+    // push a policy
+    const txt = h('textarea',{placeholder:'e.g. Starting Dec 1, every fall gets a check every hour for 4 hours, logged in Night help.'});
+    const boxes = ids.map(id => { const s = D.SITES.find(x=>x.id===id); return h('label',{class:'row small'},h('input',{type:'checkbox',value:id,checked:true}),s.name); });
+    const f = h('form',{class:'card'}, h('h2',null,'Send one policy to every home'), h('p',{class:'small muted'},'Each house manager confirms they\'ve read it and trained staff.'), txt, h('div',{class:'row'},boxes), h('div',{class:'row'},h('button',{class:'btn',type:'submit'},'Send policy')));
+    f.addEventListener('submit', e => { e.preventDefault(); if(!txt.value.trim()) return; const to = boxes.filter(b=>b.querySelector('input').checked).map(b=>b.querySelector('input').value);
+      S.policies.push({id:uid(), text:txt.value.trim(), to, acks:[], at:new Date().toISOString()}); save(); toast('Sent to '+to.length+' homes'); route(); });
+    v.append(f);
+    if (S.policies.length) v.append(h('div',{class:'card'}, h('h2',null,'Policies sent'), h('div',{class:'list'}, S.policies.slice().reverse().map(p => h('div',{class:'item'}, h('div',{class:'meta'},h('span',null,fmtDate(p.at)),h('span',{class:'chip '+(p.acks.length===p.to.length?'calm':'amber')},p.acks.length+' of '+p.to.length+' confirmed')), h('span',null,p.text),
+      p.acks.length < p.to.length ? h('button',{class:'btn quiet sm',type:'button',onclick:()=>{ const next = p.to.find(x=>!p.acks.includes(x)); p.acks.push(next); save(); route(); }},'Simulate a manager confirming') : null)))));
+    if (isHome) v.append(tourCard());
+  };
+
+  // Hand-off packet (family)
+  R.handoff = v => {
+    v.append(head('Hand-off packet', 'One page for your helper', 'Fill it in, print it, leave it on the fridge. Sample details are filled in.'));
+    const fld = (lbl, val, big) => { const e = big ? h('textarea',{style:'min-height:5rem'}) : h('input',{type:'text'}); e.value = val; return [e, h('label',{class:'f'},lbl,e)]; };
+    const [a,aL] = fld('Daily routine','Up at 7, coffee and breakfast. Rest after lunch. Supper at 5. Bed at 9.',true);
+    const [b,bL] = fld('Medicines (from the pharmacy list)','8 AM: 2 pills from the blister pack. 8 PM: 1 pill. Do not give extra.',true);
+    const [c,cL] = fld('Who to call','Emergency: 911. Nurse line: (sample) 555-0100. Me: (sample) 555-0123.');
+    const [d,dL] = fld('Please don\'t','Don\'t argue about going home; offer a walk or coffee. Don\'t change medicines.',true);
+    const [e,eL] = fld('Where things are','DNR form on the fridge. Spare key with neighbor.');
+    const out = h('div');
+    const f = h('form',{class:'card'}, aL,bL,cL,dL,eL, h('button',{class:'btn',type:'submit'},'Make the packet'));
+    f.addEventListener('submit', ev => { ev.preventDefault(); out.textContent='';
+      const txt = 'HAND-OFF PACKET (TEST DATA)\n\nDaily routine:\n'+a.value+'\n\nMedicines:\n'+b.value+'\n\nWho to call:\n'+c.value+'\n\nPlease don\'t:\n'+d.value+'\n\nWhere things are:\n'+e.value+'\n\nIf in doubt, call. Thank you for helping.';
+      const cb = h('button',{class:'btn ghost sm',type:'button'},'Copy'); cb.addEventListener('click',()=>copy(txt,cb));
+      out.append(h('div',{class:'card'},h('div',{class:'out'},txt),h('div',{class:'row noprint'},cb,h('button',{class:'btn ghost sm',type:'button',onclick:()=>window.print()},'Print')))); });
+    v.append(f, out);
+  };
+
+  // ---------- feedback to the Owner Desk ----------
+  let sb = null, user = null;
+  const KIND = {'Suggestion':'Suggestion','Something is wrong':'Action to take','Question':'Question','Idea for a new feature':'Suggestion','Wording change':'Update'};
+  $('fbOpen').addEventListener('click', () => {
+    $('fbWhere').value = VIEWS[current].t+' · viewing as '+tier().name+' · '+site().name;
+    $('fbMsg').hidden = true; $('fb').showModal(); $('fbText').focus();
+  });
+  $('fbCancel').addEventListener('click', () => $('fb').close());
+  $('fbForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const text = $('fbText').value.trim(); if (!text) return;
+    const btn = $('fbSend'); btn.disabled = true; btn.textContent = 'Sending…';
+    const kind = $('fbKind').value;
+    const data = {kind:KIND[kind]||'Suggestion', biz:'Test app: '+VIEWS[current].t, when:'Whenever', text:'['+kind+'] '+text+'\n\n(Screen: '+$('fbWhere').value+')', status:'New', reply:'', by:(user&&user.email)||'', source:'test-app', tier:S.tier, screen:current};
+    const {error} = await sb.from('desk_items').insert({kind:'request', data});
+    btn.disabled = false; btn.textContent = 'Send to the desk';
+    if (error){ $('fbMsg').textContent = 'That did not send ('+(error.code||error.message)+'). Try again in a moment.'; $('fbMsg').hidden = false; return; }
+    $('fbText').value = ''; $('fb').close(); toast('Thank you! It\'s on the Owner Desk under Requests for Claude.');
+  });
+
+  // ---------- sign-in (same Supabase project and session as the Owner Desk) ----------
+  function gate(msg, err){ $('app').hidden = true; $('gate').hidden = false; const m = $('gateMsg'); m.textContent = msg||''; m.hidden = !msg; m.className = 'msg'+(err?' err':''); }
+  const cfg = window.DESK_CONFIG || {};
+  if (!cfg.supabaseUrl || !window.supabase){ gate('The app could not reach its sign-in service. Try reloading.', true); $('emailForm').hidden = true; return; }
+  sb = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey, {auth:{flowType:'implicit',persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+
+  try { $('email').value = localStorage.getItem('desk-email') || ''; } catch(e){}
+  $('emailForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const email = $('email').value.trim().toLowerCase(); if (!email) return;
+    const b = $('sendBtn'); b.disabled = true; b.textContent = 'Sending…';
+    try { localStorage.setItem('desk-email', email); localStorage.setItem('ss-after-signin','app'); } catch(err){}
+    const {error} = await sb.auth.signInWithOtp({email, options:{shouldCreateUser:false, emailRedirectTo:location.origin+location.pathname}});
+    b.disabled = false; b.textContent = 'Email me a sign-in link';
+    if (error){
+      const m = String(error.message||'');
+      if (/signups? not allowed|not found|otp_disabled/i.test(m)) gate('That email is not set up yet. Ask Christian to add you.', true);
+      else if (/rate|seconds/i.test(m)) gate('Too many sign-in emails just now. Please wait a few minutes and try again, or open the Owner Desk if you are already signed in there.', true);
+      else gate('Could not send the link: '+m, true);
+      return;
+    }
+    gate('Check '+email+' for a sign-in email (it may land in spam). The link brings you straight back here.');
+  });
+  $('signOut').addEventListener('click', async () => { await sb.auth.signOut(); });
+
+  async function onSession(session){
+    if (!session){ user = null; gate(''); return; }
+    if (user && user.id === session.user.id) return;
+    user = session.user;
+    const {data:ok, error} = await sb.rpc('is_desk_member');
+    if (error || !ok){ user = null; gate(error ? 'Could not check access ('+(error.code||error.message)+'). Try reloading.' : 'This email is signed in but is not on the list for the test app. Ask Christian to add it.', true); return; }
+    try { localStorage.removeItem('ss-after-signin'); } catch(e){}
+    if (location.hash && /access_token|error/.test(location.hash)) history.replaceState(null,'',location.pathname+'#/home');
+    $('whoEmail').textContent = user.email || '';
+    $('gate').hidden = true; $('app').hidden = false;
+    fillSwitchers(); route();
+  }
+  sb.auth.onAuthStateChange((_e, session) => setTimeout(() => onSession(session), 0));
+  sb.auth.getSession().then(({data}) => onSession(data.session));
+  if (/error_description=/.test(location.hash)){
+    const p = new URLSearchParams(location.hash.slice(1));
+    gate('That sign-in link did not work ('+(p.get('error_description')||'expired')+'). Ask for a new one below.', true);
+    history.replaceState(null,'',location.pathname);
+  }
+})();

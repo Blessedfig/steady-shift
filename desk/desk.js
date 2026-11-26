@@ -122,7 +122,10 @@
       signinMsg(error?'Could not check access ('+(error.code||error.message)+').':'This email is signed in but is not on the desk\'s list. Ask Christian to add it.');
       $('signOut').hidden=false;return;
     }
-    signinMsg('');screen('app');
+    signinMsg('');
+    // came here from the test app's sign-in link: go back there
+    try{if(localStorage.getItem('ss-after-signin')==='app'){localStorage.removeItem('ss-after-signin');location.replace('../app/');return}}catch(e){}
+    screen('app');
     if(location.hash&&/access_token|error/.test(location.hash))history.replaceState(null,'',location.pathname);
     await load();
   }
