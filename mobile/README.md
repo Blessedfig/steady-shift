@@ -13,7 +13,7 @@ email opens in the browser, not in the home-screen app, which is why the app tak
 
 ## 2. Android app file (APK)
 
-The GitHub Action `.github/workflows/android-test.yml` builds an installable test APK whenever `mobile/` changes
+Icons and splash screens are pre-rendered in `resources/res`. The GitHub Action `.github/workflows/android-test.yml` builds an installable test APK whenever `mobile/` changes
 (or from Actions > "Android test build" > Run workflow). Download it on the phone from:
 
 https://github.com/Blessedfig/steady-shift/releases/download/android-test/steady-shift-test.apk
