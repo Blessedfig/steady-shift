@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="description" content="A calm, plain-language helper for Wisconsin adult family homes and CBRFs: procedure double-checks, professional incident reports, and overnight triage.">
+<meta name="description" content="Calm, plain-language care support for Wisconsin family caregivers, adult family homes, CBRFs, home care agencies and multi-site operators.">
 <style>body{margin:0}img{max-width:100%}*,*::before,*::after{box-sizing:border-box}</style>
 <title>Steady Shift</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -189,8 +189,37 @@ footer{padding-block:2rem;font-size:.88rem;color:var(--muted)}
 @media (max-width:860px){.gallery{grid-template-columns:1fr 1fr}.gallery figure:first-child{grid-column:1/-1}}
 @media (max-width:560px){.gallery{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){.ph img{transition:none}}
-</style>
 
+[hidden]{display:none!important}
+/* buyer paths */
+.picker{display:flex;flex-wrap:wrap;gap:.5rem}
+.picker a{font:600 .92rem/1.2 var(--body);text-decoration:none;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:.6em 1em}
+.picker a:hover{border-color:var(--pine);color:var(--pine)}
+.tabs{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1.75rem}
+.tabs button{font:600 .95rem/1.2 var(--body);color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:.65em 1.1em;cursor:pointer}
+.tabs button small{display:block;font:400 .74rem/1.2 var(--mono);color:var(--muted);margin-top:.15rem}
+.tabs button[aria-selected="true"]{background:var(--pine);border-color:var(--pine);color:var(--bg)}
+.tabs button[aria-selected="true"] small{color:var(--bg);opacity:.85}
+.path{display:grid;grid-template-columns:1.45fr 1fr;gap:2rem;margin-top:1.5rem;align-items:start}
+.path + .path{border-top:1px solid var(--line);padding-top:2rem}
+.js .path + .path{border-top:0;padding-top:0}
+.path-main{display:grid;gap:1.1rem;min-width:0}
+.path-main h3{font-size:1.5rem}
+.tier-cols{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+.tier-cols h4{margin:0 0 .4rem;font:500 .75rem/1 var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.tier-cols ul{margin:0;padding-left:1.1rem;display:grid;gap:.35rem;font-size:.97rem}
+.tier-cols .hard li::marker{color:var(--amber)}
+.tier-cols .helps li::marker{color:var(--pine)}
+.plan{background:var(--pine-soft);border-radius:22px;padding:1.4rem;display:grid;gap:.8rem;min-width:0}
+.plan .pname{font:800 1.25rem/1.1 var(--display)}
+.plan .pprice{font:800 2.1rem/1 var(--display);font-variant-numeric:tabular-nums}
+.plan .pprice small{font:400 .95rem/1 var(--body);color:var(--muted)}
+.plan ul{margin:0;padding-left:1.1rem;display:grid;gap:.3rem;font-size:.95rem}
+.plan .fine{font-size:.86rem;color:var(--muted)}
+.compare td b{font-variant-numeric:tabular-nums}
+@media (max-width:860px){.path{grid-template-columns:1fr}}
+@media (max-width:560px){.tier-cols{grid-template-columns:1fr}}
+</style>
 
 </head>
 <body>
@@ -209,9 +238,9 @@ footer{padding-block:2rem;font-size:.88rem;color:var(--muted)}
   <div class="wrap">
     <div class="brand"><span class="brand-mark" aria-hidden="true"></span>Steady Shift <span class="draft">Working name</span></div>
     <nav aria-label="Sections">
+      <a href="#paths">Who it's for</a>
       <a href="#features">What it does</a>
-      <a href="#overnight">Overnight</a>
-      <a href="#money">Cost</a>
+      <a href="#plans">Plans</a>
       <a href="#privacy">Privacy</a>
     </nav>
   </div>
@@ -222,18 +251,16 @@ footer{padding-block:2rem;font-size:.88rem;color:var(--muted)}
 <section class="hero">
   <div class="wrap">
     <div class="hero-copy">
-      <span class="eyebrow">For Wisconsin adult family homes and CBRFs</span>
+      <span class="eyebrow">For Wisconsin caregivers, homes and agencies</span>
       <h1>Confident shifts, kind words, and a full night's sleep.</h1>
       <p class="lede">Caregiving comes first and the paperwork follows. Staff check procedures against DHS 88 and DHS 83 in plain language, turn a quick note into a professional incident report, and know exactly when a 2 AM question needs a phone call and when it can wait for morning.</p>
-      <div class="who">
-        <span class="chip">DHS 88 · AFH</span>
-        <span class="chip">DHS 83 · CBRF</span>
-        <span class="chip">Family Care homes</span>
-        <span class="chip">Private-pay homes</span>
-      </div>
-      <div class="cta-row">
-        <a class="btn primary" href="#pilot">Become a pilot home</a>
-        <a class="btn ghost" href="#features">See what it does</a>
+      <p style="font-weight:600">Start with the one that sounds like you:</p>
+      <div class="picker" aria-label="Choose your path">
+        <a href="#family">I care for a family member</a>
+        <a href="#afh">I run an adult family home</a>
+        <a href="#cbrf">I run a CBRF</a>
+        <a href="#agency">I run a home care agency</a>
+        <a href="#multisite">I run several sites</a>
       </div>
     </div>
 
@@ -243,7 +270,107 @@ footer{padding-block:2rem;font-size:.88rem;color:var(--muted)}
   </div>
 </section>
 
-<section class="band" aria-labelledby="pain-h">
+<section id="paths" class="band" aria-labelledby="paths-h">
+  <div class="wrap">
+    <span class="eyebrow">Who it's for</span>
+    <h2 id="paths-h">One calm system, sized to how you give care.</h2>
+    <p class="lede" style="margin-top:.75rem">From one family caregiver to a group of homes, everyone gets the same plain-language help. What changes is who sees what, and what you pay.</p>
+    <div class="tabs" role="tablist" aria-label="Choose your path" hidden>
+<button role="tab" id="tab-family" aria-controls="family" aria-selected="false">Family caregiver<small>Caring for someone at home</small></button>
+<button role="tab" id="tab-afh" aria-controls="afh" aria-selected="false">Adult family home<small>1 to 4 residents, DHS 88</small></button>
+<button role="tab" id="tab-cbrf" aria-controls="cbrf" aria-selected="false">CBRF<small>Community-based residential facility, DHS 83</small></button>
+<button role="tab" id="tab-agency" aria-controls="agency" aria-selected="false">Home care agency<small>Personal care or home health</small></button>
+<button role="tab" id="tab-multisite" aria-controls="multisite" aria-selected="false">Several sites<small>Owners and operators with more than one home</small></button>
+    </div>
+<div class="path" id="family" role="tabpanel" aria-labelledby="tab-family">
+      <div class="path-main">
+        <span class="eyebrow">Family caregiver <span class="draft">Coming after the first release</span></span>
+        <h3>Caring for someone you love, at home.</h3>
+        <p>You are paid through a self-directed program, or you simply stepped up. You learned the care tasks fast and often alone.</p>
+        <div class="tier-cols">
+          <div><h4>What's hard</h4><ul class="hard"><li>Learning medical tasks with nobody to ask</li><li>Long nights where you wonder if you should call someone</li><li>Keeping the records your plan asks for</li></ul></div>
+          <div><h4>How it helps</h4><ul class="helps"><li>Plain, step-by-step help for each care task</li><li>Your training checklist and what a nurse has signed off</li><li>A simple daily log in your own words</li><li>A hand-off sheet for a backup caregiver</li><li>A calm "call now or wait" guide for nights</li></ul></div>
+        </div>
+      </div>
+      <div class="plan">
+        <div style="display:flex;justify-content:space-between;gap:.5rem;align-items:center;flex-wrap:wrap"><span class="pname">Family plan</span><span class="draft">Draft price</span></div>
+        <div class="pprice">about $10 <small>/month</small></div>
+        <ul><li>Just you and the person you care for</li><li>Works on your phone</li><li>Nothing shared unless you choose</li></ul>
+        <a class="btn primary" href="#pilot" style="text-align:center">Try it early</a>
+      </div>
+    </div>
+<div class="path" id="afh" role="tabpanel" aria-labelledby="tab-afh">
+      <div class="path-main">
+        <span class="eyebrow">Adult family home</span>
+        <h3>A small home where everybody does a bit of everything.</h3>
+        <p>You might be the owner, the manager and a caregiver on the same day. One survey finding or one bad night can knock everything sideways.</p>
+        <div class="tier-cols">
+          <div><h4>What's hard</h4><ul class="hard"><li>The 2 AM phone call that could have waited</li><li>Shift notes that start arguments</li><li>Keeping training hours and house rules up to date</li></ul></div>
+          <div><h4>How it helps</h4><ul class="helps"><li>Procedure double-check against DHS 88 and your own policies</li><li>Calm incident reports from a quick note</li><li>Overnight triage so you only get woken for real problems</li><li>Training hour tracker (15 hours in 6 months, then 8 a year)</li><li>Your house rules kept private, never below code</li><li>Family updates you approve, for private-pay residents <span class="draft">Planned</span></li></ul></div>
+        </div>
+      </div>
+      <div class="plan">
+        <div style="display:flex;justify-content:space-between;gap:.5rem;align-items:center;flex-wrap:wrap"><span class="pname">Home plan</span><span class="draft">Draft price</span></div>
+        <div class="pprice">$79 <small>/month per home</small></div>
+        <ul><li>All your caregivers included</li><li>Manager and owner views</li><li>Nurse you work with joins free</li></ul>
+        <a class="btn primary" href="#pilot" style="text-align:center">Try it early</a>
+      </div>
+    </div>
+<div class="path" id="cbrf" role="tabpanel" aria-labelledby="tab-cbrf">
+      <div class="path-main">
+        <span class="eyebrow">CBRF</span>
+        <h3>More residents, more staff, more rules to keep straight.</h3>
+        <p>A larger team means more turnover, more questions on every shift, and more review dates that are easy to miss.</p>
+        <div class="tier-cols">
+          <div><h4>What's hard</h4><ul class="hard"><li>New staff asking the same questions on every shift</li><li>Medication review dates slipping</li><li>Getting ready for a survey at the last minute</li></ul></div>
+          <div><h4>How it helps</h4><ul class="helps"><li>Procedure double-check against DHS 83 and your own policies</li><li>Medication review clocks: 30 days after admission, every 3 months, monthly and yearly</li><li>Nurse delegation records with sign-offs and renewal reminders</li><li>Question tracking by topic and shift, so training goes where it is needed</li><li>A survey-ready packet of training, delegations and policies</li></ul></div>
+        </div>
+      </div>
+      <div class="plan">
+        <div style="display:flex;justify-content:space-between;gap:.5rem;align-items:center;flex-wrap:wrap"><span class="pname">Facility plan</span><span class="draft">Draft price</span></div>
+        <div class="pprice">$199 <small>/month per facility</small></div>
+        <ul><li>All staff included</li><li>Manager, nurse and owner views</li><li>Survey-ready export</li></ul>
+        <a class="btn primary" href="#pilot" style="text-align:center">Try it early</a>
+      </div>
+    </div>
+<div class="path" id="agency" role="tabpanel" aria-labelledby="tab-agency">
+      <div class="path-main">
+        <span class="eyebrow">Home care agency <span class="draft">Coming after the first release</span></span>
+        <h3>Caregivers out on their own, in other people’s homes.</h3>
+        <p>Your staff work alone, far from a supervisor. Nurse visits, competency checks and client plans all need to line up.</p>
+        <div class="tier-cols">
+          <div><h4>What's hard</h4><ul class="hard"><li>Caregivers alone with a hard decision</li><li>Nurse supervisory visits to schedule and prove</li><li>Competency records spread across paper and email</li></ul></div>
+          <div><h4>How it helps</h4><ul class="helps"><li>Each caregiver sees only the clients they are assigned to</li><li>Nurse visit calendar with reminders</li><li>Caregiver competency records in one place</li><li>Incident wording help from the client’s doorstep</li><li>After-hours triage that routes to the right on-call person</li></ul></div>
+        </div>
+      </div>
+      <div class="plan">
+        <div style="display:flex;justify-content:space-between;gap:.5rem;align-items:center;flex-wrap:wrap"><span class="pname">Agency plan</span><span class="draft">Draft price</span></div>
+        <div class="pprice">about $5 <small>/caregiver a month</small></div>
+        <ul><li>$99 a month minimum</li><li>Office and nurse views</li><li>Agency rules still being checked</li></ul>
+        <a class="btn primary" href="#pilot" style="text-align:center">Try it early</a>
+      </div>
+    </div>
+<div class="path" id="multisite" role="tabpanel" aria-labelledby="tab-multisite">
+      <div class="path-main">
+        <span class="eyebrow">Several sites <span class="draft">Coming after the first release</span></span>
+        <h3>The same good care, in every home you run.</h3>
+        <p>Each home slowly drifts into its own way of doing things, and you often find out about a problem at survey time.</p>
+        <div class="tier-cols">
+          <div><h4>What's hard</h4><ul class="hard"><li>Every home doing things a little differently</li><li>Policy changes that never reach the night shift</li><li>No clear view across homes until something goes wrong</li></ul></div>
+          <div><h4>How it helps</h4><ul class="helps"><li>One dashboard across all your sites</li><li>Send one policy to every site and see who has confirmed it</li><li>Compare training and delegation health by site</li><li>Owner money view: citations avoided, overtime, turnover</li><li>Patterns across homes, never resident names or staff blame</li></ul></div>
+        </div>
+      </div>
+      <div class="plan">
+        <div style="display:flex;justify-content:space-between;gap:.5rem;align-items:center;flex-wrap:wrap"><span class="pname">Group plan</span><span class="draft">Draft price</span></div>
+        <div class="pprice">$149 <small>/month per extra site</small></div>
+        <ul><li>Plus an HQ view, about $99 a month</li><li>Each site keeps its own private space</li><li>Volume pricing to talk through</li></ul>
+        <a class="btn primary" href="#pilot" style="text-align:center">Try it early</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="pain-h">
   <div class="wrap">
     <span class="eyebrow">Why this exists</span>
     <h2 id="pain-h">Most hard days start with a small, ordinary moment.</h2>
@@ -256,7 +383,7 @@ footer{padding-block:2rem;font-size:.88rem;color:var(--muted)}
   </div>
 </section>
 
-<section aria-labelledby="calm-h">
+<section class="band" aria-labelledby="calm-h">
   <div class="wrap">
     <span class="eyebrow">A calmer home</span>
     <p class="calm-quote" id="calm-h">When staff feel sure of themselves, residents feel it too.</p>
@@ -268,7 +395,7 @@ footer{padding-block:2rem;font-size:.88rem;color:var(--muted)}
   </div>
 </section>
 
-<section aria-labelledby="middle-h">
+<section aria-labelledby="middle-h" style="padding-top:0">
   <div class="wrap">
     <span class="eyebrow">The murky middle</span>
     <h2 id="middle-h">For the situations nobody's handbook covers, and the gap between the floor and the office.</h2>
@@ -287,7 +414,7 @@ footer{padding-block:2rem;font-size:.88rem;color:var(--muted)}
   </div>
 </section>
 
-<section id="features" class="band" aria-labelledby="feat-h">
+<section id="features" aria-labelledby="feat-h">
   <div class="wrap">
     <span class="eyebrow">What it does</span>
     <h2 id="feat-h">Six tools staff reach for during a shift.</h2>
@@ -326,7 +453,7 @@ footer{padding-block:2rem;font-size:.88rem;color:var(--muted)}
   </div>
 </section>
 
-<section aria-labelledby="rw-h">
+<section class="band" aria-labelledby="rw-h">
   <div class="wrap">
     <span class="eyebrow">Documentation</span>
     <h2 id="rw-h">From a tired shift note to a report anyone can read.</h2>
@@ -351,7 +478,7 @@ footer{padding-block:2rem;font-size:.88rem;color:var(--muted)}
   </div>
 </section>
 
-<section class="band" aria-labelledby="law-h">
+<section aria-labelledby="law-h">
   <div class="wrap">
     <span class="eyebrow">Built on the law, in layers</span>
     <h2 id="law-h">Every answer says where the rule comes from.</h2>
@@ -365,18 +492,7 @@ footer{padding-block:2rem;font-size:.88rem;color:var(--muted)}
   </div>
 </section>
 
-<section class="band" aria-labelledby="fit-h">
-  <div class="wrap">
-    <span class="eyebrow">Two kinds of homes</span>
-    <h2 id="fit-h">Fits the way your home is paid for.</h2>
-    <div class="roles" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">
-      <div class="role"><h3>Family Care homes</h3><ul><li>Reporting fields and deadlines for your care management organization, set up for you</li><li>Workforce funding deadlines on the calendar</li><li>Less time on forms, more time with residents</li></ul></div>
-      <div class="role"><h3>Private-pay homes <span class="draft">Planned</span></h3><ul><li>A complete system for residents, families and staff</li><li>Calm, professional updates for families, approved by the manager</li><li>Resident preferences and routines every shift can follow</li></ul><p class="no" style="color:var(--muted)">Keeps families and caregivers working together instead of against each other.</p></div>
-    </div>
-  </div>
-</section>
-
-<section id="overnight" aria-labelledby="night-h">
+<section id="overnight" class="band" aria-labelledby="night-h">
   <div class="wrap">
     <span class="eyebrow">Overnight</span>
     <h2 id="night-h">Managers sleep. Staff are never left alone with a hard call.</h2>
@@ -409,15 +525,16 @@ footer{padding-block:2rem;font-size:.88rem;color:var(--muted)}
   <div class="wrap">
     <span class="eyebrow">Respects the chain of command</span>
     <h2 id="roles-h">Each person sees what their job needs, and no more.</h2>
-    <div class="roles">
+    <div class="roles" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">
       <div class="role"><h3>Caregivers</h3><ul><li>Ask questions without feeling judged</li><li>Write reports in their own words</li><li>See their own reports and acknowledgments</li></ul><p class="no">Don't see coworkers' reports or the manager's notes.</p></div>
       <div class="role"><h3>Managers</h3><ul><li>Morning summary and open items</li><li>Private notes on staff concerns</li><li>Approve policy changes before staff see them</li></ul><p class="no">Concerns about the manager route to the owner.</p></div>
+      <div class="role"><h3>Nurses</h3><ul><li>Delegation records for every home they serve</li><li>Competency sign-offs and renewal reminders</li><li>Only the nurse can sign their own sign-off</li></ul><p class="no">Don't see payroll, finances or staff discipline.</p></div>
       <div class="role"><h3>Owners</h3><ul><li>Monthly roll-up across homes</li><li>Training gaps and deadline risk</li><li>Money view: fines avoided, overtime, turnover</li></ul><p class="no">Patterns, not resident names or staff blame.</p></div>
     </div>
   </div>
 </section>
 
-<section id="money" class="band" aria-labelledby="money-h">
+<section id="money" aria-labelledby="money-h">
   <div class="wrap">
     <span class="eyebrow">Cost</span>
     <h2 id="money-h">Small monthly cost, big peace of mind.</h2>
@@ -428,14 +545,28 @@ footer{padding-block:2rem;font-size:.88rem;color:var(--muted)}
         <div class="fact"><span class="n">License</span><div><p>Adult family homes don't face per-day forfeitures in statute. The real risk is revocation.</p><cite>Wis. Stat. s. 50.033</cite></div></div>
         <div class="fact"><span class="n">Funding</span><div><p>Homes with a Family Care MCO contract can qualify for Direct Care Workforce Funding. The app keeps the annual agreement, survey and payout deadlines on the calendar.</p><cite>Wisconsin DHS program</cite></div></div>
       </div>
-      <div class="price">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap"><h3>Subscription</h3><span class="draft">Draft pricing</span></div>
-        <div class="price-row"><span>Adult family home</span><b>$79/mo</b></div>
-        <div class="price-row"><span>CBRF</span><b>$199/mo</b></div>
-        <div class="price-row"><span>Each additional site</span><b>$149/mo</b></div>
-        <p style="font-size:.92rem;color:var(--muted)">Placeholder numbers for discussion. Not yet confirmed.</p>
-      </div>
     </div>
+  </div>
+</section>
+
+<section id="plans" class="band" aria-labelledby="plans-h">
+  <div class="wrap">
+    <span class="eyebrow">Plans</span>
+    <h2 id="plans-h">Pay for the size you are. <span class="draft">Draft prices</span></h2>
+    <div class="tablebox">
+      <table class="compare">
+        <thead><tr><th>Plan</th><th>For</th><th>Price</th><th>Who's included</th><th>When</th></tr></thead>
+        <tbody>
+          <tr><td><b>Family</b></td><td>One family caregiver</td><td><b>about $10</b> a month</td><td>You and the person you care for</td><td>After first release</td></tr>
+          <tr><td><b>Home</b></td><td>Adult family homes</td><td><b>$79</b> a month per home</td><td>All caregivers, manager, owner</td><td>First release</td></tr>
+          <tr><td><b>Facility</b></td><td>CBRFs</td><td><b>$199</b> a month per facility</td><td>All staff, manager, nurse, owner</td><td>First release</td></tr>
+          <tr><td><b>Agency</b></td><td>Home care agencies</td><td><b>about $5</b> per caregiver a month, $99 minimum</td><td>Caregivers, office, nurse</td><td>After first release</td></tr>
+          <tr><td><b>Group</b></td><td>Several sites</td><td><b>$149</b> per extra site, plus about $99 for the HQ view</td><td>Every site, plus a cross-site view</td><td>After first release</td></tr>
+          <tr><td><b>Nurse Pro</b></td><td>Nurses serving several homes</td><td><b>$29 to $49</b> a month</td><td>Free when a home invites you. Pro adds all your homes in one place</td><td>First release</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="why">All prices are placeholders for discussion and are not final.</p>
   </div>
 </section>
 
@@ -459,14 +590,14 @@ footer{padding-block:2rem;font-size:.88rem;color:var(--muted)}
       <span class="eyebrow">Who's building it</span>
       <h2 id="pilot-h">Made by someone who has worked the night shift.</h2>
       <p>Built by a former adult family home manager and CNA who watched good homes get cited, good managers burn out, and good caregivers leave over problems a better tool could have caught.</p>
-      <p>We're looking for a small group of Wisconsin homes to try it first and shape what it becomes.</p>
+      <p>We're looking for a small group of Wisconsin homes, agencies and family caregivers to try it first and shape what it becomes.</p>
       <p><b>Contact:</b> <span class="draft">To add</span></p>
     </div>
     <div class="open">
-      <span class="eyebrow">Pilot homes get</span>
+      <span class="eyebrow">Early users get</span>
       <ol>
         <li>Setup of your own procedures in the app</li>
-        <li>A first check of your policies against DHS 88 or DHS 83</li>
+        <li>A first check of your policies against the rules that apply to you</li>
         <li>Pilot pricing for the first year <span class="draft">Draft</span></li>
         <li>A direct line to the founder for changes</li>
       </ol>
@@ -484,5 +615,26 @@ document.querySelectorAll('.ph img').forEach(function(img){
   img.addEventListener('error', function(){ img.remove(); });
 });
 </script>
+
+<script>
+// Buyer paths: show one tier at a time; the hash (#afh, #cbrf...) picks it.
+(function(){
+  var ids=['family','afh','cbrf','agency','multisite'];
+  var list=document.querySelector('#paths .tabs'); if(!list) return;
+  document.documentElement.classList.add('js'); list.hidden=false;
+  function pick(id,scroll){
+    ids.forEach(function(k){
+      var on=k===id; document.getElementById(k).hidden=!on;
+      document.getElementById('tab-'+k).setAttribute('aria-selected',on?'true':'false');
+    });
+    if(scroll) document.getElementById('paths').scrollIntoView({behavior:'smooth',block:'start'});
+  }
+  ids.forEach(function(k){document.getElementById('tab-'+k).addEventListener('click',function(){pick(k,false);try{history.replaceState(null,'','#'+k)}catch(e){location.hash=k}});});
+  function fromHash(scroll){var h=location.hash.slice(1); if(ids.indexOf(h)>-1){pick(h,scroll);return true} return false}
+  if(!fromHash(true)) pick('afh',false);
+  window.addEventListener('hashchange',function(){fromHash(true)});
+})();
+</script>
+
 </body>
 </html>
