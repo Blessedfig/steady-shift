@@ -273,7 +273,7 @@
     const done = items.filter(i => S.tour[i[0]]).length;
     return h('details',{class:'card soft noprint',open:done < items.length},
       h('summary',{style:'cursor:pointer;font:800 1.05rem var(--display)'},'Testing checklist for Angelika ('+done+' of '+items.length+' tried)'),
-      h('p',{class:'small'},'Switch "View as" at the top to see each plan. Every feature is unlocked. Tap "Send feedback" anywhere to tell us what to change.'),
+      h('p',{class:'small'},'Switch "View as" at the top to see each plan. Every feature is unlocked. Tap "Ideas and fixes" anywhere to chat about what to change, on the app or the public website.'),
       h('ul',{class:'tourlist'}, items.map(i => h('li',null, h('span',{'aria-hidden':'true'},S.tour[i[0]]?'✅':'○'), h('a',{href:'#/'+i[0],class:S.tour[i[0]]?'done':''},i[1])))),
       h('button',{class:'btn quiet sm',type:'button',onclick:()=>{ if(confirm('Reset all sample data and the checklist on this device?')){ localStorage.removeItem(KEY); location.hash='#/home'; location.reload(); } }},'Reset sample data'));
   }
@@ -821,25 +821,127 @@
     v.append(f, out);
   };
 
-  // ---------- feedback to the Owner Desk ----------
+  // ---------- "Ideas and fixes" chat: a guided helper that saves to the desk's Requests for Claude ----------
+  // Scripted, not AI. It asks short follow-ups and saves the whole conversation as one request.
   let sb = null, user = null;
-  const KIND = {'Suggestion':'Suggestion','Something is wrong':'Action to take','Question':'Question','Idea for a new feature':'Suggestion','Wording change':'Update'};
-  $('fbOpen').addEventListener('click', () => {
-    $('fbWhere').value = VIEWS[current].t+' · viewing as '+tier().name+' · '+site().name;
-    $('fbMsg').hidden = true; $('fb').showModal(); $('fbText').focus();
-  });
-  $('fbCancel').addEventListener('click', () => $('fb').close());
-  $('fbForm').addEventListener('submit', async e => {
-    e.preventDefault();
-    const text = $('fbText').value.trim(); if (!text) return;
-    const btn = $('fbSend'); btn.disabled = true; btn.textContent = 'Sending…';
-    const kind = $('fbKind').value;
-    const data = {kind:KIND[kind]||'Suggestion', biz:'Test app: '+VIEWS[current].t, when:'Whenever', text:'['+kind+'] '+text+'\n\n(Screen: '+$('fbWhere').value+')', status:'New', reply:'', by:(user&&user.email)||'', source:'test-app', tier:S.tier, screen:current};
+  const chat = $('chat'), log = $('chatLog'), chips = $('chatChips'), txt = $('chatText');
+  const TOPICS = [
+    {k:'wording', label:'Change some wording', kind:'Update'},
+    {k:'broken',  label:'Something isn\'t working', kind:'Action to take'},
+    {k:'feature', label:'Add a feature', kind:'Suggestion'},
+    {k:'website', label:'Change the public website', kind:'Suggestion'},
+    {k:'question',label:'Ask a question', kind:'Question'}
+  ];
+  let step = 'start', draft = {}, opened = false;
+  function bub(cls, text){ const b = h('div',{class:'bub '+cls}, text); log.append(b); log.scrollTop = log.scrollHeight; return b; }
+  function say(text){ bub('bot', text); }
+  function setChips(list){
+    chips.textContent = '';
+    list.forEach(c => chips.append(h('button',{type:'button',class:c.go?'go':null,onclick:()=>{ if(!c.silent) bub('me', c.label); c.run(); }}, c.label)));
+  }
+  function screenName(){ return VIEWS[current].t; }
+  function guessTopic(t){
+    if (/\b(website|public site|home ?page|landing|pricing page|plans page)\b/i.test(t)) return TOPICS[3];
+    if (/\b(broken|doesn'?t work|not working|error|bug|wrong|stuck|can'?t)\b/i.test(t)) return TOPICS[1];
+    if (/\?\s*$/.test(t) || /^(how|why|what|can|does|is|should)\b/i.test(t)) return TOPICS[4];
+    if (/\b(word|wording|say|reads|sentence|phrase|rename|title)\b/i.test(t)) return TOPICS[0];
+    return TOPICS[2];
+  }
+  function start(){
+    step = 'start'; draft = {};
+    say('Hi! I collect ideas and fixes for the app and the public website, and pass them to Christian and Claude.\n\nWhat would you like to change or add? Pick one, or just type it the way you\'d say it.');
+    setChips(TOPICS.map(t => ({label:t.label, run:()=>{ draft.topic = t; step = 'what';
+      say(t.k==='broken' ? 'Sorry about that. What happened, and what did you expect to happen?' : t.k==='question' ? 'Go ahead, what\'s your question?' : t.k==='website' ? 'What should change on the public website? Tell me which part if you can (for example the plans, the caregiver section, the wording at the top).' : 'Tell me what you\'d like, in your own words.');
+      setChips([]); txt.focus(); }})));
+  }
+  function askWhere(){
+    step = 'where';
+    if (draft.topic.k === 'website'){ draft.where = 'Public website'; return askWhy(); }
+    say('Is this about the "'+screenName()+'" screen you were on, or somewhere else?');
+    setChips([
+      {label:'Yes, "'+screenName()+'"', run:()=>{ draft.where = screenName()+' (viewing as '+tier().name+')'; askWhy(); }},
+      {label:'The whole app', run:()=>{ draft.where = 'Whole app'; askWhy(); }},
+      {label:'The public website', run:()=>{ draft.where = 'Public website'; askWhy(); }},
+      {label:'Another screen', run:()=>{ say('Which one?'); setChips(Object.keys(VIEWS).map(v => ({label:VIEWS[v].t, run:()=>{ draft.where = VIEWS[v].t; askWhy(); }}))); }}
+    ]);
+  }
+  function askWhy(){
+    step = 'why';
+    say(draft.topic.k === 'question' ? 'Anything that would help us answer, like where this comes up on a shift? (Or skip.)' : 'Why does it matter? Who would it help on a real shift, or what goes wrong without it? (Or skip.)');
+    setChips([{label:'Skip', run:askWhen}]);
+    txt.focus();
+  }
+  function askWhen(){
+    step = 'when';
+    say('How soon would you like it?');
+    setChips(['Whenever','This week','Urgent'].map(w => ({label:w, run:()=>{ draft.when = w; confirm(); }})));
+  }
+  function summary(){
+    return 'Type: '+draft.topic.label+'\nWhere: '+(draft.where||'not said')+'\nWhat: '+draft.what+(draft.why?'\nWhy: '+draft.why:'')+((draft.more||[]).length?'\nMore: '+draft.more.join(' / '):'')+'\nHow soon: '+(draft.when||'Whenever');
+  }
+  function confirm(){
+    step = 'confirm';
+    say('Here\'s what I\'ll send. Anything to add?');
+    bub('sum', summary());
+    setChips([
+      {label:'Send it', go:true, run:send},
+      {label:'Add more detail', run:()=>{ step = 'more'; say('Go ahead, type what to add.'); setChips([]); txt.focus(); }},
+      {label:'Start over', run:()=>{ log.textContent = ''; start(); }, silent:true}
+    ]);
+  }
+  async function send(){
+    setChips([]);
+    if (!sb || !user){ say('You\'re signed out, so I couldn\'t send it. Sign in and try again.'); return; }
+    const text = summary()+'\n\n(From the test app chat. Screen open: '+screenName()+', viewing as '+tier().name+', '+site().name+')';
+    const data = {kind:draft.topic.kind, biz:draft.where==='Public website'?'Website (from test app chat)':'Test app: '+(draft.where||screenName()), when:draft.when||'Whenever', text, status:'New', reply:'', by:user.email||'', source:'test-app-chat', tier:S.tier, screen:current};
     const {error} = await sb.from('desk_items').insert({kind:'request', data});
-    btn.disabled = false; btn.textContent = 'Send to the desk';
-    if (error){ $('fbMsg').textContent = 'That did not send ('+(error.code||error.message)+'). Try again in a moment.'; $('fbMsg').hidden = false; return; }
-    $('fbText').value = ''; $('fb').close(); toast('Thank you! It\'s on the Owner Desk under Requests for Claude.');
+    if (error){ say('That didn\'t go through ('+(error.code||error.message)+'). Try "Send it" again in a moment.'); setChips([{label:'Send it', go:true, run:send}]); return; }
+    say('Sent! It\'s on the Owner Desk under Requests for Claude. When someone replies, you\'ll see it under "Your notes and replies".');
+    step = 'done';
+    setChips([{label:'Something else', run:()=>start(), silent:false}]);
+  }
+  function onText(t){
+    if (/\b(dob|date of birth|ssn|social security|medicaid (id|number)|diagnos\w*)\b/i.test(t)) say('Quick reminder: please leave out real resident names and health details. Made-up examples are perfect.');
+    if (step === 'start' || step === 'done'){ draft = {topic:guessTopic(t), what:t}; askWhere(); return; }
+    if (step === 'what'){ draft.what = t; askWhere(); return; }
+    if (step === 'where'){ draft.where = t; askWhy(); return; }
+    if (step === 'why'){ draft.why = t; askWhen(); return; }
+    if (step === 'when'){ draft.when = /urgent|asap|now/i.test(t) ? 'Urgent' : /week/i.test(t) ? 'This week' : 'Whenever'; draft.more = (draft.more||[]).concat(t); confirm(); return; }
+    if (step === 'more' || step === 'confirm'){ draft.more = (draft.more||[]).concat(t); confirm(); return; }
+  }
+  $('chatForm').addEventListener('submit', e => {
+    e.preventDefault(); const t = txt.value.trim(); if (!t) return;
+    bub('me', t); txt.value = ''; setChips([]); onText(t);
   });
+  txt.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); $('chatForm').requestSubmit(); } });
+  function tab(mine){
+    $('tabTalk').setAttribute('aria-selected', String(!mine)); $('tabMine').setAttribute('aria-selected', String(mine));
+    log.hidden = mine; chips.hidden = mine; $('chatForm').hidden = mine; $('chatMine').hidden = !mine;
+    if (mine) loadMine();
+  }
+  $('tabTalk').addEventListener('click', () => tab(false));
+  $('tabMine').addEventListener('click', () => tab(true));
+  async function loadMine(){
+    const box = $('chatMine'); box.textContent = ''; box.append(h('p',{class:'small muted'},'Loading…'));
+    const {data, error} = await sb.from('desk_items').select('id,data,created_at').eq('kind','request').order('created_at',{ascending:false}).limit(50);
+    box.textContent = '';
+    if (error){ box.append(h('p',{class:'small'},'Couldn\'t load your notes ('+(error.code||error.message)+').')); return; }
+    const mine = (data||[]).filter(r => String(r.data.by||'').toLowerCase() === String(user.email||'').toLowerCase());
+    if (!mine.length){ box.append(h('p',{class:'small muted'},'Nothing sent yet. Your notes and any replies show up here.')); return; }
+    mine.forEach(r => {
+      const d = r.data, st = d.status || 'New';
+      box.append(h('div',{class:'item'},
+        h('div',{class:'meta'}, h('span',{class:'chip '+(st==='Done'?'calm':st==='In progress'?'':'amber')},st), h('span',null,fmtDate(r.created_at))),
+        h('span',{class:'small',style:'white-space:pre-wrap'}, String(d.text||'').split('\n\n(')[0].slice(0,400)),
+        d.reply ? h('div',{class:'bub sum',style:'font-size:.9rem'}, 'Reply: '+d.reply) : null));
+    });
+  }
+  $('fbOpen').addEventListener('click', () => {
+    chat.hidden = false; $('fbOpen').hidden = true;
+    if (!opened){ opened = true; start(); }
+    tab(false); txt.focus();
+  });
+  $('chatClose').addEventListener('click', () => { chat.hidden = true; $('fbOpen').hidden = false; });
 
   // ---------- sign-in (same Supabase project and session as the Owner Desk) ----------
   function gate(msg, err){ $('app').hidden = true; $('gate').hidden = false; const m = $('gateMsg'); m.textContent = msg||''; m.hidden = !msg; m.className = 'msg'+(err?' err':''); }
