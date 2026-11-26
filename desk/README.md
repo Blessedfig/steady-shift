@@ -36,3 +36,7 @@ Then invite them under Authentication > Users (or delete their user there).
 ## Executive summary tab
 
 The planning summaries and their questions are rows of kind `summary` in `desk_items`, loaded through the Supabase SQL editor rather than kept in this public repo. Answers and ideas people type are rows of kind `answer` (`cat`, `q`, `question`, `text`, `by`). A row whose data has `"only": "<email>"` is visible to that one member only; the rules in `setup.sql` enforce this. To read the answers, use "Copy answers for Claude" on the tab, or open Table Editor > desk_items in Supabase and filter kind = answer.
+
+## Optional hardening (recommended before real customers)
+
+`hardening.sql` adds database-stamped "who changed this" and an append-only activity log. It does not change who can see what. Run it once in Supabase > SQL Editor. Also recommended, in the Supabase dashboard: turn on multi-factor authentication for owner accounts, enable leaked-password protection, and keep Point-in-Time Recovery or daily backups on.

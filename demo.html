@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Steady Shift Demo</title>
 <meta name="description" content="A clickable demo of what a Steady Shift subscriber sees, using made-up sample data.">
@@ -12,7 +13,7 @@
 /* Layout: guide panel on the left explains each screen; a phone on the right shows the app. Tokens from the Core Design Workbook. */
 :root{
   --bg:#F5F9FC; --surface:#FFFFFF; --ink:#1F3A52; --muted:#5A6F80; --line:#D3E1EC; --line-strong:#7891A6;
-  --sky:#1D6AA8; --sky-soft:#E8F3FC; --calm:#2E7D5B; --calm-soft:#E6F2EC; --amber:#9A5B0F; --amber-soft:#FBF1E2;
+  --sky:#1D6AA8; --sky-soft:#E8F3FC; --calm:#276A4D; --calm-soft:#E6F2EC; --amber:#9A5B0F; --amber-soft:#FBF1E2;
   --urgent:#B3261E; --night:#141C26; --night-ink:#E6EEF5; --night-sky:#7FB8E8; --night-card:#1E2A38;
   --display:"Nunito","Segoe UI",system-ui,sans-serif; --body:"Nunito Sans","Segoe UI",system-ui,sans-serif;
   color-scheme:light;
@@ -125,12 +126,16 @@ ol.top{margin:0;padding-left:1.2rem;display:grid;gap:.35rem;font-size:.95rem}
 
 @media (max-width:900px){.layout{grid-template-columns:1fr}.phone{height:720px}.screens{grid-template-columns:1fr 1fr}}
 @media (max-width:520px){.screens{grid-template-columns:1fr}.phone{border-width:6px;border-radius:28px;height:700px}}
+.skip{position:absolute;left:-999px;top:0;z-index:2000;background:#1D6AA8;color:#fff;padding:.7rem 1rem;border-radius:0 0 12px 0;font-weight:700}.skip:focus{left:0}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+.banner a.back{min-height:44px;display:inline-flex;align-items:center}
 </style>
 </head>
 <body>
-<div class="banner" role="note"><div class="wrap"><span><b>Sample data.</b> Made-up home, staff and residents. Nothing here is real or saved.</span><a href="./">Back to the website</a></div></div>
+<a class="skip" href="#main">Skip to main content</a>
+<header><div class="banner" role="note"><div class="wrap"><span><b>Sample data.</b> Made-up home, staff and residents. Nothing here is real or saved.</span><a href="./" class="back">Back to the website</a></div></div></header>
 
-<main class="wrap">
+<main class="wrap" id="main" tabindex="-1">
   <div class="layout">
     <div class="guide">
       <h1>See what a subscriber sees.</h1>

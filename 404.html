@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Page not found | Steady Shift</title>
+<meta name="description" content="This page could not be found.">
+<link rel="icon" type="image/png" href="/steady-shift/app/icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;800&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600&display=swap">
+<style>
+
+/* Same tokens as the main site (Core Design Workbook): sky on white, rounded type, color held back for meaning. */
+:root{
+  --bg:#F5F9FC; --surface:#FFFFFF; --ink:#1F3A52; --muted:#5A6F80; --line:#D3E1EC; --line-strong:#7891A6;
+  --pine:#1D6AA8; --pine-soft:#E8F3FC; --night:#E8F3FC;
+  --calm:#2E7D5B; --calm-soft:#E6F2EC; --amber:#9A5B0F; --amber-soft:#FBF1E2; --sun:#E7AE55;
+  --display:"Nunito","Segoe UI",system-ui,sans-serif;
+  --body:"Nunito Sans","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141C26; --surface:#1B2532; --ink:#E6EEF5; --muted:#A9B9C7; --line:#2C3A4A; --line-strong:#6F869B;
+  --pine:#7FB8E8; --pine-soft:#1E2E40; --night:#1B2939;
+  --calm:#7CC9A3; --calm-soft:#1B3129; --amber:#E7AE55; --amber-soft:#2E2414; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141C26; --surface:#1B2532; --ink:#E6EEF5; --muted:#A9B9C7; --line:#2C3A4A; --line-strong:#6F869B;
+  --pine:#7FB8E8; --pine-soft:#1E2E40; --night:#1B2939;
+  --calm:#7CC9A3; --calm-soft:#1B3129; --amber:#E7AE55; --amber-soft:#2E2414; color-scheme:dark}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 1.0625rem/1.5 var(--body)}
+img,svg{max-width:100%}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--display);line-height:1.12;text-wrap:balance;margin:0}
+h1{font-size:clamp(2rem,5vw,3rem);font-weight:800;letter-spacing:-.02em}
+h2{font-size:clamp(1.45rem,3vw,1.9rem);font-weight:800}
+h3{font-size:1.15rem;font-weight:800}
+p{margin:0;max-width:65ch}
+a{color:var(--pine)}
+:focus-visible{outline:3px solid var(--pine);outline-offset:2px}
+.eyebrow{font:700 1rem/1.2 var(--display);color:var(--pine)}
+.lede{font-size:1.15rem;color:var(--muted)}
+.muted{color:var(--muted)}
+.small{font-size:.93rem}
+
+.top{border-bottom:1px solid var(--line);background:var(--surface)}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;padding-block:.8rem}
+.brand{min-height:44px;font:700 1.15rem/1 var(--display);display:flex;align-items:center;gap:.6rem;color:var(--ink);text-decoration:none}
+.brand-mark{width:30px;height:30px;border-radius:50%;background:var(--pine);flex:none}
+.top nav{display:flex;gap:1.1rem;flex-wrap:wrap;font-size:.95rem}
+.top nav a{color:var(--muted);text-decoration:none;min-height:44px;display:inline-flex;align-items:center}
+.top nav a:hover{color:var(--ink)}
+main{padding-block:2.5rem 3.5rem}
+article{display:grid;gap:1.6rem;max-width:72ch}
+article section{display:grid;gap:.6rem}
+article ul{margin:0;padding-left:1.2rem;display:grid;gap:.4rem}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:1.1rem 1.2rem}
+.note{background:var(--amber-soft);border-radius:12px;padding:.8rem 1rem}
+footer{border-top:1px solid var(--line);padding-block:1.5rem;font-size:.9rem;color:var(--muted)}
+footer nav{display:flex;gap:1rem;flex-wrap:wrap}
+footer a{min-height:44px;display:inline-flex;align-items:center}
+.skip{position:absolute;left:-999px;top:0;z-index:2000;background:#1D6AA8;color:#fff;padding:.7rem 1rem;border-radius:0 0 12px 0;font-weight:700}.skip:focus{left:0}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to main content</a>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="/steady-shift/"><span class="brand-mark" aria-hidden="true"></span>Steady Shift</a>
+    <nav aria-label="Sections"><a href="/steady-shift/">Home</a><a href="/steady-shift/demo.html">See a demo</a><a href="/steady-shift/get-app.html">Get the app</a></nav>
+  </div>
+</header>
+<main id="main" tabindex="-1"><div class="wrap">
+<article>
+<header><span class="eyebrow">Page not found</span><h1>We couldn't find that page</h1></header>
+<p>The link may be old, or the address may have a typo. These will get you back on track:</p>
+<ul>
+<li><a href="/steady-shift/">Steady Shift home</a></li>
+<li><a href="/steady-shift/demo.html">See a demo</a></li>
+<li><a href="/steady-shift/app/">Open the test app</a></li>
+</ul>
+</article>
+</div></main>
+<footer><div class="wrap"><nav aria-label="Footer"><a href="/steady-shift/">Home</a><a href="/steady-shift/privacy.html">Privacy</a><a href="/steady-shift/accessibility.html">Accessibility</a></nav>Steady Shift is a working name. This app supports staff judgment and your home's procedures. It does not replace medical advice, legal advice or a call to 911.</div></footer>
+</body>
+</html>

@@ -2,6 +2,7 @@
 <html lang="en" data-theme="light">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https: wss://umwebrbyusatucjixdju.supabase.co; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <meta name="referrer" content="no-referrer">
@@ -212,12 +213,15 @@ mark.flag{background:var(--amber-soft);color:var(--ink);border-bottom:2px solid 
 .tourlist .done{color:var(--muted);text-decoration:line-through}
 
 @media print{.top,.testbar,nav.side,.fab,.chat,.noprint{display:none!important}.shell{display:block}main{padding:0}.card{box-shadow:none}}
+.skip{position:absolute;left:-999px;top:0;z-index:2000;background:#1D6AA8;color:#fff;padding:.7rem 1rem;border-radius:0 0 12px 0;font-weight:700}.skip:focus{left:0}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
 </style>
 </head>
 <body>
-<div class="testbar" role="note"><b>Test version.</b> Every person, home and record here is made up. Do not enter real resident names or health details.</div>
+<a class="skip" href="#main">Skip to main content</a>
+<div class="testbar" role="region" aria-label="Test version notice"><b>Test version.</b> Every person, home and record here is made up. Do not enter real resident names or health details.</div>
 
-<div id="gate" class="gate" hidden>
+<div id="gate" class="gate" role="main" hidden>
   <div class="card">
     <div class="row"><span class="mark" aria-hidden="true"></span><span class="eyebrow">Steady Shift test app</span></div>
     <h1>Sign in</h1>
@@ -237,7 +241,7 @@ mark.flag{background:var(--amber-soft);color:var(--ink);border-bottom:2px solid 
       <button class="btn" id="codeBtn" type="submit">Sign in with the code</button>
     </form>
     <p id="gateMsg" class="msg" hidden></p>
-    <p class="small muted">You stay signed in on this device until you sign out.</p>
+    <p class="small muted">You stay signed in on this device until you sign out or go 12 hours without using it.</p>
   </div>
 </div>
 
@@ -278,6 +282,7 @@ mark.flag{background:var(--amber-soft);color:var(--ink);border-bottom:2px solid 
 <script src="../desk/vendor/supabase-js-2.118.0.js"></script>
 <script src="../desk/config.js"></script>
 <script src="../desk/pw.js"></script>
+<script src="../desk/idle.js"></script>
 <script src="data.js"></script>
 <script src="app.js"></script>
 </body>
