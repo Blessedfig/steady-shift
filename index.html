@@ -171,9 +171,40 @@ footer{padding-block:2rem;font-size:.88rem;color:var(--muted)}
   .btn{transition:transform .15s ease}
   .btn:hover{transform:translateY(-1px)}
 }
+
+/* photo frames: illustration shows at rest; a real photo in images/ fades in over it when present */
+.ph{position:relative;border-radius:24px;overflow:hidden;background:var(--night);aspect-ratio:4/3;max-width:100%}
+.ph svg.scene{position:absolute;inset:0;width:100%;height:100%}
+.ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .4s ease}
+.ph img.ok{opacity:1}
+.ph figcaption{position:absolute;left:.8rem;bottom:.8rem;background:var(--surface);color:var(--ink);font:600 .85rem/1.2 var(--body);padding:.45em .8em;border-radius:99px;box-shadow:0 4px 14px -8px rgba(0,0,0,.3)}
+.sc-sky{fill:var(--night)} .sc-sun{fill:var(--amber-soft)} .sc-far{fill:var(--pine-soft)} .sc-near{fill:var(--pine);opacity:.28} .sc-tree{fill:var(--pine)} .sc-trunk{fill:var(--muted)} .sc-cloud{fill:var(--surface);opacity:.85}
+.hero-visual{position:relative;display:grid;gap:1rem;min-width:0}
+.hero-visual .ph{aspect-ratio:5/4}
+.gallery{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:1rem;margin-top:2rem}
+.gallery figure{margin:0}
+.hills{display:block;width:100%;height:70px}
+.hills path{fill:var(--night)}
+.calm-quote{font:800 clamp(1.3rem,2.6vw,1.7rem)/1.3 var(--display);max-width:30ch;text-wrap:balance}
+@media (max-width:860px){.gallery{grid-template-columns:1fr 1fr}.gallery figure:first-child{grid-column:1/-1}}
+@media (max-width:560px){.gallery{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.ph img{transition:none}}
 </style>
+
+
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="scene" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
+<rect class="sc-sky" width="400" height="300"/>
+<circle class="sc-sun" cx="300" cy="80" r="42"/>
+<ellipse class="sc-cloud" cx="110" cy="70" rx="46" ry="14"/><ellipse class="sc-cloud" cx="140" cy="60" rx="30" ry="14"/>
+<path class="sc-far" d="M0 200 C80 150 160 170 230 185 S340 150 400 170 V300 H0Z"/>
+<rect class="sc-trunk" x="72" y="170" width="6" height="40"/><circle class="sc-tree" cx="75" cy="160" r="24"/><circle class="sc-tree" cx="60" cy="176" r="16"/><circle class="sc-tree" cx="92" cy="174" r="17"/>
+<rect class="sc-trunk" x="318" y="160" width="5" height="34"/><path class="sc-tree" d="M320 110 L346 170 H294Z"/><path class="sc-tree" d="M320 130 L352 186 H288Z"/>
+<rect class="sc-trunk" x="252" y="182" width="4" height="26"/><circle class="sc-tree" cx="254" cy="174" r="15"/>
+<path class="sc-near" d="M0 240 C90 210 170 230 250 238 S350 220 400 232 V300 H0Z"/>
+</symbol></defs></svg>
 <header class="top">
   <div class="wrap">
     <div class="brand"><span class="brand-mark" aria-hidden="true"></span>Steady Shift <span class="draft">Working name</span></div>
@@ -206,13 +237,8 @@ footer{padding-block:2rem;font-size:.88rem;color:var(--muted)}
       </div>
     </div>
 
-    <div class="phone" role="img" aria-label="Example of an overnight question on the app at 2:14 AM, sorted into a morning queue instead of waking the manager">
-      <div class="phone-head"><span>Night shift</span><span>2:14 AM</span></div>
-      <div class="bubble staff"><small>Caregiver asks</small>Resident in room 3 refused her 8 PM meds and is asleep now. Do I wake the manager?</div>
-      <div class="bubble"><small>Your home's procedure</small>Do not wake the resident to give it. Document the refusal on the MAR with the reason and time. Note any change in condition.</div>
-      <div class="tier"><span class="dot"></span>Morning queue. No call needed unless she shows new symptoms.</div>
-      <div class="bubble"><small>Still worried?</small>Tap “I need a manager now” at any time. You never get blocked from calling.</div>
-      <p class="muted">Example screen. Wording follows each home's own medication policy.</p>
+    <div class="hero-visual">
+      <figure class="ph"><svg class="scene" aria-hidden="true"><use href="#scene"/></svg><img src="images/hero-caregiver-resident.jpg" alt="A caregiver sitting with an older resident at home, both smiling" loading="lazy"><figcaption>Care at home, done calmly</figcaption></figure>
     </div>
   </div>
 </section>
@@ -226,6 +252,18 @@ footer{padding-block:2rem;font-size:.88rem;color:var(--muted)}
       <div class="pain"><span class="time">2:10 AM</span><h3>The phone rings again</h3><p>The manager gets woken for something that could have waited, and burns out.</p></div>
       <div class="pain"><span class="time">7:05 AM</span><h3>“She never does…”</h3><p>A shift note reads as an accusation and the next shift starts tense.</p></div>
       <div class="pain"><span class="time">Survey day</span><h3>The binder is out of date</h3><p>The house procedure says yearly. The rule says otherwise.</p></div>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="calm-h">
+  <div class="wrap">
+    <span class="eyebrow">A calmer home</span>
+    <p class="calm-quote" id="calm-h">When staff feel sure of themselves, residents feel it too.</p>
+    <div class="gallery">
+      <figure class="ph"><svg class="scene" aria-hidden="true"><use href="#scene"/></svg><img src="images/residents-together.jpg" alt="Older adults sharing a meal and laughing at a kitchen table" loading="lazy"><figcaption>Residents at home</figcaption></figure>
+      <figure class="ph"><svg class="scene" aria-hidden="true"><use href="#scene"/></svg><img src="images/staff-team.jpg" alt="Two caregivers talking together at the start of a shift" loading="lazy"><figcaption>A team on the same page</figcaption></figure>
+      <figure class="ph"><svg class="scene" aria-hidden="true"><use href="#scene"/></svg><img src="images/trees-path.jpg" alt="A quiet path through tall green trees" loading="lazy"><figcaption>Room to breathe</figcaption></figure>
     </div>
   </div>
 </section>
@@ -342,6 +380,15 @@ footer{padding-block:2rem;font-size:.88rem;color:var(--muted)}
   <div class="wrap">
     <span class="eyebrow">Overnight</span>
     <h2 id="night-h">Managers sleep. Staff are never left alone with a hard call.</h2>
+    <div class="money" style="margin-top:1.5rem;align-items:center"><div class="stack"><p class="lede">Overnight questions get sorted before anyone's phone rings. Staff always have the answer from your own procedures, and they can always reach a person.</p></div>
+<div class="phone" role="img" aria-label="Example of an overnight question on the app at 2:14 AM, sorted into a morning queue instead of waking the manager">
+      <div class="phone-head"><span>Night shift</span><span>2:14 AM</span></div>
+      <div class="bubble staff"><small>Caregiver asks</small>Resident in room 3 refused her 8 PM meds and is asleep now. Do I wake the manager?</div>
+      <div class="bubble"><small>Your home's procedure</small>Do not wake the resident to give it. Document the refusal on the MAR with the reason and time. Note any change in condition.</div>
+      <div class="tier"><span class="dot"></span>Morning queue. No call needed unless she shows new symptoms.</div>
+      <div class="bubble"><small>Still worried?</small>Tap “I need a manager now” at any time. You never get blocked from calling.</div>
+      <p class="muted">Example screen. Wording follows each home's own medication policy.</p>
+</div>    </div>
     <div class="tablebox">
       <table>
         <thead><tr><th>Level</th><th>What happens</th><th>Example</th></tr></thead>
@@ -405,6 +452,7 @@ footer{padding-block:2rem;font-size:.88rem;color:var(--muted)}
   </div>
 </section>
 
+<svg class="hills" viewBox="0 0 1200 70" preserveAspectRatio="none" aria-hidden="true"><path d="M0 70 V40 C150 5 300 5 450 30 S750 60 900 30 S1100 0 1200 25 V70Z"/></svg>
 <section id="pilot" class="founder" aria-labelledby="pilot-h">
   <div class="wrap">
     <div class="stack">
@@ -426,6 +474,15 @@ footer{padding-block:2rem;font-size:.88rem;color:var(--muted)}
   </div>
 </section>
 
-<footer><div class="wrap">Steady Shift is a working name. This app supports staff judgment and your home's procedures. It does not replace medical advice, legal advice or a call to 911.</div></footer>
+<footer><div class="wrap"><p id="credits" hidden></p>Steady Shift is a working name. This app supports staff judgment and your home's procedures. It does not replace medical advice, legal advice or a call to 911.</div></footer>
+
+<script>
+// Fade in real photos when they exist in images/; otherwise the drawn scene stays.
+document.querySelectorAll('.ph img').forEach(function(img){
+  function ok(){ if(img.naturalWidth>0) img.classList.add('ok'); }
+  if(img.complete) ok(); else img.addEventListener('load', ok);
+  img.addEventListener('error', function(){ img.remove(); });
+});
+</script>
 </body>
 </html>
