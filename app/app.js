@@ -197,7 +197,7 @@
     const t = S.tier;
     if (t === 'owner') return R.owner(v, true);
     if (t === 'multi') return R.sites(v, true);
-    const pc = pulseCard(); if (pc) v.append(pc);
+    const ic = installCard(); if (ic) v.append(ic); const pc = pulseCard(); if (pc) v.append(pc);
     if (t === 'caregiver') homeCaregiver(v);
     if (t === 'manager') homeManager(v);
     if (t === 'rn') homeRN(v);
@@ -795,7 +795,7 @@
     v.append(h('div',{class:'grid g2'},
       h('div',{class:'card'}, h('h2',null,'Top 5 things your team asked'), top.length ? h('ol',null, top.map(([id,n]) => h('li',null,ruleById(id).q+' ('+n+')'))) : h('p',{class:'muted'},'Nothing yet.'), h('p',{class:'small muted'},'Use these to plan the next training. No names attached.'), h('a',{href:'#/questions'},'Full question report')),
       h('div',{class:'card'}, h('h2',null,'Funding and rate watch'), h('ul',null, h('li',null,'Wisconsin budget items for caregiver pay and training (amounts being checked).'), h('li',null,'Medicaid payment caps proposed from 2028 may affect care manager rates.'), h('li',null,'WisCaregiver Careers can offset hiring and training costs.')), h('a',{href:'#/watch'},'Regulatory Watch'))));
-    if (isHome){ const pc = pulseCard(); if (pc) v.append(pc); v.append(tourCard()); }
+    if (isHome){ const ic = installCard(); if (ic) v.append(ic); const pc = pulseCard(); if (pc) v.append(pc); v.append(tourCard()); }
   };
 
   // All sites (multi-site)
@@ -819,7 +819,7 @@
     v.append(f);
     if (S.policies.length) v.append(h('div',{class:'card'}, h('h2',null,'Policies sent'), h('div',{class:'list'}, S.policies.slice().reverse().map(p => h('div',{class:'item'}, h('div',{class:'meta'},h('span',null,fmtDate(p.at)),h('span',{class:'chip '+(p.acks.length===p.to.length?'calm':'amber')},p.acks.length+' of '+p.to.length+' confirmed')), h('span',null,p.text),
       p.acks.length < p.to.length ? h('button',{class:'btn quiet sm',type:'button',onclick:()=>{ const next = p.to.find(x=>!p.acks.includes(x)); p.acks.push(next); save(); route(); }},'Simulate a manager confirming') : null)))));
-    if (isHome){ const pc = pulseCard(); if (pc) v.append(pc); v.append(tourCard()); }
+    if (isHome){ const ic = installCard(); if (ic) v.append(ic); const pc = pulseCard(); if (pc) v.append(pc); v.append(tourCard()); }
   };
 
   // Hand-off packet (family)
@@ -1398,6 +1398,26 @@
   });
   $('chatClose').addEventListener('click', () => { chat.hidden = true; $('fbOpen').hidden = false; });
 
+  // ---------- install on a phone (home-screen app) ----------
+  function standalone(){ return (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true || /SteadyShiftApp/.test(navigator.userAgent); }
+  let installEvt = null;
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; });
+  if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+  function installCard(){
+    if (standalone()) return null;
+    try { if (localStorage.getItem('ss-install-hide')) return null; } catch(e){}
+    const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const android = /Android/.test(navigator.userAgent);
+    if (!ios && !android) return null;
+    const c = h('div',{class:'card soft noprint'}, h('span',{class:'eyebrow'},'Use it like an app'), h('h3',null,'Put Steady Shift on your home screen'),
+      ios ? h('p',{class:'small'},'In Safari, tap the Share button (the square with an arrow), then "Add to Home Screen". Open it from the new icon and sign in once with the code from the email.')
+          : h('p',{class:'small'},'Tap "Install" below, or open the Chrome menu (⋮) and choose "Add to Home screen" or "Install app". Then open it from the new icon and sign in once with the code from the email.'),
+      h('div',{class:'row'},
+        android ? h('button',{class:'btn sm',type:'button',onclick:async()=>{ if (installEvt){ installEvt.prompt(); await installEvt.userChoice; installEvt = null; c.remove(); } else toast('Use the Chrome menu (⋮), then "Add to Home screen".'); }},'Install') : null,
+        h('button',{class:'btn quiet sm',type:'button',onclick:()=>{ try{localStorage.setItem('ss-install-hide','1')}catch(e){} c.remove(); }},'Not now')));
+    return c;
+  }
+
   // ---------- sign-in (same Supabase project and session as the Owner Desk) ----------
   function gate(msg, err){ $('app').hidden = true; $('gate').hidden = false; const m = $('gateMsg'); m.textContent = msg||''; m.hidden = !msg; m.className = 'msg'+(err?' err':''); }
   const cfg = window.DESK_CONFIG || {};
@@ -1419,7 +1439,18 @@
       else gate('Could not send the link: '+m, true);
       return;
     }
-    gate('Check '+email+' for a sign-in email (it may land in spam). The link brings you straight back here.');
+    gate(standalone() ? 'Check '+email+' for a sign-in email (it may land in spam). Type the code from the email below.' : 'Check '+email+' for a sign-in email (it may land in spam). Tap the link, or type the code from the email below.');
+    $('codeForm').hidden = false; $('code').focus();
+  });
+  $('haveCode').addEventListener('click', () => { $('codeForm').hidden = false; $('code').focus(); });
+  $('codeForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const email = $('email').value.trim().toLowerCase(), token = $('code').value.replace(/\D/g,'');
+    if (!email){ gate('Type your email above first.', true); $('codeForm').hidden = false; return; }
+    const b = $('codeBtn'); b.disabled = true; b.textContent = 'Checking…';
+    const {error} = await sb.auth.verifyOtp({email, token, type:'email'});
+    b.disabled = false; b.textContent = 'Sign in with the code';
+    if (error){ gate(/expired|invalid/i.test(String(error.message)) ? 'That code did not work or has expired. Send a new email and use the newest code.' : 'Could not sign in: '+error.message, true); $('codeForm').hidden = false; }
   });
   $('signOut').addEventListener('click', async () => { await sb.auth.signOut(); });
 

@@ -6,6 +6,14 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="referrer" content="no-referrer">
 <title>Steady Shift App</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1D6AA8">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Steady Shift">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700&display=swap">
@@ -218,7 +226,12 @@ mark.flag{background:var(--amber-soft);color:var(--ink);border-bottom:2px solid 
       <label class="f">Email<input id="email" type="email" autocomplete="email" required placeholder="you@example.com"></label>
       <button class="btn" id="sendBtn" type="submit">Email me a sign-in link</button>
     </form>
+    <form id="codeForm" class="grid" hidden>
+      <label class="f">Code from the email<input id="code" inputmode="numeric" autocomplete="one-time-code" maxlength="12" required placeholder="123456"></label>
+      <button class="btn" id="codeBtn" type="submit">Sign in with the code</button>
+    </form>
     <p id="gateMsg" class="msg" hidden></p>
+    <p class="small muted" id="codeHint"><button class="linkbtn" id="haveCode" type="button">I have a sign-in code</button> (best on a phone app, where links open in the browser instead)</p>
     <p class="small muted">Already signed in to the <a href="../desk/">Owner Desk</a> on this device? Then this page opens on its own. Just reload.</p>
   </div>
 </div>

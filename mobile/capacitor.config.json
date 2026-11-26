@@ -1,0 +1,17 @@
+{
+  "appId": "com.blessedfig.steadyshift.test",
+  "appName": "Steady Shift Test",
+  "webDir": "www",
+  "server": {
+    "url": "https://blessedfig.github.io/steady-shift/app/",
+    "allowNavigation": ["blessedfig.github.io", "*.supabase.co"]
+  },
+  "appendUserAgent": "SteadyShiftApp",
+  "backgroundColor": "#F5F9FC",
+  "android": {
+    "allowMixedContent": false
+  },
+  "ios": {
+    "contentInset": "always"
+  }
+}
