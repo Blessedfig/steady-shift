@@ -237,6 +237,28 @@ footer{padding-block:2rem;font-size:.88rem;color:var(--muted)}
 footer nav{display:flex;flex-wrap:wrap;gap:1.25rem;margin-bottom:.75rem}
 footer nav a{color:var(--muted);text-decoration:none;font-weight:600;min-height:48px;display:inline-flex;align-items:center}
 footer nav a:hover{color:var(--pine)}
+
+/* subscriber section */
+.gain{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin-top:1.75rem}
+.gain div{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:1.1rem 1.2rem;display:grid;gap:.4rem;align-content:start}
+.gain div.lead{background:var(--pine-soft);border-color:transparent}
+.gain p{font-size:.98rem;color:var(--muted)}
+.ftable td:not(:first-child),.ftable th:not(:first-child){text-align:center;white-space:nowrap}
+.ftable td small{display:block;color:var(--muted);font-size:.85rem}
+.yes{color:var(--calm);font-weight:800}
+.no-mark{color:var(--muted)}
+.labels{display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-top:2rem;align-items:start}
+.lbls{display:grid;gap:.8rem}
+.lbl3{display:grid;grid-template-columns:auto 1fr;gap:.8rem;align-items:baseline}
+.tag3{font:800 .85rem/1 var(--display);border-radius:8px;padding:.45em .65em;white-space:nowrap}
+.tag3.says{background:var(--calm-soft);color:var(--calm)}
+.tag3.reading{background:var(--pine-soft);color:var(--pine)}
+.tag3.open{background:var(--amber-soft);color:var(--amber)}
+.ccard{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:1.2rem;display:grid;gap:.6rem;box-shadow:0 4px 16px rgba(31,58,82,.08)}
+.ccard ol{margin:0;padding-left:1.2rem;display:grid;gap:.3rem}
+.ccard .src{font-size:.85rem;color:var(--pine);background:var(--pine-soft);border-radius:99px;padding:.35em .7em;width:fit-content}
+.ccard .legal{font-size:.82rem;color:var(--muted);border-top:1px solid var(--line);padding-top:.5rem}
+@media (max-width:860px){.labels{grid-template-columns:1fr}}
 </style>
 
 </head>
@@ -258,8 +280,8 @@ footer nav a:hover{color:var(--pine)}
     <div class="top-right">
       <nav aria-label="Sections">
         <a href="#paths">Who it's for</a>
-        <a href="#features">What it does</a>
         <a href="#plans">Plans</a>
+        <a href="demo.html">See a demo</a>
       </nav>
       <a class="btn primary" href="#pilot">Try it early</a>
     </div>
@@ -283,6 +305,7 @@ footer nav a:hover{color:var(--pine)}
         <a href="#agency">I run a home care agency</a>
         <a href="#multisite">I run several sites</a>
       </div>
+      <p><a href="demo.html" style="font-weight:600">Or see a demo with sample data →</a></p>
     </div>
 
     <div class="hero-visual">
@@ -612,7 +635,61 @@ footer nav a:hover{color:var(--pine)}
   </div>
 </section>
 
-<section id="privacy" aria-labelledby="priv-h">
+<section id="subscribe" aria-labelledby="sub-h">
+  <div class="wrap">
+    <span class="eyebrow">What subscribers get</span>
+    <h2 id="sub-h">Rules change. Your subscription keeps up so you don't have to.</h2>
+    <p class="lede" style="margin-top:.75rem">New laws, court decisions and deadlines land every year. Subscribers get them explained in plain words, with what to do and by when.</p>
+    <div class="gain">
+      <div class="lead"><h3>Regulatory Watch</h3><p>Short alerts when a Wisconsin rule, federal rule, court decision or deadline changes: what changed, who it affects and what to do. Right now that includes the proposed DHS 88 rewrite and the HIPAA Security Rule update.</p></div>
+      <div><h3>Clarity Cards, kept current</h3><p>Plain answers to the questions that cause the most confusion, each with its rule, a confidence label and the date it was last checked.</p></div>
+      <div><h3>Monthly Clarity Bulletin</h3><p>Rule changes, newly answered questions and the month's top confusions across homes. A free version anyone can join.</p></div>
+      <div><h3>Answers everyone learns from</h3><p>When a home asks the regulator a question, the answer (with permission and no names) becomes a new card for every subscriber.</p></div>
+    </div>
+
+    <div class="tablebox">
+      <table class="ftable">
+        <thead><tr><th>Feature</th><th>Free</th><th>Core<small style="display:block;text-transform:none;font-weight:400">Home, Facility, Agency</small></th><th>Premium<small style="display:block;text-transform:none;font-weight:400">add-on</small></th><th>Owner and Group</th></tr></thead>
+        <tbody>
+          <tr><td><b>Clarity Cards</b><small>Plain answer, rule, confidence label, date checked</small></td><td>5 cards</td><td class="yes">Full set</td><td class="yes">Full set</td><td class="yes">Full set</td></tr>
+          <tr><td><b>Survey-Ready Check</b><small>Self-check on the most-cited rules, with a fix list</small></td><td>Quiz</td><td class="yes">Kept current</td><td class="yes">Kept current</td><td class="yes">Every site</td></tr>
+          <tr><td><b>Monthly Clarity Bulletin</b><small>Changes, answers and top confusions</small></td><td>Basic</td><td class="yes">Full, with app links</td><td class="yes">Full</td><td class="yes">Full</td></tr>
+          <tr><td><b>Regulatory Watch alerts</b><small>New laws, court decisions and deadlines</small></td><td class="no-mark">Headlines</td><td class="yes">Alerts for your setting</td><td class="yes">Alerts</td><td class="yes">Every site</td></tr>
+          <tr><td><b>House Rule vs. Rights checker</b><small>Flags house rules that limit resident rights</small></td><td>Checker</td><td>Checker</td><td class="yes">Full policy review</td><td class="yes">Full review</td></tr>
+          <tr><td><b>Decide and Document</b><small>A dated record for gray areas</small></td><td class="no-mark">–</td><td class="yes">Yes</td><td class="yes">Yes</td><td class="yes">Yes</td></tr>
+          <tr><td><b>Refusal and rights log</b><small>Offers, refusals and a calm family note</small></td><td class="no-mark">–</td><td class="yes">Yes</td><td class="yes">Yes</td><td class="yes">Yes</td></tr>
+          <tr><td><b>Which-clock incident router</b><small>Every recipient and deadline from one report</small></td><td class="no-mark">–</td><td class="yes">Yes</td><td class="yes">Yes</td><td class="yes">Yes</td></tr>
+          <tr><td><b>Ask the Regulator kit</b><small>Ready-to-send question with citations, reply tracked</small></td><td class="no-mark">–</td><td class="no-mark">–</td><td class="yes">Yes</td><td class="yes">Yes</td></tr>
+          <tr><td><b>Owner Confusion Report</b><small>Top 5 confusions a month, no names, with a training plan</small></td><td class="no-mark">–</td><td class="no-mark">–</td><td class="no-mark">–</td><td class="yes">Yes</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="why">Which feature sits in which tier is a draft. <span class="draft">Draft</span></p>
+
+    <div class="labels">
+      <div class="stack">
+        <h3>Every answer tells you how sure it is.</h3>
+        <div class="lbls">
+          <div class="lbl3"><span class="tag3 says">Rule says</span><p>Quoted or closely paraphrased from the rule, with a link and the date we last checked it.</p></div>
+          <div class="lbl3"><span class="tag3 reading">Best reading</span><p>Our reading where the rule is thin, with the reasoning and a button to ask for confirmation.</p></div>
+          <div class="lbl3"><span class="tag3 open">Open question</span><p>The rules really conflict. We never pick a side. You get Decide and Document and the Ask the Regulator kit instead.</p></div>
+        </div>
+        <p class="muted" style="font-size:.95rem">None of this is legal advice. It helps you find and document the answer; it doesn't guarantee compliance. Any card not checked in 12 months goes back into review.</p>
+        <a class="btn primary" href="demo.html" style="justify-self:start">See a demo</a>
+      </div>
+      <div class="ccard" aria-label="Example Clarity Card">
+        <span class="tag3 says" style="width:fit-content">Rule says</span>
+        <h3>Can I set up meds in a cup for later?</h3>
+        <p><b>In an adult family home, no.</b> Meds stay in their original container until you give them.</p>
+        <ol><li>Leave meds in the pharmacy packaging.</li><li>Take them out one resident at a time, at the time they're due.</li><li>Sign the record after each one.</li></ol>
+        <span class="src">DHS 88.07(3)(a) · checked Nov 2026</span>
+        <p class="legal">Not legal advice. Check with your licensing specialist or attorney for your situation.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="privacy" class="band" aria-labelledby="priv-h">
   <div class="wrap">
     <span class="eyebrow">Privacy</span>
     <h2 id="priv-h">Designed around HIPAA from the first screen.</h2>
