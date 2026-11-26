@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ["mobile/**", "app/icons/**", ".github/workflows/android-test.yml"]
+    paths: ["mobile/**", ".github/workflows/android-test.yml"]
 
 permissions:
   contents: write
@@ -36,21 +36,12 @@ jobs:
         run: npm ci
       - name: Create the Android project
         run: npx cap add android
-      - name: App icons
+      - name: App icons and splash (pre-rendered in mobile/resources)
         run: |
           RES=android/app/src/main/res
           rm -rf "$RES/mipmap-anydpi-v26"
-          for d in mdpi:48 hdpi:72 xhdpi:96 xxhdpi:144 xxxhdpi:192; do
-            dir="$RES/mipmap-${d%%:*}"; size="${d##*:}"; mkdir -p "$dir"
-            convert ../app/icons/icon-512.png -resize "${size}x${size}" "$dir/ic_launcher.png"
-            cp "$dir/ic_launcher.png" "$dir/ic_launcher_round.png"
-            rm -f "$dir/ic_launcher_foreground.png"
-          done
-          # replace Capacitor's default splash logo with ours, centered on the app background
-          for f in $(find "$RES" -name splash.png); do
-            wh=$(identify -format "%wx%h" "$f"); w=${wh%x*}; h=${wh#*x}; m=$(( (w<h?w:h) / 3 ))
-            convert -size "$wh" xc:'#F5F9FC' \( ../app/icons/icon-512.png -resize "${m}x${m}" \) -gravity center -composite "$f"
-          done
+          rm -f "$RES"/mipmap-*/ic_launcher_foreground.png
+          cp -R resources/res/. "$RES/"
       - name: Build the APK
         working-directory: mobile/android
         run: ./gradlew assembleDebug --no-daemon
