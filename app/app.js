@@ -822,7 +822,8 @@
   };
 
   // ---------- "Ideas and fixes" chat: a guided helper that saves to the desk's Requests for Claude ----------
-  // Scripted, not AI. It asks short follow-ups and saves the whole conversation as one request.
+  // Uses the AI helper (Supabase Edge Function "app-chat") when it is set up; otherwise a scripted helper
+  // asks short follow-ups and saves the conversation as one request.
   let sb = null, user = null;
   const chat = $('chat'), log = $('chatLog'), chips = $('chatChips'), txt = $('chatText');
   const TOPICS = [
@@ -900,7 +901,35 @@
     step = 'done';
     setChips([{label:'Something else', run:()=>start(), silent:false}]);
   }
+  // ---- AI mode: used when the app-chat server function is set up with an API key ----
+  let aiMode = false, aiTurns = [];
+  async function probeAI(){
+    try { const {data, error} = await sb.functions.invoke('app-chat', {body:{ping:true}}); return !error && data && data.ok; } catch(e){ return false; }
+  }
+  function startAI(){
+    aiTurns = [];
+    const hello = 'Hi! I\'m the app\'s helper. Tell me anything you\'d change or add, on this app or the public website, and I\'ll ask a question or two and send it to the desk for Christian and Claude.\n\nYou can also ask me what a screen does.';
+    say(hello); aiTurns.push({role:'assistant', content:hello});
+    setChips([]);
+  }
+  async function aiSend(t){
+    aiTurns.push({role:'user', content:t});
+    const typing = bub('bot','…');
+    const ctx = {screen:screenName(), tier:tier().name, site:site().name};
+    let data, error;
+    try { ({data, error} = await sb.functions.invoke('app-chat', {body:{messages:aiTurns.slice(-20), context:ctx}})); } catch(e){ error = e; }
+    typing.remove();
+    if (error || !data || !data.reply){
+      aiTurns.pop();
+      say('The AI helper isn\'t answering right now, so I\'ll ask you a few quick questions instead.');
+      aiMode = false; draft = {topic:guessTopic(t), what:t}; askWhere(); return;
+    }
+    say(data.reply); aiTurns.push({role:'assistant', content:data.reply});
+    (data.saved||[]).forEach(w => bub('sum','Saved to the desk: '+w));
+    setChips([{label:'Start over', silent:true, run:()=>{ log.textContent=''; startAI(); }}]);
+  }
   function onText(t){
+    if (aiMode){ aiSend(t); return; }
     if (/\b(dob|date of birth|ssn|social security|medicaid (id|number)|diagnos\w*)\b/i.test(t)) say('Quick reminder: please leave out real resident names and health details. Made-up examples are perfect.');
     if (step === 'start' || step === 'done'){ draft = {topic:guessTopic(t), what:t}; askWhere(); return; }
     if (step === 'what'){ draft.what = t; askWhere(); return; }
@@ -938,7 +967,7 @@
   }
   $('fbOpen').addEventListener('click', () => {
     chat.hidden = false; $('fbOpen').hidden = true;
-    if (!opened){ opened = true; start(); }
+    if (!opened){ opened = true; const wait = bub('bot','…'); probeAI().then(ok => { wait.remove(); aiMode = !!ok; aiMode ? startAI() : start(); }); }
     tab(false); txt.focus();
   });
   $('chatClose').addEventListener('click', () => { chat.hidden = true; $('fbOpen').hidden = false; });
