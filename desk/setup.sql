@@ -30,7 +30,7 @@ grant execute on function public.is_desk_member() to authenticated;
 
 create table if not exists public.desk_items (
   id         uuid primary key default gen_random_uuid(),
-  kind       text not null check (kind in ('lead', 'milestone', 'note', 'request')),
+  kind       text not null check (kind in ('lead', 'milestone', 'note', 'request', 'summary', 'answer')),
   data       jsonb not null default '{}'::jsonb check (pg_column_size(data) < 20000),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
@@ -57,6 +57,28 @@ insert into public.desk_members (email) values
   ('second-person@example.com')
 on conflict do nothing;
 
--- Allow "Requests for Claude" items on a desk set up before they existed.
+-- Allow every kind of item, including ones added after the desk was first set up.
 alter table public.desk_items drop constraint if exists desk_items_kind_check;
-alter table public.desk_items add constraint desk_items_kind_check check (kind in ('lead', 'milestone', 'note', 'request'));
+alter table public.desk_items add constraint desk_items_kind_check check (kind in ('lead', 'milestone', 'note', 'request', 'summary', 'answer'));
+
+-- Private items: a row whose data has "only": "<email>" is visible to that one signed-in member and nobody else.
+-- (Used for Angelika's career summary and her answers about it.)
+create or replace function public.desk_can_see(d jsonb)
+returns boolean
+language sql
+stable
+as $$
+  select public.is_desk_member()
+     and (d ->> 'only' is null or d ->> 'only' = lower(coalesce(auth.jwt() ->> 'email', '')));
+$$;
+revoke all on function public.desk_can_see(jsonb) from public, anon;
+grant execute on function public.desk_can_see(jsonb) to authenticated;
+
+drop policy if exists "desk members can read"   on public.desk_items;
+drop policy if exists "desk members can add"    on public.desk_items;
+drop policy if exists "desk members can change" on public.desk_items;
+drop policy if exists "desk members can remove" on public.desk_items;
+create policy "desk members can read"   on public.desk_items for select to authenticated using (public.desk_can_see(data));
+create policy "desk members can add"    on public.desk_items for insert to authenticated with check (public.desk_can_see(data));
+create policy "desk members can change" on public.desk_items for update to authenticated using (public.desk_can_see(data)) with check (public.desk_can_see(data));
+create policy "desk members can remove" on public.desk_items for delete to authenticated using (public.desk_can_see(data));
