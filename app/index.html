@@ -121,7 +121,7 @@ main{padding:1.5rem max(16px,2vw) 7rem;min-width:0}
 .btn:disabled{opacity:.5;cursor:not-allowed}
 .row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center}
 label.f{display:grid;gap:.3rem;font-size:.88rem;font-weight:600;color:var(--muted)}
-input[type=text],input[type=search],input[type=email],input[type=number],input[type=datetime-local],select,textarea{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:.7rem .85rem;min-height:48px;width:100%;color:var(--ink);font-weight:400}
+input[type=text],input[type=search],input[type=email],input[type=password],input[type=number],input[type=datetime-local],select,textarea{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:.7rem .85rem;min-height:48px;width:100%;color:var(--ink);font-weight:400}
 textarea{min-height:7rem;resize:vertical;line-height:1.5}
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--sky);box-shadow:0 0 0 3px var(--sky-soft)}
 .search{position:relative}
@@ -220,19 +220,24 @@ mark.flag{background:var(--amber-soft);color:var(--ink);border-bottom:2px solid 
 <div id="gate" class="gate" hidden>
   <div class="card">
     <div class="row"><span class="mark" aria-hidden="true"></span><span class="eyebrow">Steady Shift test app</span></div>
-    <h1>Sign in to try the app</h1>
-    <p class="muted">This is the private test version with every plan unlocked. Use the same email you use for the Owner Desk.</p>
-    <form id="emailForm" class="grid">
-      <label class="f">Email<input id="email" type="email" autocomplete="email" required placeholder="you@example.com"></label>
-      <button class="btn" id="sendBtn" type="submit">Email me a sign-in link</button>
+    <h1>Sign in</h1>
+    <p class="muted">This is the private test version with every plan unlocked. Use the same email as the Owner Desk.</p>
+    <form id="pwForm" class="grid">
+      <label class="f">Email<input id="email" type="email" autocomplete="username" inputmode="email" required placeholder="you@example.com"></label>
+      <label class="f">Password<input id="password" type="password" autocomplete="current-password" required></label>
+      <button class="btn" id="pwBtn" type="submit">Sign in</button>
     </form>
+    <div class="card soft" style="box-shadow:none;gap:.5rem">
+      <b>First time here, or forgot your password?</b>
+      <span class="small">We'll email you a sign-in code. After you're in, you can choose a password.</span>
+      <div class="row"><button class="btn ghost sm" id="sendBtn" type="button">Email me a sign-in code</button></div>
+    </div>
     <form id="codeForm" class="grid" hidden>
-      <label class="f">Code from the email<input id="code" inputmode="numeric" autocomplete="one-time-code" maxlength="12" required placeholder="123456"></label>
+      <label class="f">Code from the email<input id="code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="12" required placeholder="123456"></label>
       <button class="btn" id="codeBtn" type="submit">Sign in with the code</button>
     </form>
     <p id="gateMsg" class="msg" hidden></p>
-    <p class="small muted" id="codeHint"><button class="linkbtn" id="haveCode" type="button">I have a sign-in code</button> (best on a phone app, where links open in the browser instead)</p>
-    <p class="small muted">Already signed in to the <a href="../desk/">Owner Desk</a> on this device? Then this page opens on its own. Just reload.</p>
+    <p class="small muted">You stay signed in on this device until you sign out.</p>
   </div>
 </div>
 
@@ -242,7 +247,7 @@ mark.flag{background:var(--amber-soft);color:var(--ink);border-bottom:2px solid 
       <a class="brand" href="#/home"><span class="mark" aria-hidden="true"></span>Steady Shift</a>
       <label class="switch">View as<select id="tierSel" aria-label="View the app as"></select></label>
       <label class="switch">Home<select id="siteSel" aria-label="Which home"></select></label>
-      <div class="who"><span class="email" id="whoEmail"></span><button class="linkbtn" id="signOut" type="button">Sign out</button></div>
+      <div class="who"><span class="email" id="whoEmail"></span><button class="linkbtn" id="pwChange" type="button">Password</button><button class="linkbtn" id="signOut" type="button">Sign out</button></div>
     </div>
   </header>
   <div class="shell">
@@ -272,6 +277,7 @@ mark.flag{background:var(--amber-soft);color:var(--ink);border-bottom:2px solid 
 
 <script src="../desk/vendor/supabase-js-2.118.0.js"></script>
 <script src="../desk/config.js"></script>
+<script src="../desk/pw.js"></script>
 <script src="data.js"></script>
 <script src="app.js"></script>
 </body>
