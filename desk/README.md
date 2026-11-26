@@ -32,3 +32,7 @@ delete from public.desk_members where email = 'name@example.com';
 Then invite them under Authentication > Users (or delete their user there).
 
 `vendor/supabase-js-2.118.0.js` is the unmodified Supabase JS client (MIT, see `vendor/SUPABASE-LICENSE.txt`).
+
+## Executive summary tab
+
+The planning summaries and their questions are rows of kind `summary` in `desk_items`, loaded through the Supabase SQL editor rather than kept in this public repo. Answers and ideas people type are rows of kind `answer` (`cat`, `q`, `question`, `text`, `by`). A row whose data has `"only": "<email>"` is visible to that one member only; the rules in `setup.sql` enforce this. To read the answers, use "Copy answers for Claude" on the tab, or open Table Editor > desk_items in Supabase and filter kind = answer.

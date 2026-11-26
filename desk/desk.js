@@ -14,7 +14,7 @@
   tabs.forEach(t=>t.addEventListener('click',()=>{const id=t.getAttribute('aria-controls');show(id);if(history.replaceState)history.replaceState(null,'','#'+id);}));
   let start=(location.hash||'').slice(1);
   if(!ids.includes(start)){try{start=localStorage.getItem('desk-tab')}catch(e){start=null}}
-  show(ids.includes(start)?start:'progress');
+  show(ids.includes(start)?start:'summary');
 
   // ---------- marketing copy (static) ----------
   const COPY=[
@@ -92,7 +92,7 @@
     if(error){setGate('Could not load saved data ('+(error.code||error.message||'error')+'). Try reloading.');return}
     items=data||[];ready=true;renderAll();
   }
-  function renderAll(){renderBoard();renderMilestones();renderNotes();renderRequests();}
+  function renderAll(){renderSummary();renderBoard();renderMilestones();renderNotes();renderRequests();}
   function report(err){setGate('That change did not save ('+(err&&(err.code||err.message)||'error')+'). Try again in a moment.')}
   async function add(kind,data){
     const {error}=await sb.from('desk_items').insert({kind,data});
@@ -136,6 +136,111 @@
   }
   // pick up changes Angelika or Christian made on another device
   document.addEventListener('visibilitychange',()=>{if(!document.hidden&&ready)load()});
+
+  // ---------- executive summary ----------
+  // Category summaries are rows of kind 'summary'; answers are rows of kind 'answer'
+  // ({cat, q, question, text, by}). A row with data.only is private to that one email (enforced by the database).
+  const drafts={};const openCats=new Set();let openInit=false;
+  const me=()=>((currentUser&&currentUser.email)||'').toLowerCase();
+  const who=e=>!e?'Someone':(e.toLowerCase()===me()?'You':e.split('@')[0]);
+  function summaries(){return of('summary').sort((a,b)=>(a.order||0)-(b.order||0))}
+  function answersFor(cat){return of('answer').filter(a=>a.cat===cat)}
+  function myAnswer(cat,q){return of('answer').find(a=>a.cat===cat&&a.q===q&&String(a.by||'').toLowerCase()===me())}
+  function renderSummary(){
+    const box=$('sumList');
+    const keepFocus=document.activeElement&&box.contains(document.activeElement)?document.activeElement.dataset.key:null;
+    box.textContent='';
+    const cats=summaries();
+    let total=0,done=0;
+    cats.forEach(c=>{(c.questions||[]).forEach((q,i)=>{total++;const a=myAnswer(c.cat,i);if(a&&a.text)done++;})});
+    $('sumCount').textContent=ready?(total?done+' of '+total+' questions answered':'No questions yet'):'Loading…';
+    $('sumBar').style.width=total?Math.round(done/total*100)+'%':'0';
+    if(!cats.length){box.append(el('p','empty',ready?'The summaries have not been added yet. Christian will load them.':'Your summary appears here once you are signed in.'));return}
+    if(!openInit&&cats.length){openCats.add(cats[0].cat);openInit=true}
+    cats.forEach(c=>{
+      const qs=c.questions||[];
+      const mine=qs.filter((q,i)=>{const a=myAnswer(c.cat,i);return a&&a.text}).length;
+      const d=el('details','card sum');d.open=openCats.has(c.cat);
+      d.addEventListener('toggle',()=>{d.open?openCats.add(c.cat):openCats.delete(c.cat)});
+      const sm=el('summary');
+      const h=el('div');h.append(el('span','eyebrow',c.status||'Draft'),el('h3',null,c.title||c.cat));
+      const chips=el('div','sum-chips');
+      if(c.only)chips.append(el('span','chip priv','Only you can see this'));
+      if(qs.length)chips.append(el('span','chip'+(mine===qs.length?' ok':''),mine===qs.length?'All answered':mine+' of '+qs.length+' answered'));
+      sm.append(h,chips,el('p','lede',c.summary||''));
+      const body=el('div','sum-body');
+      body.append(el('p',null,c.summary||''));
+      if((c.points||[]).length){const ul=el('ul','pts');c.points.forEach(p=>ul.append(el('li',null,p)));body.append(ul)}
+      if(c.source){const s=el('p','src');const a=el('a',null,c.source.includes('claude.ai')?'Full plan in Claude':'Open it');a.href=c.source;a.target='_blank';a.rel='noopener';s.append(a);if(c.source.includes('claude.ai'))s.append(document.createTextNode(' (ask Christian to share it if it does not open)'));body.append(s)}
+      if(qs.length){
+        const wrap=el('div','qs');wrap.append(el('h4',null,'Questions for you'));
+        qs.forEach((qt,i)=>{
+          const key=c.cat+'#'+i;const a=myAnswer(c.cat,i);
+          const q=el('div','q'+(a&&a.text?' answered':''));
+          const id='ans-'+c.cat+'-'+i;
+          const lb=el('label',null,(i+1)+'. '+qt);lb.htmlFor=id;q.append(lb);
+          answersFor(c.cat).filter(o=>o.q===i&&String(o.by||'').toLowerCase()!==me()&&o.text).forEach(o=>{
+            const p=el('div','other');p.append(el('b',null,who(o.by)+': '),document.createTextNode(o.text));q.append(p);
+          });
+          const ta=el('textarea');ta.id=id;ta.maxLength=4000;ta.dataset.key=key;ta.placeholder='Your answer, in your own words';
+          ta.value=key in drafts?drafts[key]:(a&&a.text)||'';
+          const row=el('div','qrow');
+          const b=el('button','btn','Save');b.type='button';
+          const st=el('span','saved',a&&a.text?'Saved':'');
+          ta.addEventListener('input',()=>{drafts[key]=ta.value;st.textContent=(ta.value.trim()===((a&&a.text)||''))?(a&&a.text?'Saved':''):'Not saved yet'});
+          b.addEventListener('click',async()=>{
+            const t=ta.value.trim();b.disabled=true;st.textContent='Saving…';
+            let ok;
+            if(a){ok=await patchOk(a.id,{text:t,question:qt})}
+            else if(t){const data={cat:c.cat,q:i,question:qt,text:t,by:me()};if(c.only)data.only=c.only;ok=await add('answer',data)}
+            else ok=true;
+            b.disabled=false;
+            if(ok){delete drafts[key];renderSummary()}else st.textContent='Not saved. Try again.';
+          });
+          row.append(b,st);q.append(ta,row);wrap.append(q);
+          if(keepFocus===key)setTimeout(()=>{const n=document.querySelector('[data-key="'+CSS.escape(key)+'"]');if(n)n.focus()},0);
+        });
+        body.append(wrap);
+      }
+      const ideas=el('div','ideas');ideas.append(el('h4',null,'Your own ideas for this area'));
+      answersFor(c.cat).filter(o=>o.q==='idea').sort((x,y)=>String(x._created).localeCompare(String(y._created))).forEach(o=>{
+        const r=el('div','idea');const t=el('div',null,o.text||'');t.append(el('small',null,who(o.by)+' · '+(o._created?new Date(o._created).toLocaleDateString():'')));r.append(t);
+        if(String(o.by||'').toLowerCase()===me()){const x=el('button','x','×');x.type='button';x.setAttribute('aria-label','Delete idea');let armed=false;
+          x.addEventListener('click',()=>{if(!armed){armed=true;x.textContent='Delete?';setTimeout(()=>{armed=false;x.textContent='×'},3000);return}remove(o.id)});r.append(x)}
+        ideas.append(r);
+      });
+      const f=el('form','row');const ikey=c.cat+'#idea';
+      const it=el('textarea');it.maxLength=4000;it.dataset.key=ikey;it.placeholder='Anything you would add, change or drop here';it.setAttribute('aria-label','New idea for '+(c.title||c.cat));it.style.minHeight='3rem';
+      it.value=drafts[ikey]||'';it.addEventListener('input',()=>{drafts[ikey]=it.value});
+      const ib=el('button','btn ghost','Add idea');ib.type='submit';
+      f.append(it,ib);ideas.append(f);
+      f.addEventListener('submit',async e=>{e.preventDefault();const t=it.value.trim();if(!t||!ready)return;
+        const data={cat:c.cat,q:'idea',text:t,by:me()};if(c.only)data.only=c.only;
+        if(await add('answer',data)){delete drafts[ikey];renderSummary()}});
+      body.append(ideas);
+      d.append(sm,body);box.append(d);
+    });
+  }
+  async function patchOk(id,changes){
+    const it=items.find(i=>i.id===id);if(!it)return false;
+    const {error}=await sb.from('desk_items').update({data:{...it.data,...changes},updated_at:new Date().toISOString()}).eq('id',id);
+    if(error){report(error);return false}
+    setGate('');await load();return true;
+  }
+  $('sumCopy').addEventListener('click',()=>{
+    const lines=['Owner Desk executive summary answers (copied '+new Date().toLocaleString()+')',''];
+    summaries().forEach(c=>{
+      const as=answersFor(c.cat).filter(a=>a.text);if(!as.length)return;
+      lines.push('## '+(c.title||c.cat)+(c.only?' (private)':''));
+      (c.questions||[]).forEach((qt,i)=>{as.filter(a=>a.q===i).forEach(a=>{lines.push('Q'+(i+1)+'. '+qt);lines.push('   '+String(a.by||'').split('@')[0]+': '+String(a.text).replace(/\n/g,'\n   '))})});
+      as.filter(a=>a.q==='idea').forEach(a=>lines.push('Idea from '+String(a.by||'').split('@')[0]+': '+String(a.text).replace(/\n/g,'\n   ')));
+      lines.push('');
+    });
+    if(lines.length===2)lines.push('No answers yet.');
+    const txt=lines.join('\n');const b=$('sumCopy');
+    const done=()=>{b.textContent='Copied';setTimeout(()=>b.textContent='Copy answers for Claude',1500)};
+    try{navigator.clipboard.writeText(txt).then(done,()=>prompt('Copy this:',txt))}catch(err){prompt('Copy this:',txt)}
+  });
 
   // ---------- leads ----------
   function renderBoard(){
