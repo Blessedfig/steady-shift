@@ -1419,7 +1419,9 @@
   }
 
   // ---------- sign-in (same Supabase project and session as the Owner Desk) ----------
-  function gate(msg, err){ $('app').hidden = true; $('gate').hidden = false; const m = $('gateMsg'); m.textContent = msg||''; m.hidden = !msg; m.className = 'msg'+(err?' err':''); }
+  // near: the button or form the person just used, so the message shows right under it
+  function gate(msg, err, near){ $('app').hidden = true; $('gate').hidden = false; const m = $('gateMsg'); m.textContent = msg||''; m.hidden = !msg; m.className = 'msg'+(err?' err':''); if (msg && near && window.SSPw) SSPw.showNear(m, near); }
+  const busy = (b, on, text) => { b.disabled = on; b.textContent = text; b.classList.toggle('sspw-busy', on); b.setAttribute('aria-busy', String(on)); };
   const cfg = window.DESK_CONFIG || {};
   if (!cfg.supabaseUrl || !window.supabase){ gate('The app could not reach its sign-in service. Try reloading.', true); $('pwForm').hidden = true; return; }
   sb = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey, {auth:{flowType:'implicit',persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
@@ -1427,41 +1429,46 @@
   try { $('email').value = localStorage.getItem('desk-email') || ''; } catch(e){}
   let how = '';
   const emailVal = () => $('email').value.trim().toLowerCase();
+  const typo = window.SSPw ? SSPw.watchEmail($('email')) : () => '';
+  const typoStop = near => { const sug = typo(); if (sug){ gate('Check your email address. Did you mean '+sug+'? Tap "Fix it" under the email box.', true, near); $('email').focus(); return true; } return false; };
   $('pwForm').addEventListener('submit', async e => {
     e.preventDefault();
     const email = emailVal(), pw = $('password').value; if (!email || !pw) return;
-    const b = $('pwBtn'); b.disabled = true; b.textContent = 'Signing in…';
+    gate('');
+    if (typoStop($('pwBtn'))) return;
+    const b = $('pwBtn'); busy(b, true, 'Signing in…');
     try { localStorage.setItem('desk-email', email); } catch(err){}
     how = 'password';
     const msg = window.SSPw ? await SSPw.signIn(sb, email, pw) : 'Password sign-in is not available right now. Use the email code below.';
-    b.disabled = false; b.textContent = 'Sign in';
-    if (msg){ how = ''; gate(msg, true); $('password').value = ''; }
+    busy(b, false, 'Sign in');
+    if (msg){ how = ''; gate(msg, true, b); $('password').value = ''; }
   });
   $('sendBtn').addEventListener('click', async () => {
     const email = emailVal();
-    if (!email || !$('email').checkValidity()){ gate('Type your email above first.', true); $('email').focus(); return; }
-    const b = $('sendBtn'); b.disabled = true; b.textContent = 'Sending…';
+    if (!email || !$('email').checkValidity()){ gate('Type your email above first.', true, $('sendBtn')); $('email').focus(); return; }
+    if (typoStop($('sendBtn'))) return;
+    const b = $('sendBtn'); busy(b, true, 'Sending…');
     try { localStorage.setItem('desk-email', email); localStorage.setItem('ss-after-signin','app'); } catch(err){}
     const {error} = await sb.auth.signInWithOtp({email, options:{shouldCreateUser:false, emailRedirectTo:location.origin+location.pathname}});
-    b.disabled = false; b.textContent = 'Email me a sign-in code';
+    busy(b, false, 'Email me a sign-in code');
     if (error){
       const m = String(error.message||'');
-      if (/signups? not allowed|not found|otp_disabled/i.test(m)) gate('That email is not set up yet. Ask Christian to add you.', true);
-      else if (/rate|seconds/i.test(m)) gate('Too many sign-in emails just now. Please wait a few minutes and try again.', true);
-      else gate('Could not send the email: '+m, true);
+      if (/signups? not allowed|not found|otp_disabled/i.test(m)) gate('That email is not set up yet. Check it for typos, or ask Christian to add you.', true, b);
+      else if (/rate|seconds/i.test(m)) gate('Too many sign-in emails just now. Please wait a few minutes and try again.', true, b);
+      else gate('Could not send the email: '+m, true, b);
       return;
     }
-    gate(standalone() ? 'Check '+email+' for a sign-in email (it may land in spam). Type the code from the email below.' : 'Check '+email+' for a sign-in email (it may land in spam). Type the code below, or tap the link in the email.');
+    gate(standalone() ? 'Check '+email+' for a sign-in email (it may land in spam). Type the code from the email below.' : 'Check '+email+' for a sign-in email (it may land in spam). Type the code below, or tap the link in the email.', false, b.closest('.card'));
     $('codeForm').hidden = false; $('code').focus();
   });
   $('codeForm').addEventListener('submit', async e => {
     e.preventDefault();
     const email = emailVal(), token = $('code').value.replace(/\D/g,'');
-    if (!email){ gate('Type your email above first.', true); $('codeForm').hidden = false; return; }
-    const b = $('codeBtn'); b.disabled = true; b.textContent = 'Checking…'; how = 'code';
+    if (!email){ gate('Type your email above first.', true, $('codeBtn')); $('codeForm').hidden = false; return; }
+    const b = $('codeBtn'); busy(b, true, 'Checking…'); how = 'code';
     const {error} = await sb.auth.verifyOtp({email, token, type:'email'});
-    b.disabled = false; b.textContent = 'Sign in with the code';
-    if (error){ gate(/expired|invalid/i.test(String(error.message)) ? 'That code did not work or has expired. Send a new email and use the newest code.' : 'Could not sign in: '+error.message, true); $('codeForm').hidden = false; }
+    busy(b, false, 'Sign in with the code');
+    if (error){ $('codeForm').hidden = false; gate(/expired|invalid/i.test(String(error.message)) ? 'That code did not work or has expired. Send a new email and use the newest code.' : 'Could not sign in: '+error.message, true, b); }
   });
   $('signOut').addEventListener('click', async () => { try { sessionStorage.removeItem('sspw-later'); } catch(e){} await sb.auth.signOut(); });
   $('pwChange').addEventListener('click', () => { if (window.SSPw && user) SSPw.change(sb, user); });

@@ -16,13 +16,19 @@
   .sspw .later{background:#fff;color:#1D6AA8}
   .sspw .show{border:0;background:none;color:#1D6AA8;text-decoration:underline;padding:.3rem;min-height:auto;font-weight:600}
   .sspw .msg{font-size:.9rem;padding:.6rem .8rem;border-radius:10px;background:#FBF1E2;color:#7a4a0c}
-  .sspw .ok{background:#E6F2EC;color:#1f5e43}`;
+  .sspw .ok{background:#E6F2EC;color:#1f5e43}
+  .sspw-typo{font-size:.9rem;margin-top:.35rem;padding:.5rem .7rem;border-radius:10px;background:#FBF1E2;color:#7a4a0c;font-weight:400}
+  .sspw-typo button{font:inherit;font-weight:700;background:none;border:0;color:#1D6AA8;text-decoration:underline;cursor:pointer;padding:.2rem .3rem;min-height:32px}
+  .sspw-busy{opacity:.75;cursor:progress}
+  .sspw-busy::after{content:"";width:1em;height:1em;margin-left:.5em;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;display:inline-block;vertical-align:-.15em;animation:sspw-spin .8s linear infinite}
+  @keyframes sspw-spin{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion:reduce){.sspw-busy::after{animation:none}}`;
   function addCss(){ if (document.getElementById('sspw-css')) return; const s = document.createElement('style'); s.id = 'sspw-css'; s.textContent = css; document.head.appendChild(s); }
   function el(tag, attrs, ...kids){ const e = document.createElement(tag); Object.entries(attrs||{}).forEach(([k,v]) => { if (k === 'class') e.className = v; else if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else if (v !== false && v != null) e.setAttribute(k, v === true ? '' : v); }); kids.flat().forEach(k => { if (k != null) e.append(k); }); return e; }
 
   function friendly(error){
     const m = String((error && error.message) || error || '');
-    if (/invalid login credentials/i.test(m)) return 'That email and password do not match. First time here, or forgot your password? Use "Email me a sign-in code" below, then choose a password.';
+    if (/invalid login credentials/i.test(m)) return 'That email and password do not match. Check the email for typos. First time? Use "Email me a sign-in code" below to set your password.';
     if (/email not confirmed/i.test(m)) return 'This email is not confirmed yet. Use "Email me a sign-in code" below.';
     if (/rate|too many|seconds/i.test(m)) return 'Too many tries just now. Please wait a few minutes and try again.';
     if (/should be different|same password/i.test(m)) return 'That is already your password. Pick a new one, or keep using it.';
@@ -83,5 +89,38 @@
     if (!hasPassword(user) && !later) dialog(sb, user, 'first');
   }
 
-  window.SSPw = {MIN, signIn, friendly, hasPassword, afterSignIn, change:(sb,user)=>dialog(sb,user,'change')};
+  // Likely typos in the email address (".con" for ".com", "gmial" for "gmail" ...). Returns the suggested address or ''.
+  const TLD = {con:'com',cmo:'com',ocm:'com',comm:'com',vom:'com',xom:'com',cpm:'com',coom:'com',ner:'net',nte:'net',ogr:'org',orh:'org'};
+  const DOM = {gmial:'gmail',gmal:'gmail',gmai:'gmail',gnail:'gmail',gamil:'gmail',yahooo:'yahoo',yaho:'yahoo',hotmial:'hotmail',hotmal:'hotmail',outlok:'outlook',outloo:'outlook',iclod:'icloud',icoud:'icloud'};
+  function emailTypo(email){
+    const m = /^([^@\s]+)@([^@\s]+)\.([a-z]+)$/i.exec(String(email||'').trim()); if (!m) return '';
+    let dom = m[2].toLowerCase(), tld = m[3].toLowerCase(), changed = false;
+    if (TLD[tld]){ tld = TLD[tld]; changed = true; }
+    if (DOM[dom]){ dom = DOM[dom]; changed = true; }
+    return changed ? m[1]+'@'+dom+'.'+tld : '';
+  }
+  // Shows a "Did you mean ...?" line under an email input, with a one-tap fix.
+  function watchEmail(input){
+    addCss();
+    const hint = el('div',{class:'sspw-typo',role:'status',hidden:true});
+    input.insertAdjacentElement('afterend', hint);
+    let shown = null;
+    const check = () => {
+      const sug = emailTypo(input.value);
+      if (sug === shown) return; // keep the same button, so a tap on "Fix it" isn't lost when the box loses focus
+      shown = sug; hint.replaceChildren(); hint.hidden = !sug; if (!sug) return;
+      hint.append('Did you mean ', el('b',null,sug), '? ', el('button',{type:'button',onclick:()=>{ input.value = sug; check(); input.focus(); }},'Fix it'));
+    };
+    ['input','blur','change'].forEach(ev => input.addEventListener(ev, check));
+    check();
+    return () => { check(); return emailTypo(input.value); };
+  }
+  // Moves a message box right under the thing the person just tapped, and scrolls it into view.
+  function showNear(msgEl, anchor){
+    if (anchor && msgEl.previousElementSibling !== anchor) anchor.insertAdjacentElement('afterend', msgEl);
+    msgEl.hidden = false;
+    try { msgEl.scrollIntoView({block:'center', behavior:'smooth'}); } catch(e){ msgEl.scrollIntoView(); }
+  }
+
+  window.SSPw = {MIN, signIn, friendly, hasPassword, afterSignIn, emailTypo, watchEmail, showNear, change:(sb,user)=>dialog(sb,user,'change')};
 })();
