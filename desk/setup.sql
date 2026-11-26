@@ -30,7 +30,7 @@ grant execute on function public.is_desk_member() to authenticated;
 
 create table if not exists public.desk_items (
   id         uuid primary key default gen_random_uuid(),
-  kind       text not null check (kind in ('lead', 'milestone', 'note')),
+  kind       text not null check (kind in ('lead', 'milestone', 'note', 'request')),
   data       jsonb not null default '{}'::jsonb check (pg_column_size(data) < 20000),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
@@ -56,3 +56,7 @@ insert into public.desk_members (email) values
   ('first-person@example.com'),
   ('second-person@example.com')
 on conflict do nothing;
+
+-- Allow "Requests for Claude" items on a desk set up before they existed.
+alter table public.desk_items drop constraint if exists desk_items_kind_check;
+alter table public.desk_items add constraint desk_items_kind_check check (kind in ('lead', 'milestone', 'note', 'request'));
