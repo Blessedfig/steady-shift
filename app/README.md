@@ -9,3 +9,12 @@ with every plan unlocked and a "View as" switcher (caregiver, house manager, RN,
 - The casual-to-professional rewrite is a template (word swaps, name removal, flags), not an AI service.
 - Rule content comes from the Wisconsin rulebook and Rule Conflicts docs (checked 2026-11-26). Not legal advice.
 - "Sync and calendar" (`#/sync`, in the manager, RN, owner and multi-site menus) turns app follow-ups (reports waiting, RN delegation reviews, training catch-up, rule-change dates, on-call check) into Google Calendar and Outlook links, a single .ics file or a .csv for Sheets, Excel and shift tools. Its team chat demo builds a Microsoft Teams Workflows card or a Google Chat message from the same item. A pasted test webhook link stays on the page and is never saved. No resident names or codes go into any export.
+
+## Free trials (trial.js)
+
+People with a trial code made on the Owner Desk can create their own account from the sign-in screen
+("Start my free trial", or a link like `app/?code=SS-XXXX-XXXX`). They get every screen for 14 days, with a countdown
+bar at the top. In the last 3 days the plan screen opens once a day, and after the trial ends it is the only screen
+they see until they pick a plan. Plan choices land on the desk under Requests for Claude ("Trial: plan choice").
+Database rules: `desk/trials.sql`. Turning it on: `desk/README.md` > "Turn on trial codes". Payments:
+`supabase/functions/trial-checkout/README.md`. Until `trials.sql` is run, the app behaves exactly as before (desk members only).
