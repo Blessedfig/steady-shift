@@ -251,7 +251,7 @@ details.sum[open]>summary .lede{display:none}
 <header class="top">
   <div class="wrap">
     <div class="brand"><span class="brand-mark" aria-hidden="true"></span><div class="brand-text"><h1>Owner Desk</h1><span class="brand-sub">Steady Shift <span class="soft">(working name)</span></span></div></div>
-    <div class="whobox"><a href="../app/" id="appLink" style="font-weight:700;margin-right:.6rem">Open the test app</a><span class="who" id="who">Checking sign-in…</span><button type="button" class="signout" id="signOut" hidden>Sign out</button></div>
+    <div class="whobox"><a href="../app/" id="appLink" style="font-weight:700;margin-right:.6rem">Open the test app</a><span class="who" id="who">Checking sign-in…</span><button type="button" class="signout" id="pwChange" hidden>Password</button><button type="button" class="signout" id="signOut" hidden>Sign out</button></div>
   </div>
 </header>
 
@@ -259,16 +259,19 @@ details.sum[open]>summary .lede{display:none}
   <div class="card signin">
     <span class="signin-mark" aria-hidden="true"></span>
     <h2>Welcome back</h2>
-    <p class="muted">We'll email you a sign-in link. No password to remember. Only people on the desk's list can get in.</p>
+    <p class="muted">Sign in with your email and password. Only people on the desk's list can get in, and you stay signed in on this device.</p>
     <form id="emailForm" style="display:grid;gap:.8rem">
-      <label>Email address<input type="email" id="email" autocomplete="email" required inputmode="email"></label>
-      <button class="btn" type="submit" id="sendBtn">Email me a sign-in link</button>
+      <label>Email address<input type="email" id="email" autocomplete="username" required inputmode="email"></label>
+      <label>Password<input type="password" id="password" autocomplete="current-password" required></label>
+      <button class="btn" type="submit" id="pwBtn">Sign in</button>
+      <p class="muted" style="font-size:.92rem;margin:0">First time here, or forgot your password? We'll email you a sign-in code, and then you can choose a password.</p>
+      <button class="btn ghost" type="button" id="sendBtn">Email me a sign-in code</button>
     </form>
     <div id="sent" hidden style="display:grid;gap:.8rem">
       <div class="banner info" id="sentMsg"></div>
-      <p class="muted" style="font-size:.92rem">Open the link on this same device. If the email shows a 6-digit code, you can type it here instead.</p>
+      <p class="muted" style="font-size:.92rem">Type the code from the email here, or open the link in the email on this same device.</p>
       <form id="codeForm" style="display:grid;gap:.8rem">
-        <label>6-digit code<input type="text" id="code" inputmode="numeric" autocomplete="one-time-code" maxlength="10" pattern="[0-9]*"></label>
+        <label>Code from the email<input type="text" id="code" inputmode="numeric" autocomplete="one-time-code" maxlength="12"></label>
         <button class="btn ghost" type="submit">Sign in with code</button>
       </form>
       <button type="button" class="linkbtn" id="restart">Use a different email</button>
@@ -440,6 +443,7 @@ details.sum[open]>summary .lede{display:none}
 </div>
 
 <script src="config.js"></script>
+<script src="pw.js"></script>
 <script src="vendor/supabase-js-2.118.0.js"></script>
 <script src="desk.js"></script>
 </body>
