@@ -1571,7 +1571,7 @@
 
   // ---------- sign-in (same Supabase project and session as the Owner Desk) ----------
   // near: the button or form the person just used, so the message shows right under it
-  function gate(msg, err, near){ $('app').hidden = true; $('gate').hidden = false; const m = $('gateMsg'); m.textContent = msg||''; m.hidden = !msg; m.className = 'msg'+(err?' err':''); if (msg && near && window.SSPw) SSPw.showNear(m, near); }
+  function gate(msg, err, near){ $('app').hidden = true; $('plans').hidden = true; $('gate').hidden = false; const m = $('gateMsg'); m.textContent = msg||''; m.hidden = !msg; m.className = 'msg'+(err?' err':''); if (msg && near && window.SSPw) SSPw.showNear(m, near); }
   const busy = (b, on, text) => { b.disabled = on; b.textContent = text; b.classList.toggle('sspw-busy', on); b.setAttribute('aria-busy', String(on)); };
   const cfg = window.DESK_CONFIG || {};
   if (!cfg.supabaseUrl || !window.supabase){ gate('The app could not reach its sign-in service. Try reloading.', true); $('pwForm').hidden = true; return; }
@@ -1621,22 +1621,39 @@
     busy(b, false, 'Sign in with the code');
     if (error){ $('codeForm').hidden = false; gate(/expired|invalid/i.test(String(error.message)) ? 'That code did not work or has expired. Send a new email and use the newest code.' : 'Could not sign in: '+error.message, true, b); }
   });
-  $('signOut').addEventListener('click', async () => { try { sessionStorage.removeItem('sspw-later'); } catch(e){} await sb.auth.signOut(); });
+  async function signOut(){ try { sessionStorage.removeItem('sspw-later'); } catch(e){} await sb.auth.signOut(); }
+  $('signOut').addEventListener('click', signOut);
+  if (window.SSTrial) SSTrial.setupRedeem(sb, gate, busy);
   $('pwChange').addEventListener('click', () => { if (window.SSPw && user) SSPw.change(sb, user); });
 
   async function onSession(session){
     if (!session){ user = null; gate(''); $('codeForm').hidden = true; return; }
     if (user && user.id === session.user.id) return;
     user = session.user;
-    const {data:ok, error} = await sb.rpc('is_desk_member');
-    if (error || !ok){ user = null; gate(error ? 'Could not check access ('+(error.code||error.message)+'). Try reloading.' : 'This email is signed in but is not on the list for the test app. Ask Christian to add it.', true); return; }
+    // members of the Owner Desk, or people on a free trial (see trial.js and desk/trials.sql)
+    let acc;
+    if (window.SSTrial) acc = await SSTrial.check(sb);
+    else { const r = await sb.rpc('is_desk_member'); acc = r.error ? {error:r.error} : {member:!!r.data, active:!!r.data}; }
+    if (acc.error || (!acc.member && !acc.trial)){ user = null; gate(acc.error ? 'Could not check access ('+(acc.error.code||acc.error.message)+'). Try reloading.' : 'This email is signed in but is not on the list for the test app. If you were given a free trial code, sign out and use "Start my free trial". Otherwise ask Christian to add it.', true); return; }
     try { localStorage.removeItem('ss-after-signin'); } catch(e){}
+    if (/[?&](code|trial|paid)=/.test(location.search)) history.replaceState(null,'',location.pathname+location.hash);
+    trial = acc.trialOnly ? acc.trial : null;
+    if (trial && !acc.active){ $('gate').hidden = true; SSTrial.plans(sb, user, trial, {locked:true, onSignOut:signOut}); if (window.SSPw) SSPw.afterSignIn(sb, user, how); return; }
     if (location.hash && /access_token|error/.test(location.hash)) history.replaceState(null,'',location.pathname+'#/home');
     $('whoEmail').textContent = user.email || '';
     $('gate').hidden = true; $('app').hidden = false;
     fillSwitchers(); route();
     if (window.SSPw) SSPw.afterSignIn(sb, user, how);
+    if (trial){
+      const openPlans = () => SSTrial.plans(sb, user, trial, {onSignOut:signOut, onBack:() => SSTrial.bar(trial, openPlans)});
+      SSTrial.bar(trial, openPlans);
+      if (SSTrial.shouldNudge(trial)) setTimeout(openPlans, 1200);
+      // if the trial runs out while the app is open, switch to the plan screen
+      clearInterval(trialTimer);
+      trialTimer = setInterval(() => { if (!user || !trial) return clearInterval(trialTimer); if (!SSTrial.active(trial)){ clearInterval(trialTimer); SSTrial.plans(sb, user, trial, {locked:true, onSignOut:signOut}); } else SSTrial.bar(trial, openPlans); }, 600000);
+    } else { const b = $('trialBar'); if (b) b.hidden = true; }
   }
+  let trial = null, trialTimer = 0;
   (window.SSIdle ? SSIdle.guard(sb) : Promise.resolve()).then(() => {
     sb.auth.onAuthStateChange((_e, session) => setTimeout(() => onSession(session), 0));
     sb.auth.getSession().then(({data}) => onSession(data.session));

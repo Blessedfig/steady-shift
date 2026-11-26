@@ -88,7 +88,7 @@ main{padding-block:1.75rem 3rem}
 
 /* forms */
 form.row{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
-input[type=text],input[type=date],input[type=email],select,textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:.6rem .8rem;min-width:0}
+input[type=text],input[type=date],input[type=email],input[type=number],select,textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:.6rem .8rem;min-width:0}
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--pine);box-shadow:0 0 0 3px var(--pine-soft)}
 form.row input[type=text]{flex:1 1 220px}
 textarea{width:100%;min-height:5rem;resize:vertical}
@@ -186,7 +186,7 @@ main{padding-block:2rem 4rem}
 .btn{font:700 .9rem/1 var(--body);border-radius:10px;padding:.75rem 1.15rem;box-shadow:0 1px 2px rgba(16,40,60,.08)}
 .btn.ghost{background:var(--surface);border-color:var(--line);color:var(--ink);box-shadow:none}
 .btn.ghost:hover{border-color:var(--pine);color:var(--pine)}
-input[type=text],input[type=date],input[type=email],select,textarea{background:var(--surface);border-radius:10px;border-color:#D9E3EA}
+input[type=text],input[type=date],input[type=email],input[type=number],select,textarea{background:var(--surface);border-radius:10px;border-color:#D9E3EA}
 .col{background:#F2F6F9;border-color:var(--line);border-radius:14px}
 .col h3{font:700 .72rem/1.2 var(--body);letter-spacing:.08em}
 .lead{border-radius:12px}
@@ -292,6 +292,7 @@ details.sum[open]>summary .lede{display:none}
     <button role="tab" id="t-marketing" aria-controls="marketing" aria-selected="false"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10v4l11 5V5L4 10z"/><path d="M15 9a3 3 0 010 6"/></svg><span>Marketing kit</span></button>
     <button role="tab" id="t-notes" aria-controls="notes" aria-selected="false"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h7M9 17h5"/></svg><span>Notes</span></button>
     <button role="tab" id="t-requests" aria-controls="requests" aria-selected="false"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 01-11.5 7.2L4 21l1.8-5.5A8 8 0 1121 12z"/></svg><span>Requests for Claude</span></button>
+    <button role="tab" id="t-trials" aria-controls="trials" aria-selected="false"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h18v4a2 2 0 000 4v4H3v-4a2 2 0 000-4z"/><path d="M14 8v12" stroke-dasharray="2 2"/></svg><span>Trial codes</span></button>
     <button role="tab" id="t-later" aria-controls="later" aria-selected="false"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>Later</span></button>
   </div>
 </nav>
@@ -420,6 +421,35 @@ details.sum[open]>summary .lede{display:none}
     </div>
   </section>
 
+  <!-- TRIAL CODES -->
+  <section id="trials" class="panel" role="tabpanel" aria-labelledby="t-trials" hidden>
+    <div class="banner info">Free trial codes: each code gives someone 2 weeks with everything unlocked in the test app. They type the code on the app's sign-in screen (or open the link you send them), create an account, and near the end are asked to pick a plan. Trial users never see this desk. They're asked to use made-up data only.</div>
+    <p id="trSetup" class="banner warn" hidden></p>
+    <div class="card">
+      <span class="eyebrow">Make new codes</span>
+      <form id="trForm" class="lf">
+        <label>How many codes<input type="number" id="tr-count" min="1" max="50" value="1" required></label>
+        <label>People per code<input type="number" id="tr-uses" min="1" max="500" value="1" required></label>
+        <label>Trial length (days)<input type="number" id="tr-days" min="1" max="90" value="14" required></label>
+        <label>Last day to use the code<input type="date" id="tr-exp"></label>
+        <label class="wide">Who it's for (only you two see this)<input type="text" id="tr-note" maxlength="200" placeholder="e.g. Sunny Acres AFH, met at the Dec 9 forum"></label>
+        <div class="wide"><button class="btn" type="submit" id="tr-make">Make codes</button></div>
+      </form>
+      <p id="trMsg" class="muted" role="status" style="font-size:.9rem" hidden></p>
+    </div>
+    <div class="card">
+      <div class="bar" style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap">
+        <span class="eyebrow">Codes</span>
+        <label style="display:flex;gap:.4rem;align-items:center;font-size:.85rem;color:var(--muted)"><input type="checkbox" id="trShowOff"> Show used up and turned off</label>
+      </div>
+      <div id="trCodes" style="display:grid;gap:.6rem"><p class="empty">Loading…</p></div>
+    </div>
+    <div class="card">
+      <span class="eyebrow">Who signed up</span>
+      <div id="trPeople" style="display:grid;gap:.6rem"><p class="empty">Loading…</p></div>
+    </div>
+  </section>
+
   <!-- LATER -->
   <section id="later" class="panel" role="tabpanel" aria-labelledby="t-later" hidden>
     <div class="grid2">
@@ -450,6 +480,7 @@ details.sum[open]>summary .lede{display:none}
 <script src="pw.js"></script>
 <script src="idle.js"></script>
 <script src="vendor/supabase-js-2.118.0.js"></script>
+<script src="trials.js"></script>
 <script src="desk.js"></script>
 </body>
 </html>

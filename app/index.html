@@ -207,6 +207,23 @@ mark.flag{background:var(--amber-soft);color:var(--ink);border-bottom:2px solid 
 .msg{font-size:.92rem;padding:.75rem .9rem;border-radius:12px;background:var(--sky-soft)}
 .msg.err{background:var(--amber-soft)}
 
+/* free trial: code sign-up, countdown bar, plan choice */
+.gate [hidden],.plans[hidden],.trialbar[hidden]{display:none}
+.trialbar{background:var(--sky-soft);border-bottom:1px solid var(--sky-deep);font-size:.92rem}
+.trialbar .in{max-width:1280px;margin:0 auto;padding:.5rem max(16px,env(safe-area-inset-left));display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.trialbar.soon{background:var(--amber-soft);border-color:#E9C995}
+.plans{max-width:1080px;margin:2rem auto 4rem;padding:0 16px;display:grid;gap:1.25rem}
+.plans h1{font:800 clamp(1.6rem,4vw,2.2rem)/1.15 var(--display);margin:0}
+.plangrid{display:grid;gap:1rem;grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+.plan{display:grid;gap:.5rem;align-content:start}
+.plan.pick{border-color:var(--sky);box-shadow:0 0 0 2px var(--sky-deep)}
+.plan .price{font:800 1.5rem/1.1 var(--display);color:var(--ink)}
+.plan .price small{font:600 .85rem var(--body);color:var(--muted)}
+.plan ul{margin:0;padding-left:1.1rem;font-size:.9rem;color:var(--muted)}
+.gate textarea,.plans textarea{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:.6rem .8rem;min-height:80px;width:100%}
+.agree{display:flex;gap:.6rem;align-items:flex-start;font-size:.9rem}
+.agree input{margin-top:.2rem;width:1.15rem;height:1.15rem;flex:none;accent-color:var(--sky)}
+
 .tourlist{list-style:none;margin:0;padding:0;display:grid;gap:.35rem}
 .tourlist li{display:flex;gap:.6rem;align-items:center}
 .tourlist input{width:1.2rem;height:1.2rem;accent-color:var(--calm)}
@@ -224,18 +241,45 @@ mark.flag{background:var(--amber-soft);color:var(--ink);border-bottom:2px solid 
 <div id="gate" class="gate" role="main" hidden>
   <div class="card">
     <div class="row"><span class="mark" aria-hidden="true"></span><span class="eyebrow">Steady Shift test app</span></div>
-    <h1>Sign in</h1>
-    <p class="muted">This is the private test version with every plan unlocked. Use the same email as the Owner Desk.</p>
+    <h1 id="gateTitle">Sign in</h1>
+    <p class="muted" id="gateIntro">This is the private test version with every plan unlocked. Use the same email as the Owner Desk.</p>
     <form id="pwForm" class="grid">
       <label class="f">Email<input id="email" type="email" autocomplete="username" inputmode="email" required placeholder="you@example.com"></label>
       <label class="f">Password<input id="password" type="password" autocomplete="current-password" required></label>
       <button class="btn" id="pwBtn" type="submit">Sign in</button>
     </form>
-    <div class="card soft" style="box-shadow:none;gap:.5rem">
+    <div class="card soft" style="box-shadow:none;gap:.5rem" id="firstCard">
       <b>First time here, or forgot your password?</b>
       <span class="small">We'll email you a sign-in code. After you're in, you can choose a password.</span>
       <div class="row"><button class="btn ghost sm" id="sendBtn" type="button">Email me a sign-in code</button></div>
     </div>
+    <div class="card soft" style="box-shadow:none;gap:.5rem" id="trialCard">
+      <b>Have a free trial code?</b>
+      <span class="small">Someone from Steady Shift gave you a code for 2 free weeks with everything unlocked. Create your account with it here.</span>
+      <div class="row"><button class="btn ghost sm" id="trialOpen" type="button" aria-expanded="false" aria-controls="trialForm">Start my free trial</button></div>
+    </div>
+    <form id="trialForm" class="grid" hidden>
+      <label class="f">Trial code<input id="t-code" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="32" required placeholder="SS-XXXX-XXXX"></label>
+      <label class="f">Your first name<input id="t-name" type="text" autocomplete="given-name" maxlength="60"></label>
+      <label class="f">Email<input id="t-email" type="email" autocomplete="email" inputmode="email" required placeholder="you@example.com"></label>
+      <label class="f">Choose a password (10 or more characters)<input id="t-pw" type="password" autocomplete="new-password" minlength="10" required></label>
+      <label class="f">What fits you best?<select id="t-type">
+        <option value="afh">I run or work at an adult family home</option>
+        <option value="cbrf">I run or work at a CBRF</option>
+        <option value="agency">Home care agency</option>
+        <option value="multi">Several sites</option>
+        <option value="nurse">Nurse serving homes</option>
+        <option value="family">I care for a family member</option>
+        <option value="other">Something else</option>
+      </select></label>
+      <label class="agree"><input id="t-agree" type="checkbox" required><span>I understand this trial is a test version with made-up sample data. I won't enter real resident names, health details or other private information.</span></label>
+      <button class="btn" id="t-btn" type="submit">Create my account</button>
+      <p class="small muted" style="margin:0">Already have an account? <button class="linkbtn" id="trialBack" type="button">Sign in instead</button></p>
+    </form>
+    <form id="trialVerify" class="grid" hidden>
+      <label class="f">6-digit code from the email<input id="t-otp" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="12" required placeholder="123456"></label>
+      <button class="btn" id="t-otpBtn" type="submit">Confirm my email</button>
+    </form>
     <form id="codeForm" class="grid" hidden>
       <label class="f">Code from the email<input id="code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="12" required placeholder="123456"></label>
       <button class="btn" id="codeBtn" type="submit">Sign in with the code</button>
@@ -244,6 +288,8 @@ mark.flag{background:var(--amber-soft);color:var(--ink);border-bottom:2px solid 
     <p class="small muted">You stay signed in on this device until you sign out or go 12 hours without using it.</p>
   </div>
 </div>
+
+<div id="plans" class="plans" role="main" hidden></div>
 
 <div id="app" hidden>
   <header class="top">
@@ -254,6 +300,7 @@ mark.flag{background:var(--amber-soft);color:var(--ink);border-bottom:2px solid 
       <div class="who"><span class="email" id="whoEmail"></span><button class="linkbtn" id="pwChange" type="button">Password</button><button class="linkbtn" id="signOut" type="button">Sign out</button></div>
     </div>
   </header>
+  <div id="trialBar" class="trialbar noprint" role="status" hidden></div>
   <div class="shell">
     <nav class="side" id="nav" aria-label="App sections"></nav>
     <main id="main" tabindex="-1"></main>
@@ -284,6 +331,7 @@ mark.flag{background:var(--amber-soft);color:var(--ink);border-bottom:2px solid 
 <script src="../desk/pw.js"></script>
 <script src="../desk/idle.js"></script>
 <script src="data.js"></script>
+<script src="trial.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

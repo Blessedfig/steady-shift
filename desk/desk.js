@@ -137,6 +137,8 @@
     whoEl.textContent='Signed in as '+(session.user.email||'owner');
     const {data:ok,error}=await sb.rpc('is_desk_member');
     if(error||!ok){
+      // free-trial people land here from their confirmation email: send them on to the app
+      if(!error){try{const r=await sb.rpc('app_access');if(r.data&&r.data.trial){try{localStorage.removeItem('ss-after-signin')}catch(e){}location.replace('../app/');return}}catch(e){}}
       screen('signin');$('emailForm').hidden=true;$('sent').hidden=true;
       signinMsg(error?'Could not check access ('+(error.code||error.message)+').':'This email is signed in but is not on the desk\'s list. Ask Christian to add it.');
       $('signOut').hidden=false;return;
@@ -147,6 +149,7 @@
     screen('app');
     if(location.hash&&/access_token|error/.test(location.hash))history.replaceState(null,'',location.pathname);
     if(window.SSPw)SSPw.afterSignIn(sb,session.user,how);
+    if(window.SSTrialDesk)SSTrialDesk.start(sb);
     await load();
   }
   (window.SSIdle?SSIdle.guard(sb):Promise.resolve()).then(()=>{
