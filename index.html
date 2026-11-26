@@ -239,9 +239,14 @@ footer nav a{color:var(--muted);text-decoration:none;font-weight:600;min-height:
 footer nav a:hover{color:var(--pine)}
 
 /* subscriber section */
-.gain{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin-top:1.75rem}
+.gain{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin-top:1.75rem}
 .gain div{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:1.1rem 1.2rem;display:grid;gap:.4rem;align-content:start}
-.gain div.lead{background:var(--pine-soft);border-color:transparent}
+.gain div.lead{background:var(--pine-soft);border-color:transparent;grid-column:1/-1}
+.gain ul.watch{list-style:none;margin:.75rem 0 0;padding:0;display:grid;gap:.5rem;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.gain ul.watch li{display:grid;grid-template-columns:6.5rem 1fr;gap:.75rem;background:var(--surface,#fff);border-radius:12px;padding:.6rem .8rem;font-size:.95rem}
+.gain ul.watch b{color:var(--ink)}
+.gain .watch-note{font-size:.85rem;color:var(--muted);margin-top:.6rem}
+@media(max-width:520px){.gain ul.watch{grid-template-columns:1fr}.gain ul.watch li{grid-template-columns:1fr;gap:.15rem}}
 .gain p{font-size:.98rem;color:var(--muted)}
 .ftable td:not(:first-child),.ftable th:not(:first-child){text-align:center;white-space:nowrap}
 .ftable td small{display:block;color:var(--muted);font-size:.85rem}
@@ -641,7 +646,15 @@ footer nav a:hover{color:var(--pine)}
     <h2 id="sub-h">Rules change. Your subscription keeps up so you don't have to.</h2>
     <p class="lede" style="margin-top:.75rem">New laws, court decisions and deadlines land every year. Subscribers get them explained in plain words, with what to do and by when.</p>
     <div class="gain">
-      <div class="lead"><h3>Regulatory Watch</h3><p>Short alerts when a Wisconsin rule, federal rule, court decision or deadline changes: what changed, who it affects and what to do. Right now that includes the proposed DHS 88 rewrite and the HIPAA Security Rule update.</p></div>
+      <div class="lead"><h3>Regulatory Watch</h3><p>Short alerts when a Wisconsin rule, federal rule, court decision or deadline changes: what changed, who it affects and what to do. We also tell you when a change does not apply to you.</p>
+        <ul class="watch">
+          <li><b>Dec 9, 2026</b><span>DHS 88 rewrite: state forum, 4 to 5 PM. If approved, new adult family home rules start Jan 1, 2029.</span></li>
+          <li><b>Dec 31, 2026</b><span>Wisconsin adopts the federal HCBS quality measures.</span></li>
+          <li><b>July 9, 2027</b><span>Medicaid home and community care needs an incident management system.</span></li>
+          <li><b>Dec 31, 2027</b><span>Medicaid grievance system rules take effect, moved back by a federal notice in Feb 2026.</span></li>
+          <li><b>Not for you</b><span>The nursing home staffing rule was struck down by a federal court in 2025 and repealed. It never applied to AFHs or CBRFs.</span></li>
+        </ul>
+        <p class="watch-note">Dates checked against official sources, Nov 2026. Items we have not confirmed yet stay off this list.</p></div>
       <div><h3>Clarity Cards, kept current</h3><p>Plain answers to the questions that cause the most confusion, each with its rule, a confidence label and the date it was last checked.</p></div>
       <div><h3>Monthly Clarity Bulletin</h3><p>Rule changes, newly answered questions and the month's top confusions across homes. A free version anyone can join.</p></div>
       <div><h3>Answers everyone learns from</h3><p>When a home asks the regulator a question, the answer (with permission and no names) becomes a new card for every subscriber.</p></div>
