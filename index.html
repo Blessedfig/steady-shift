@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="A calm, plain-language helper for Wisconsin adult family homes and CBRFs: procedure double-checks, professional incident reports, and overnight triage.">
+<style>body{margin:0}img{max-width:100%}*,*::before,*::after{box-sizing:border-box}</style>
+<title>Steady Shift</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;800&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column with wide bands; the hero pairs the promise with a live 2 AM triage card. */
+:root{
+  --bg:#FAFBF9; --surface:#FFFFFF; --ink:#24352F; --muted:#5B6C66; --line:#E2E9E6;
+  --pine:#2F7D6B; --pine-soft:#E7F4EF; --night:#EAF3FB; --night-ink:#24352F; --amber:#A8670F; --amber-soft:#FDF1DE;
+  --red:#A63D32; --red-soft:#F8E4E1;
+  --display:"Nunito", "Segoe UI", system-ui, sans-serif;
+  --body:"Nunito Sans", "Segoe UI", system-ui, sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F1614; --surface:#17211E; --ink:#E4EDEA; --muted:#9DB0AA; --line:#2A3833;
+  --pine:#7CCBB5; --pine-soft:#1D302B; --night:#1A2636; --night-ink:#E4EDEA; --amber:#E7AE55; --amber-soft:#2E2414;
+  --red:#E58A7E; --red-soft:#33201D; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1614; --surface:#17211E; --ink:#E4EDEA; --muted:#9DB0AA; --line:#2A3833;
+  --pine:#7CCBB5; --pine-soft:#1D302B; --night:#1A2636; --night-ink:#E4EDEA; --amber:#E7AE55; --amber-soft:#2E2414;
+  --red:#E58A7E; --red-soft:#33201D; color-scheme:dark}
+
+body{background:var(--bg);color:var(--ink);font:400 1.0625rem/1.6 var(--body)}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--display);line-height:1.12;text-wrap:balance;margin:0}
+h1{font-size:clamp(2.1rem,5vw,3.3rem);font-weight:800;letter-spacing:-.02em}
+h2{font-size:clamp(1.55rem,3.2vw,2.15rem);font-weight:800;letter-spacing:-.01em}
+h3{font-size:1.2rem;font-weight:800}
+p{margin:0;max-width:65ch}
+.eyebrow{font:500 .78rem/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--pine)}
+.lede{font-size:1.2rem;color:var(--muted)}
+a{color:var(--pine)}
+:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+section{padding-block:clamp(3rem,7vw,5rem)}
+.stack{display:grid;gap:1rem}
+.draft{display:inline-block;font:500 .7rem/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;background:var(--amber-soft);color:var(--amber);border:1px dashed var(--amber);border-radius:4px;padding:.3em .5em;vertical-align:middle;white-space:nowrap}
+
+/* top bar */
+.top{border-bottom:1px solid var(--line);background:var(--surface)}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;padding-block:.8rem}
+.brand{font:700 1.15rem/1 var(--display);display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+.brand-mark{width:22px;height:22px;border-radius:50%;background:conic-gradient(var(--night) 0 50%,var(--amber) 50% 100%);flex:none}
+.top nav{display:flex;gap:1.1rem;flex-wrap:wrap;font-size:.95rem}
+.top nav a{color:var(--muted);text-decoration:none}
+.top nav a:hover{color:var(--ink)}
+
+/* notice */
+.notice{background:var(--amber-soft);border-bottom:1px solid var(--line);font-size:.92rem}
+.notice .wrap{padding-block:.6rem}
+
+/* hero */
+.hero{padding-block:clamp(2.5rem,6vw,4.5rem);background:linear-gradient(180deg,var(--night),var(--bg))}
+.hero .wrap{display:grid;grid-template-columns:1.15fr .85fr;gap:clamp(2rem,5vw,4rem);align-items:center}
+.hero-copy{display:grid;gap:1.25rem;min-width:0}
+.who{display:flex;flex-wrap:wrap;gap:.5rem}
+.chip{font:500 .8rem/1 var(--mono);border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:.45em .8em;color:var(--muted)}
+.cta-row{display:flex;gap:.8rem;flex-wrap:wrap;align-items:center}
+.btn{display:inline-block;font:600 1rem/1 var(--body);padding:.85em 1.2em;border-radius:99px;text-decoration:none;border:1px solid var(--pine)}
+.btn.primary{background:var(--pine);color:var(--bg)}
+.btn.ghost{color:var(--pine);background:transparent}
+
+/* phone card */
+.phone{background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:28px;padding:1.2rem;display:grid;gap:.85rem;box-shadow:0 16px 36px -22px rgba(40,90,80,.35);min-width:0}
+.phone-head{display:flex;justify-content:space-between;font:500 .8rem/1 var(--mono);opacity:.75}
+.bubble{background:var(--night);border-radius:18px;padding:.75rem .85rem;font-size:.95rem;line-height:1.45}
+.bubble.staff{background:var(--pine-soft)}
+.bubble small{display:block;font:500 .68rem/1.3 var(--mono);letter-spacing:.05em;text-transform:uppercase;opacity:.65;margin-bottom:.3rem}
+.tier{display:flex;align-items:center;gap:.5rem;font:500 .8rem/1.3 var(--mono)}
+.dot{width:10px;height:10px;border-radius:50%;background:#E7AE55;flex:none}
+.phone .muted{opacity:.7;font-size:.85rem}
+
+/* pain list */
+.pains{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:18px;overflow:hidden;margin-top:2rem}
+.pain{background:var(--surface);padding:1.25rem;display:grid;gap:.5rem;align-content:start}
+.pain .time{font:500 .8rem/1 var(--mono);color:var(--amber)}
+.pain p{font-size:.97rem;color:var(--muted)}
+
+/* features */
+.features{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem;margin-top:2rem}
+.feat{border-top:3px solid var(--pine);padding-top:1rem;display:grid;gap:.55rem;align-content:start;min-width:0}
+.feat.soon{border-top-style:dashed;border-top-color:var(--muted)}
+.feat p{font-size:.98rem;color:var(--muted)}
+.feat ul{margin:0;padding-left:1.1rem;font-size:.95rem;color:var(--muted);display:grid;gap:.25rem}
+
+/* rewrite */
+.band{background:var(--surface);border-block:1px solid var(--line)}
+.rewrite{display:grid;grid-template-columns:1fr auto 1fr;gap:1.25rem;align-items:stretch;margin-top:2rem}
+.note{border-radius:18px;padding:1.25rem;display:grid;gap:.6rem;align-content:start;min-width:0}
+.note.before{background:var(--red-soft)}
+.note.after{background:var(--pine-soft)}
+.note .lbl{font:500 .75rem/1 var(--mono);letter-spacing:.07em;text-transform:uppercase}
+.note.before .lbl{color:var(--red)}
+.note.after .lbl{color:var(--pine)}
+.note dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:.35rem .8rem;font-size:.95rem}
+.note dt{font-weight:600}
+.note dd{margin:0}
+.arrow{align-self:center;font:500 1.6rem/1 var(--mono);color:var(--muted)}
+.why{margin-top:1.25rem;font-size:.95rem;color:var(--muted)}
+
+/* layers */
+.layers{display:grid;gap:.5rem;margin-top:2rem;max-width:760px}
+.layer{display:grid;grid-template-columns:9rem 1fr;gap:1rem;align-items:baseline;padding:.85rem 1rem;border-radius:14px;background:var(--surface);border:1px solid var(--line)}
+.layer b{font:500 .82rem/1.3 var(--mono);color:var(--pine)}
+.layer span{font-size:.97rem;color:var(--muted)}
+.layer:nth-child(2){margin-left:1.25rem}.layer:nth-child(3){margin-left:2.5rem}.layer:nth-child(4){margin-left:3.75rem;border-color:var(--pine);background:var(--pine-soft)}
+
+/* triage table */
+.tablebox{overflow-x:auto;margin-top:2rem;border:1px solid var(--line);border-radius:18px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:.96rem}
+th,td{text-align:left;padding:.8rem 1rem;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:500 .75rem/1.2 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+tr:last-child td{border-bottom:0}
+.sev{display:inline-flex;align-items:center;gap:.45rem;font-weight:600;white-space:nowrap}
+.sev i{width:10px;height:10px;border-radius:50%;display:inline-block}
+
+/* roles */
+.roles{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem;margin-top:2rem}
+.role{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:1.25rem;display:grid;gap:.6rem;align-content:start}
+.role ul{margin:0;padding-left:1.1rem;font-size:.96rem;color:var(--muted);display:grid;gap:.3rem}
+.role .no{color:var(--red);font-size:.9rem}
+
+/* money */
+.money{display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-top:2rem;align-items:start}
+.facts{display:grid;gap:1rem}
+.fact{display:grid;grid-template-columns:auto 1fr;gap:1rem;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:1rem}
+.fact .n{font:700 1.5rem/1 var(--display);color:var(--pine);font-variant-numeric:tabular-nums;white-space:nowrap}
+.fact p{font-size:.96rem;color:var(--muted)}
+.fact cite{font:400 .78rem/1.4 var(--mono);font-style:normal;display:block;margin-top:.2rem;color:var(--muted)}
+.price{background:var(--surface);border:1px dashed var(--amber);border-radius:18px;padding:1.25rem;display:grid;gap:.9rem}
+.price-row{display:flex;justify-content:space-between;gap:1rem;border-bottom:1px solid var(--line);padding-bottom:.6rem;font-variant-numeric:tabular-nums}
+.price-row:last-of-type{border-bottom:0}
+.price-row b{font-family:var(--display);font-size:1.25rem}
+
+/* privacy */
+.privacy{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem 2rem;margin-top:2rem}
+.privacy div{display:grid;gap:.35rem}
+.privacy p{font-size:.97rem;color:var(--muted)}
+
+/* founder + cta */
+.founder{background:var(--night);color:var(--night-ink)}
+.founder .wrap{display:grid;grid-template-columns:1fr 1fr;gap:2.5rem;align-items:start}
+.founder .eyebrow{color:var(--pine)}
+.founder p{color:var(--night-ink)}
+.founder .stack p{max-width:52ch}
+.open{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:1.25rem;display:grid;gap:.7rem}
+.open ol{margin:0;padding-left:1.2rem;display:grid;gap:.4rem;font-size:.95rem}
+footer{padding-block:2rem;font-size:.88rem;color:var(--muted)}
+
+@media (max-width:860px){
+  .hero .wrap,.money,.founder .wrap{grid-template-columns:1fr}
+  .pains{grid-template-columns:1fr 1fr}
+  .features,.roles{grid-template-columns:1fr 1fr}
+  .rewrite{grid-template-columns:1fr}
+  .arrow{transform:rotate(90deg);justify-self:center}
+}
+@media (max-width:560px){
+  .pains,.features,.roles,.privacy{grid-template-columns:1fr}
+  .layer{grid-template-columns:1fr;gap:.3rem}
+  .layer:nth-child(n){margin-left:0}
+  .top nav{display:none}
+}
+@media (prefers-reduced-motion:no-preference){
+  .btn{transition:transform .15s ease}
+  .btn:hover{transform:translateY(-1px)}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="brand"><span class="brand-mark" aria-hidden="true"></span>Steady Shift <span class="draft">Working name</span></div>
+    <nav aria-label="Sections">
+      <a href="#features">What it does</a>
+      <a href="#overnight">Overnight</a>
+      <a href="#money">Cost</a>
+      <a href="#privacy">Privacy</a>
+    </nav>
+  </div>
+</header>
+
+<div class="notice"><div class="wrap">First draft for review. Anything tagged <span class="draft">Draft</span> is a placeholder or a guess we still need to confirm before showing it to a facility.</div></div>
+
+<section class="hero">
+  <div class="wrap">
+    <div class="hero-copy">
+      <span class="eyebrow">For Wisconsin adult family homes and CBRFs</span>
+      <h1>Confident shifts, kind words, and a full night's sleep.</h1>
+      <p class="lede">Caregiving comes first and the paperwork follows. Staff check procedures against DHS 88 and DHS 83 in plain language, turn a quick note into a professional incident report, and know exactly when a 2 AM question needs a phone call and when it can wait for morning.</p>
+      <div class="who">
+        <span class="chip">DHS 88 · AFH</span>
+        <span class="chip">DHS 83 · CBRF</span>
+        <span class="chip">Family Care homes</span>
+        <span class="chip">Private-pay homes</span>
+      </div>
+      <div class="cta-row">
+        <a class="btn primary" href="#pilot">Become a pilot home</a>
+        <a class="btn ghost" href="#features">See what it does</a>
+      </div>
+    </div>
+
+    <div class="phone" role="img" aria-label="Example of an overnight question on the app at 2:14 AM, sorted into a morning queue instead of waking the manager">
+      <div class="phone-head"><span>Night shift</span><span>2:14 AM</span></div>
+      <div class="bubble staff"><small>Caregiver asks</small>Resident in room 3 refused her 8 PM meds and is asleep now. Do I wake the manager?</div>
+      <div class="bubble"><small>Your home's procedure</small>Do not wake the resident to give it. Document the refusal on the MAR with the reason and time. Note any change in condition.</div>
+      <div class="tier"><span class="dot"></span>Morning queue. No call needed unless she shows new symptoms.</div>
+      <div class="bubble"><small>Still worried?</small>Tap “I need a manager now” at any time. You never get blocked from calling.</div>
+      <p class="muted">Example screen. Wording follows each home's own medication policy.</p>
+    </div>
+  </div>
+</section>
+
+<section class="band" aria-labelledby="pain-h">
+  <div class="wrap">
+    <span class="eyebrow">Why this exists</span>
+    <h2 id="pain-h">Most hard days start with a small, ordinary moment.</h2>
+    <div class="pains">
+      <div class="pain"><span class="time">11:40 PM</span><h3>“Is this reportable?”</h3><p>A new caregiver isn't sure, guesses, and the deadline passes.</p></div>
+      <div class="pain"><span class="time">2:10 AM</span><h3>The phone rings again</h3><p>The manager gets woken for something that could have waited, and burns out.</p></div>
+      <div class="pain"><span class="time">7:05 AM</span><h3>“She never does…”</h3><p>A shift note reads as an accusation and the next shift starts tense.</p></div>
+      <div class="pain"><span class="time">Survey day</span><h3>The binder is out of date</h3><p>The house procedure says yearly. The rule says otherwise.</p></div>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="middle-h">
+  <div class="wrap">
+    <span class="eyebrow">The murky middle</span>
+    <h2 id="middle-h">For the situations nobody's handbook covers, and the gap between the floor and the office.</h2>
+    <div class="money" style="margin-top:1.5rem">
+      <div class="stack">
+        <p class="lede">Most hard days aren't a clear emergency or a clear rule. A resident pushes back, two caregivers remember a shift differently, a new federal rule seems to clash with the binder, or the owner wants answers the manager doesn't have time to write up.</p>
+        <p>Those moments are where fights start, citations happen and good staff quit. This app gives everyone the same calm starting point: what the rule says, what your home decided, and the words to say it without blaming anyone.</p>
+        <p>Small and medium homes know their residents as people, not numbers. The rules still matter, but staff shouldn't feel frozen by them. The app handles the system side quietly so caregivers can stay focused on the person in front of them.</p>
+      </div>
+      <div class="facts">
+        <div class="fact"><span class="n">Up</span><div><p>Caregivers raise concerns in writing without going around their manager. Patterns reach the owner without naming who asked.</p></div></div>
+        <div class="fact"><span class="n">Down</span><div><p>Owners and managers send policy changes as short cards with the reason attached, and see who has confirmed them.</p></div></div>
+        <div class="fact"><span class="n">Across</span><div><p>Shift-to-shift handoffs stay factual, so the next shift starts with information instead of tension.</p></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="features" class="band" aria-labelledby="feat-h">
+  <div class="wrap">
+    <span class="eyebrow">What it does</span>
+    <h2 id="feat-h">Six tools staff reach for during a shift.</h2>
+    <div class="features">
+      <div class="feat">
+        <h3>Procedure double-check</h3>
+        <p>Ask a question in everyday words and get the answer from your home's procedure, with the rule behind it.</p>
+        <ul><li>DHS 88 and DHS 83 first</li><li>Shows which level each rule comes from</li><li>Flags house rules that fall short of code</li></ul>
+      </div>
+      <div class="feat">
+        <h3>Incident reports that stay calm</h3>
+        <p>Staff describe what happened the way they'd tell a coworker. The app turns it into facts, times and actions taken.</p>
+        <ul><li>Fills the fields your MCO and the state ask for</li><li>Removes blame and guesses about motive</li><li>Staff review and sign before it is sent</li></ul>
+      </div>
+      <div class="feat">
+        <h3>Overnight triage</h3>
+        <p>Every after-hours question gets sorted: call 911, wake the on-call manager, send a quiet heads-up, or hold for morning.</p>
+        <ul><li>Backup on-call if no answer</li><li>“Not sure” about safety always means call</li><li>6 AM summary for the manager</li></ul>
+      </div>
+      <div class="feat">
+        <h3>Question tracking</h3>
+        <p>See what staff keep asking about, so training goes where it's needed instead of where someone made a mistake.</p>
+        <ul><li>Patterns by topic and shift</li><li>Monthly roll-up for the owner</li><li>Shows gaps, not people to blame</li></ul>
+      </div>
+      <div class="feat">
+        <h3>Your house policies, kept private</h3>
+        <p>Each home's own rules sit on top of the law. They can be stricter than code, never looser, and no other home sees them.</p>
+        <ul><li>Rule changes arrive as short “what changed for you” cards</li><li>Manager approves before staff see them</li><li>Staff confirm in under two minutes</li></ul>
+      </div>
+      <div class="feat soon">
+        <h3>Resident behavior support <span class="draft">In design</span></h3>
+        <p>Step-by-step guidance for each resident's behavior plan, plus short trainings on respectful ways to redirect and encourage, so every shift responds the same way.</p>
+        <ul><li>Follows the resident's own plan</li><li>Respectful-influence training for staff</li><li>Tracks what worked and what didn't</li></ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="rw-h">
+  <div class="wrap">
+    <span class="eyebrow">Documentation</span>
+    <h2 id="rw-h">From a tired shift note to a report anyone can read.</h2>
+    <div class="rewrite">
+      <div class="note before">
+        <span class="lbl">What the caregiver typed</span>
+        <p>“found J on the floor again by the bathroom around 3, pretty sure 2nd shift didnt put her call light where she can reach it AGAIN. shes ok i think, got her back to bed”</p>
+      </div>
+      <div class="arrow" aria-hidden="true">→</div>
+      <div class="note after">
+        <span class="lbl">What the report says</span>
+        <dl>
+          <dt>Time</dt><dd>Approx. 3:00 AM</dd>
+          <dt>Observed</dt><dd>Resident found on floor near bathroom door. Alert, responding to questions.</dd>
+          <dt>Action</dt><dd>Assisted back to bed. Checked for injury. None seen.</dd>
+          <dt>Environment</dt><dd>Call light was out of the resident's reach when found.</dd>
+          <dt>Follow-up</dt><dd>Recheck at 4:00 AM. Fall noted for manager review.</dd>
+        </dl>
+      </div>
+    </div>
+    <p class="why">The call light detail is kept because it matters for preventing the next fall. The guess about who left it there goes to the manager's private notes instead of the shared record. <span class="draft">Example, made up</span></p>
+  </div>
+</section>
+
+<section class="band" aria-labelledby="law-h">
+  <div class="wrap">
+    <span class="eyebrow">Built on the law, in layers</span>
+    <h2 id="law-h">Every answer says where the rule comes from.</h2>
+    <p class="lede" style="margin-top:1rem">When a federal change and a state rule seem to disagree, staff see which one wins and what to do on shift.</p>
+    <div class="layers">
+      <div class="layer"><b>Federal</b><span>HIPAA, CMS rules for Medicaid-funded care, and recent federal changes that touch your home.</span></div>
+      <div class="layer"><b>Wisconsin</b><span>DHS 88 for adult family homes, DHS 83 for CBRFs, and DQA reporting rules.</span></div>
+      <div class="layer"><b>County &amp; MCO</b><span>Your county and care management organization's reporting rules and deadlines.</span></div>
+      <div class="layer"><b>Your home</b><span>Your own procedures. Kept private, and checked so they never fall below code.</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="band" aria-labelledby="fit-h">
+  <div class="wrap">
+    <span class="eyebrow">Two kinds of homes</span>
+    <h2 id="fit-h">Fits the way your home is paid for.</h2>
+    <div class="roles" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">
+      <div class="role"><h3>Family Care homes</h3><ul><li>Reporting fields and deadlines for your care management organization, set up for you</li><li>Workforce funding deadlines on the calendar</li><li>Less time on forms, more time with residents</li></ul></div>
+      <div class="role"><h3>Private-pay homes <span class="draft">Planned</span></h3><ul><li>A complete system for residents, families and staff</li><li>Calm, professional updates for families, approved by the manager</li><li>Resident preferences and routines every shift can follow</li></ul><p class="no" style="color:var(--muted)">Keeps families and caregivers working together instead of against each other.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="overnight" aria-labelledby="night-h">
+  <div class="wrap">
+    <span class="eyebrow">Overnight</span>
+    <h2 id="night-h">Managers sleep. Staff are never left alone with a hard call.</h2>
+    <div class="tablebox">
+      <table>
+        <thead><tr><th>Level</th><th>What happens</th><th>Example</th></tr></thead>
+        <tbody>
+          <tr><td><span class="sev"><i style="background:var(--red)"></i>Emergency</span></td><td>Call 911, then the app pages on-call</td><td>Not breathing, serious fall with injury, fire</td></tr>
+          <tr><td><span class="sev"><i style="background:var(--amber)"></i>Wake on-call</span></td><td>Phone rings now. Backup rings if no answer <span class="draft">10 min, guess</span></td><td>Resident missing, med given to wrong person</td></tr>
+          <tr><td><span class="sev"><i style="background:var(--pine)"></i>Quiet heads-up</span></td><td>Silent message. Rings only if a report is due before 7 AM</td><td>Fall with no injury, resident upset after a call home</td></tr>
+          <tr><td><span class="sev"><i style="background:var(--muted)"></i>Follow procedure</span></td><td>Step-by-step answer from your home's policy</td><td>Refused evening meds, PRN question</td></tr>
+          <tr><td><span class="sev"><i style="background:var(--line)"></i>Morning queue</span></td><td>Waits in the 6 AM summary</td><td>Supply running low, schedule swap request</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="why">On-call hours, who is called and how fast are set by each home. Examples above are illustrative and will be checked against DHS reporting rules before launch. <span class="draft">Draft</span></p>
+  </div>
+</section>
+
+<section aria-labelledby="roles-h">
+  <div class="wrap">
+    <span class="eyebrow">Respects the chain of command</span>
+    <h2 id="roles-h">Each person sees what their job needs, and no more.</h2>
+    <div class="roles">
+      <div class="role"><h3>Caregivers</h3><ul><li>Ask questions without feeling judged</li><li>Write reports in their own words</li><li>See their own reports and acknowledgments</li></ul><p class="no">Don't see coworkers' reports or the manager's notes.</p></div>
+      <div class="role"><h3>Managers</h3><ul><li>Morning summary and open items</li><li>Private notes on staff concerns</li><li>Approve policy changes before staff see them</li></ul><p class="no">Concerns about the manager route to the owner.</p></div>
+      <div class="role"><h3>Owners</h3><ul><li>Monthly roll-up across homes</li><li>Training gaps and deadline risk</li><li>Money view: fines avoided, overtime, turnover</li></ul><p class="no">Patterns, not resident names or staff blame.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="money" class="band" aria-labelledby="money-h">
+  <div class="wrap">
+    <span class="eyebrow">Cost</span>
+    <h2 id="money-h">Small monthly cost, big peace of mind.</h2>
+    <div class="money">
+      <div class="facts">
+        <div class="fact"><span class="n">$10–$1,000</span><div><p>CBRF forfeiture per violation, per day.</p><cite>Wis. Stat. s. 50.03(5g)(c)</cite></div></div>
+        <div class="fact"><span class="n">$200</span><div><p>Re-inspection fee when a home needs a follow-up visit.</p><cite>Wisconsin DQA, AFH and CBRF</cite></div></div>
+        <div class="fact"><span class="n">License</span><div><p>Adult family homes don't face per-day forfeitures in statute. The real risk is revocation.</p><cite>Wis. Stat. s. 50.033</cite></div></div>
+        <div class="fact"><span class="n">Funding</span><div><p>Homes with a Family Care MCO contract can qualify for Direct Care Workforce Funding. The app keeps the annual agreement, survey and payout deadlines on the calendar.</p><cite>Wisconsin DHS program</cite></div></div>
+      </div>
+      <div class="price">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap"><h3>Subscription</h3><span class="draft">Draft pricing</span></div>
+        <div class="price-row"><span>Adult family home</span><b>$79/mo</b></div>
+        <div class="price-row"><span>CBRF</span><b>$199/mo</b></div>
+        <div class="price-row"><span>Each additional site</span><b>$149/mo</b></div>
+        <p style="font-size:.92rem;color:var(--muted)">Placeholder numbers for discussion. Not yet confirmed.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="privacy" aria-labelledby="priv-h">
+  <div class="wrap">
+    <span class="eyebrow">Privacy</span>
+    <h2 id="priv-h">Designed around HIPAA from the first screen.</h2>
+    <div class="privacy">
+      <div><h3>Each home is sealed off</h3><p>Your residents, staff and house policies live in their own encrypted space. Other homes never see them.</p></div>
+      <div><h3>Minimum necessary</h3><p>Questions can be asked without resident names. Reports carry only what the reader needs.</p></div>
+      <div><h3>Ready for the new Security Rule</h3><p>Built to the proposed HIPAA Security Rule update now expected in 2027, so you won't need to switch tools later.</p></div>
+      <div><h3>Fewer updates, not more</h3><p>The screens change a few times a year. Rule changes come as short cards, not retraining.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="pilot" class="founder" aria-labelledby="pilot-h">
+  <div class="wrap">
+    <div class="stack">
+      <span class="eyebrow">Who's building it</span>
+      <h2 id="pilot-h">Made by someone who has worked the night shift.</h2>
+      <p>Built by a former adult family home manager and CNA who watched good homes get cited, good managers burn out, and good caregivers leave over problems a better tool could have caught.</p>
+      <p>We're looking for a small group of Wisconsin homes to try it first and shape what it becomes.</p>
+      <p><b>Contact:</b> <span class="draft">To add</span></p>
+    </div>
+    <div class="open">
+      <span class="eyebrow">Pilot homes get</span>
+      <ol>
+        <li>Setup of your own procedures in the app</li>
+        <li>A first check of your policies against DHS 88 or DHS 83</li>
+        <li>Pilot pricing for the first year <span class="draft">Draft</span></li>
+        <li>A direct line to the founder for changes</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<footer><div class="wrap">Steady Shift is a working name. This app supports staff judgment and your home's procedures. It does not replace medical advice, legal advice or a call to 911.</div></footer>
+</body>
+</html>
