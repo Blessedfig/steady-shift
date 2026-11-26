@@ -40,7 +40,8 @@
   // ---------- screens ----------
   const gate=$('gate'),whoEl=$('who');
   function setGate(msg){gate.textContent=msg||'';gate.hidden=!msg}
-  function signinMsg(msg){$('signinMsg').textContent=msg||'';$('signinMsg').hidden=!msg}
+  function signinMsg(msg,near){const m=$('signinMsg');m.textContent=msg||'';m.hidden=!msg;if(msg&&near&&window.SSPw)SSPw.showNear(m,near)}
+  const busy=(b,on,text)=>{b.disabled=on;b.textContent=text;b.classList.toggle('sspw-busy',on);b.setAttribute('aria-busy',String(on))};
   function screen(which){$('signin').hidden=which!=='signin';$('app').hidden=which!=='app';$('signOut').hidden=which!=='app';$('pwChange').hidden=which!=='app';}
 
   const cfg=window.DESK_CONFIG||{};
@@ -57,28 +58,32 @@
   if(pendingEmail)$('email').value=pendingEmail;
 
   let how='';
+  const typo=window.SSPw?SSPw.watchEmail($('email')):()=>'';
+  const typoStop=near=>{const sug=typo();if(sug){signinMsg('Check your email address. Did you mean '+sug+'? Tap "Fix it" under the email box.',near);$('email').focus();return true}return false};
   $('emailForm').addEventListener('submit',async e=>{
     e.preventDefault();signinMsg('');
     const email=$('email').value.trim().toLowerCase(),pw=$('password').value;if(!email||!pw)return;
-    const b=$('pwBtn');b.disabled=true;b.textContent='Signing in…';
+    if(typoStop($('pwBtn')))return;
+    const b=$('pwBtn');busy(b,true,'Signing in…');
     try{localStorage.setItem('desk-email',email)}catch(err){}
     how='password';
     const msg=window.SSPw?await SSPw.signIn(sb,email,pw):'Password sign-in is not available right now. Use the email code instead.';
-    b.disabled=false;b.textContent='Sign in';
-    if(msg){how='';signinMsg(msg);$('password').value='';}
+    busy(b,false,'Sign in');
+    if(msg){how='';signinMsg(msg,b);$('password').value='';}
   });
   $('sendBtn').addEventListener('click',async()=>{
     signinMsg('');
     const email=$('email').value.trim().toLowerCase();
-    if(!email||!$('email').checkValidity()){signinMsg('Type your email above first.');$('email').focus();return}
-    const b=$('sendBtn');b.disabled=true;b.textContent='Sending…';
+    if(!email||!$('email').checkValidity()){signinMsg('Type your email above first.',$('sendBtn'));$('email').focus();return}
+    if(typoStop($('sendBtn')))return;
+    const b=$('sendBtn');busy(b,true,'Sending…');
     const {error}=await sb.auth.signInWithOtp({email,options:{shouldCreateUser:false,emailRedirectTo:location.origin+location.pathname}});
-    b.disabled=false;b.textContent='Email me a sign-in code';
+    busy(b,false,'Email me a sign-in code');
     if(error){
       const m=String(error.message||'');
-      if(/signups? not allowed|not found|otp_disabled/i.test(m))signinMsg('That email is not set up for the desk yet. If you were just invited, use the link in your invite email first. Otherwise ask Christian to add you.');
-      else if(/rate|seconds/i.test(m))signinMsg('Please wait a minute before asking for another link.');
-      else signinMsg('Could not send the email: '+m);
+      if(/signups? not allowed|not found|otp_disabled/i.test(m))signinMsg('That email is not set up for the desk yet. Check it for typos. If you were just invited, use the link in your invite email first, or ask Christian to add you.',b);
+      else if(/rate|seconds/i.test(m))signinMsg('Please wait a minute before asking for another email.',b);
+      else signinMsg('Could not send the email: '+m,b);
       return;
     }
     pendingEmail=email;try{localStorage.setItem('desk-email',email)}catch(e){}
@@ -90,7 +95,7 @@
     const token=$('code').value.replace(/\D/g,'');if(!token||!pendingEmail)return;
     how='code';
     const {error}=await sb.auth.verifyOtp({email:pendingEmail,token,type:'email'});
-    if(error)signinMsg('That code did not work. Codes expire after about an hour, so you may need a new one.');
+    if(error)signinMsg('That code did not work. Codes expire after about an hour, so you may need a new one.',$('codeForm'));
   });
   $('restart').addEventListener('click',()=>{$('sent').hidden=true;$('emailForm').hidden=false;$('code').value='';signinMsg('')});
   $('signOut').addEventListener('click',async()=>{try{sessionStorage.removeItem('sspw-later')}catch(e){}await sb.auth.signOut();});
