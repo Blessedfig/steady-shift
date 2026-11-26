@@ -18,3 +18,9 @@ bar at the top. In the last 3 days the plan screen opens once a day, and after t
 they see until they pick a plan. Plan choices land on the desk under Requests for Claude ("Trial: plan choice").
 Database rules: `desk/trials.sql`. Turning it on: `desk/README.md` > "Turn on trial codes". Payments:
 `supabase/functions/trial-checkout/README.md`. Until `trials.sql` is run, the app behaves exactly as before (desk members only).
+
+## Facility setup and Ask our policy
+
+- **Facility setup** (`#/setup`): each home adds its own PDFs, Word files and text files (Google Docs: download as Word or PDF). Files are read on the device (`vendor/pdf.min.js`, `vendor/mammoth.browser.min.js`, self-hosted for the CSP), private details are stripped, and the text is split into short passages with their headings and page numbers. "Build this home's procedure layer" maps the passages to the what-if library.
+- **Ask our policy** (`#/askpolicy`): shows the law first, then quotes this home's own passages with their source, then a conflict check done in code. If nothing in the home's documents matches, it says "Not covered by your policy". It searches only the selected home's documents; other homes are never searched. With the optional `facility-ask` function, Claude rewords the quoted passages, and every sentence must cite one of them.
+- Sample documents for testing are in `../data/samples/` (fictional). Test data stays in the browser. See `../supabase/functions/facility-ask/README.md` for what production needs (per-facility tables with row-level security, server-side retrieval, BAAs).
