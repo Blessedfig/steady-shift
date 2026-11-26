@@ -92,7 +92,7 @@
     if(error){setGate('Could not load saved data ('+(error.code||error.message||'error')+'). Try reloading.');return}
     items=data||[];ready=true;renderAll();
   }
-  function renderAll(){renderBoard();renderMilestones();renderNotes();}
+  function renderAll(){renderBoard();renderMilestones();renderNotes();renderRequests();}
   function report(err){setGate('That change did not save ('+(err&&(err.code||err.message)||'error')+'). Try again in a moment.')}
   async function add(kind,data){
     const {error}=await sb.from('desk_items').insert({kind,data});
@@ -207,6 +207,62 @@
   $('noteForm').addEventListener('submit',async e=>{
     e.preventDefault();const t=$('noteText');const txt=t.value.trim();if(!txt||!ready)return;
     if(await add('note',{text:txt,tag:$('noteTag').value}))t.value='';
+  });
+
+  // ---------- requests for Claude ----------
+  const RSTAT=['New','In progress','Done'];
+  const rOrder=r=>({'New':0,'In progress':1,'Done':2}[r.status||'New']);
+  function renderRequests(){
+    const box=$('reqList');box.textContent='';const rs=of('request');
+    if(!rs.length){box.append(el('p','empty',ready?'No requests yet.':'Requests appear here once you are signed in.'));return}
+    rs.sort((a,b)=>(rOrder(a)-rOrder(b))||String(b._created).localeCompare(String(a._created))).forEach(r=>{
+      const st=r.status||'New';
+      const c=el('div','req'+(st==='Done'?' done':''));
+      const m=el('div','meta');
+      m.append(el('span','status'+(st==='In progress'?' s-progress':st==='Done'?' s-done':''),st),el('span','tag',r.kind||'Request'));
+      if(r.biz)m.append(el('span',null,r.biz));
+      if(r.when&&r.when!=='Whenever')m.append(el('span','due',r.when));
+      m.append(el('span',null,(r._created?new Date(r._created).toLocaleDateString():'')+(r.by?' · '+r.by:'')));
+      c.append(m,el('p',null,r.text||''));
+      if(r.reply){const rp=el('div','reply');rp.append(el('b',null,'Reply: '),document.createTextNode(r.reply));c.append(rp)}
+      const row=el('div','row');
+      const sel=el('select');sel.setAttribute('aria-label','Status');
+      RSTAT.forEach(s=>{const o=el('option',null,s);o.value=s;if(s===st)o.selected=true;sel.append(o)});
+      sel.addEventListener('change',()=>patch(r.id,{status:sel.value}));
+      const rb=el('button','btn ghost',r.reply?'Edit reply':'Add reply');rb.type='button';
+      const del=el('button','x','Remove');del.type='button';
+      let armed=false;del.addEventListener('click',()=>{if(!armed){armed=true;del.textContent='Confirm';setTimeout(()=>{armed=false;del.textContent='Remove'},3000);return}remove(r.id)});
+      row.append(sel,rb,del);c.append(row);
+      rb.addEventListener('click',()=>{
+        const f=el('form');f.style.display='grid';f.style.gap='.5rem';
+        const ta=el('textarea');ta.maxLength=4000;ta.value=r.reply||'';ta.setAttribute('aria-label','Reply');
+        const sb2=el('button','btn','Save reply');sb2.type='submit';
+        f.append(ta,sb2);rb.replaceWith(f);ta.focus();
+        f.addEventListener('submit',e=>{e.preventDefault();patch(r.id,{reply:ta.value.trim()})});
+      });
+      box.append(c);
+    });
+  }
+  $('reqForm').addEventListener('submit',async e=>{
+    e.preventDefault();if(!ready)return;
+    const t=$('rq-text').value.trim();if(!t)return;
+    const data={kind:$('rq-kind').value,biz:$('rq-biz').value.trim(),when:$('rq-when').value,text:t,status:'New',reply:'',by:(currentUser&&currentUser.email)||''};
+    if(await add('request',data)){e.target.reset()}
+  });
+  $('reqCopy').addEventListener('click',()=>{
+    const open=of('request').filter(r=>(r.status||'New')!=='Done').sort((a,b)=>String(a._created).localeCompare(String(b._created)));
+    const lines=['Owner Desk requests for Claude ('+open.length+' open, copied '+new Date().toLocaleString()+')',''];
+    open.forEach((r,i)=>{
+      lines.push((i+1)+'. ['+(r.status||'New')+'] '+(r.kind||'Request')+(r.biz?' / '+r.biz:'')+(r.when&&r.when!=='Whenever'?' / '+r.when:''));
+      lines.push('   From '+(r.by||'unknown')+' on '+(r._created?new Date(r._created).toLocaleDateString():'')+' (id '+r.id+')');
+      lines.push('   '+String(r.text||'').replace(/\n/g,'\n   '));
+      if(r.reply)lines.push('   Reply so far: '+r.reply);
+      lines.push('');
+    });
+    if(!open.length)lines.push('Nothing open right now.');
+    const txt=lines.join('\n');const b=$('reqCopy');
+    const done=()=>{b.textContent='Copied';setTimeout(()=>b.textContent='Copy open requests for Claude',1500)};
+    try{navigator.clipboard.writeText(txt).then(done,()=>prompt('Copy this:',txt))}catch(err){prompt('Copy this:',txt)}
   });
 
   renderAll();
