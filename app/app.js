@@ -35,7 +35,7 @@
 
   // ---------- saved test state (this browser only) ----------
   const KEY = 'ss-app-v1';
-  function fresh(){ const s = JSON.parse(JSON.stringify(D.SEED)); return Object.assign(s,{tier:'caregiver', site:'maple', survey:{}, tour:{}, watch:{}, policies:[], orgProcs:[], pulse:{}, oncall:{fallok:false,medq:false,callin:true}}); }
+  function fresh(){ const s = JSON.parse(JSON.stringify(D.SEED)); return Object.assign(s,{tier:'caregiver', site:'maple', survey:{}, tour:{}, watch:{}, policies:[], orgProcs:[], pulse:{}, peer:{votes:{},queue:[],published:[]}, oncall:{fallok:false,medq:false,callin:true}}); }
   let S;
   try { S = JSON.parse(localStorage.getItem(KEY)) || fresh(); } catch(e){ S = fresh(); }
   for (const k in fresh()) if (!(k in S)) S[k] = fresh()[k];
@@ -71,14 +71,15 @@
     mytraining:{t:'My training', ic:'🎓'},
     procedures:{t:'Company procedures', ic:'🗂️'},
     review:{t:'Feedback review', ic:'👍'},
-    sync:{t:'Sync and calendar', ic:'🔗'}
+    sync:{t:'Sync and calendar', ic:'🔗'},
+    peer:{t:'What\'s worked for others', ic:'🤲'}
   };
   const NAV = {
-    caregiver:['home','check','whatif','report','night','behavior','cards','mytraining'],
-    manager:['home','inbox','questions','check','whatif','report','night','behavior','team','review','survey','decide','ask','cards','watch','procedures','sync'],
+    caregiver:['home','check','whatif','report','night','behavior','cards','peer','mytraining'],
+    manager:['home','inbox','questions','check','whatif','report','night','behavior','team','review','survey','decide','ask','cards','peer','watch','procedures','sync'],
     rn:['home','delegations','sync','check','whatif','cards','night','behavior','watch'],
-    owner:['home','owner','sync','review','whatif','procedures','survey','questions','decide','ask','watch','cards'],
-    multi:['home','sites','owner','sync','review','whatif','procedures','survey','watch','ask','cards'],
+    owner:['home','owner','sync','review','peer','whatif','procedures','survey','questions','decide','ask','watch','cards'],
+    multi:['home','sites','owner','sync','review','peer','whatif','procedures','survey','watch','ask','cards'],
     family:['home','check','night','behavior','handoff','cards','watch']
   };
 
@@ -692,6 +693,201 @@
     tg.addEventListener('click',()=>{ mineOnly = !mineOnly; tg.setAttribute('aria-pressed',String(mineOnly)); draw(); });
     v.append(h('div',{class:'row'},tg), list); draw();
   };
+
+  // ---------- What's worked for others: the shared peer layer ----------
+  // Kept apart from each home's private documents (S.orgProcs, S.policies, reports): it never reads them.
+  // Something reaches it only when a person submits it here, after scrubbing, consent and a human review.
+  const P = window.SS_PEER;
+  const PEER_TABS = [['', 'Browse'], ['share', 'Share what worked'], ['incident', 'Share an incident pattern'], ['review', 'Review queue'], ['legal', 'Before real data']];
+  function peerHead(v, sub){
+    v.append(head('What\'s worked for others', 'How other homes handle the same rule conflicts', 'Peer practice from public sources and member homes. No home, staff or resident is ever named.'));
+    v.append(h('div',{class:'card warn'}, h('b',null,'Peer practice, not legal advice.'), h('span',{class:'small'},' Each entry links to the rule it relates to. Check the rule and your own policy before changing what you do. Test version: anything you add stays in this browser.')));
+    v.append(h('nav',{class:'chips','aria-label':'What\'s worked for others sections'}, PEER_TABS.map(([k,t]) => h('a',{class:'chip'+(k===sub?'':' grey'),style:'min-height:40px',href:'#/peer'+(k?'/'+k:''),'aria-current':k===sub?'page':null},t))));
+  }
+  const ruleLabel = id => { const r = ruleById(id); return r ? id+' · '+r.topic : id; };
+
+  // Safe Harbor scrub: removes or generalizes identifiers and reports which of the 18 categories it touched.
+  function deid(text){
+    let t = String(text||''); const hits = {};
+    const hit = (i, re, rep) => { t = t.replace(re, (...m) => { hits[i] = (hits[i]||0)+1; return typeof rep === 'function' ? rep(...m) : rep; }); };
+    Object.values(D.RESIDENTS).flat().forEach(r => { hit(0, new RegExp('\\b'+r.nick+'\\b','g'), 'the resident'); hit(17, new RegExp('\\b'+r.code.replace('-','\\-')+'\\b','g'), 'the resident'); });
+    hit(3, /\b\d{3}[-. )]\s?\d{3}[-.]\d{4}\b/g, '[removed]');
+    hit(5, /\b[\w.+-]+@[\w-]+\.[\w.]+\b/g, '[removed]');
+    hit(6, /\b\d{3}-\d{2}-\d{4}\b/g, '[removed]');
+    hit(7, /\b(mrn|medical record( number)?)\b[:#\s]*\w+/gi, '[removed]');
+    hit(8, /\b(medicaid|member|ma|policy) (id|number|#)[:#\s]*\w+/gi, '[removed]');
+    hit(13, /\bhttps?:\/\/\S+/gi, '[removed]');
+    hit(14, /\b\d{1,3}(\.\d{1,3}){3}\b/g, '[removed]');
+    hit(2, /\b\d{1,2}[\/-]\d{1,2}[\/-](\d{2,4})\b/g, (m, y) => y.length === 4 ? y : '[date]');
+    hit(2, /\b(jan(uary)?|feb(ruary)?|mar(ch)?|apr(il)?|may|june?|july?|aug(ust)?|sep(t(ember)?)?|oct(ober)?|nov(ember)?|dec(ember)?)\.? \d{1,2}(st|nd|rd|th)?\b/gi, '[date]');
+    hit(2, /\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday|yesterday|today|tonight|last night)\b/gi, 'on the shift');
+    hit(2, /\b(?:at |around |about )?(1[0-2]|0?[1-9])(:[0-5]\d)?\s?(am|pm|a\.m\.|p\.m\.)(?![a-z])/gi, (m, hh, mm, ap) => { const pm = /p/i.test(ap); const hr = parseInt(hh,10)%12 + (pm?12:0); return hr < 7 ? 'overnight' : hr < 15 ? 'during the day shift' : hr < 23 ? 'during the evening shift' : 'overnight'; });
+    hit(1, /\b\d{3,5} [A-Z][a-z]+ (st|street|ave|avenue|rd|road|ln|lane|dr|drive)\b/gi, '[place]');
+    hit(1, /\b(in|at|near) [A-Z][a-z]+( County)?\b/g, (m, w) => w+' [place]');
+    hit(1, /\b\d{5}(-\d{4})?\b/g, '[place]');
+    hit(17, /\b(room|rm\.?|bed) ?#?\d+[a-z]?\b/gi, 'their room');
+    hit(17, /\b(9\d|1[01]\d)[- ]?(years?[- ]old|yo|y\/o)\b/gi, 'over 89');
+    hit(17, /\b(aged?|age of) (9\d|1[01]\d)\b/gi, 'over 89');
+    hit(11, /\b(plate|license plate)\b[:#\s]*\w+/gi, '[removed]');
+    // staff and other names: capitalized words that are not common words
+    t = t.replace(/(^|[^.!?]\s)([A-Z][a-z]{2,})\b/g, (m, pre, w) => /^(I|The|This|That|They|She|He|Her|His|Their|We|Our|Staff|Resident|Nurse|Manager|Caregiver|RN|LPN|CNA|DQA|MCO|PRN|DNR|AFH|CBRF|DHS|EMS|ER|Wisconsin|After|Before|When|Then|Called|Checked|Gave|Offered)$/.test(w) ? m : (hits[0]=(hits[0]||0)+1, pre+'[name]'));
+    return {text:t, hits};
+  }
+
+  function voteBtn(e){
+    const mine = !!S.peer.votes[e.id];
+    const n = e.votes + (mine ? 1 : 0);
+    return h('button',{class:'btn quiet sm',type:'button','aria-pressed':String(mine),'aria-label':'Mark helpful, '+n+' so far',onclick:ev=>{ S.peer.votes[e.id] = !mine; save(); ev.currentTarget.replaceWith(voteBtn(e)); }}, (mine?'▲ ':'△ ')+n+' found this helpful');
+  }
+
+  function entryCard(e){
+    const o = P.OUTCOMES[e.outcome] || P.OUTCOMES.untested;
+    const r = ruleById(e.conflict);
+    return h('div',{class:'card'},
+      h('div',{class:'chips'}, h('span',{class:'chip '+o.cls},o.label), h('span',{class:'chip grey'},P.SOURCE_KIND[e.source]||'Member home'), h('span',{class:'chip '+(e.verified?'calm':'grey')},e.verified?'Source checked':'Unverified'),
+        e.settings.map(s => h('span',{class:'chip grey'},D.SETTINGS[s].short)), h('span',{class:'chip grey'},e.state+(e.county&&e.county!=='Not given'&&e.county!=='Statewide'?' · '+e.county:''))),
+      h('h3',null,e.title),
+      e.situation ? h('p',null,h('b',null,'What happened: '),e.situation) : null,
+      h('p',null,h('b',null,'What they do: '),e.practice),
+      h('p',null,h('b',null,'How it played out: '),e.result),
+      h('p',{class:'small muted'},'Rule: '+e.cite+(r?' · Conflict '+ruleLabel(e.conflict):'')),
+      h('div',{class:'row'}, voteBtn(e), r ? h('a',{class:'btn ghost sm',href:'#/cards'},'Clarity Cards') : null,
+        e.ref ? h('a',{class:'btn ghost sm',href:e.ref.url,target:'_blank',rel:'noopener'},'Source: '+e.ref.label) : null,
+        e.also ? h('a',{class:'btn ghost sm',href:e.also.url,target:'_blank',rel:'noopener'},e.also.label) : null));
+  }
+
+  R.peer = v => {
+    const sub = (param||'').split('/')[0];
+    peerHead(v, sub);
+    if (sub === 'share') return peerShare(v);
+    if (sub === 'incident') return peerIncident(v);
+    if (sub === 'review') return peerReview(v);
+    if (sub === 'legal') return peerLegal(v);
+
+    const all = P.ENTRIES.concat(S.peer.published.filter(x => x.kind === 'practice'));
+    let f = {conflict:'', outcome:'', mine:true};
+    const confs = [...new Set(all.map(e => e.conflict))].sort();
+    const cs = h('select',{'aria-label':'Rule conflict'}, h('option',{value:''},'All rule conflicts'), confs.map(c => h('option',{value:c},ruleLabel(c)+(ruleById(c)?': '+ruleById(c).q:''))));
+    const os = h('select',{'aria-label':'Outcome'}, h('option',{value:''},'Any outcome'), Object.entries(P.OUTCOMES).map(([k,o]) => h('option',{value:k},o.label)));
+    const tg = h('button',{class:'chip',type:'button','aria-pressed':'true'},'Only '+D.SETTINGS[setting()].short+' entries');
+    const list = h('div',{class:'list'});
+    function draw(){
+      list.textContent = '';
+      const rows = all.filter(e => (!f.conflict || e.conflict === f.conflict) && (!f.outcome || e.outcome === f.outcome) && (!f.mine || setting()==='home' || e.settings.includes(setting())))
+        .sort((a,b) => (b.votes + (S.peer.votes[b.id]?1:0)) - (a.votes + (S.peer.votes[a.id]?1:0)));
+      list.append(h('p',{class:'small muted'}, rows.length+' entries · most helpful first · checked '+fmtDate(P.CHECKED)));
+      rows.forEach(e => list.append(entryCard(e)));
+      if (!rows.length) list.append(h('p',{class:'muted'},'Nothing matches yet.'));
+    }
+    cs.addEventListener('change',()=>{f.conflict = cs.value; draw();});
+    os.addEventListener('change',()=>{f.outcome = os.value; draw();});
+    tg.addEventListener('click',()=>{ f.mine = !f.mine; tg.setAttribute('aria-pressed',String(f.mine)); draw(); });
+    if (param && ruleById(param)) { f.conflict = param; cs.value = param; }
+
+    // de-identified incident patterns, shown only when enough homes contributed
+    const pub = S.peer.published.filter(x => x.kind === 'incident');
+    const pats = P.PATTERNS.map(p => Object.assign({}, p, {homes: p.homes + pub.filter(x => x.type === p.type).length}));
+    const pv = h('div',{class:'card'}, h('h2',null,'How common situations played out'),
+      h('p',{class:'small muted'},'De-identified scenarios pooled from member homes (sample numbers). A pattern shows only when at least '+P.MIN_HOMES+' different homes contributed, so no home can be singled out.'),
+      h('div',{class:'list'}, pats.map(p => p.homes >= P.MIN_HOMES
+        ? h('div',{class:'item'}, h('div',{class:'meta'},h('span',null,p.shift+' shift'),h('span',null,p.n+' reports from '+p.homes+' homes')), h('b',null,p.type), h('span',null,h('b',null,'Situation: '),p.situation), h('span',null,h('b',null,'Response: '),p.response), h('span',null,h('b',null,'Outcome: '),p.outcome))
+        : h('div',{class:'item'}, h('b',null,p.type), h('span',{class:'small muted'},'Hidden until '+P.MIN_HOMES+' homes contribute (now fewer).')))));
+    v.append(h('div',{class:'grid g2'}, h('label',{class:'f'},'Rule conflict',cs), h('label',{class:'f'},'Outcome',os)), h('div',{class:'row'},tg, h('a',{class:'btn sm',href:'#/peer/share'},'Share what worked for you')), list, pv);
+    draw();
+  };
+
+  function consentBlock(){
+    const a = h('input',{type:'checkbox',id:'pc1'}), b = h('input',{type:'checkbox',id:'pc2'});
+    return {a, b, el:h('fieldset',{class:'card soft'}, h('legend',null,h('b',null,'Consent')),
+      h('div',{class:'row'},a,h('label',{for:'pc1'},'Our home has opted in to sharing de-identified scenarios (subscription terms). In this test, no home has signed these terms yet.')),
+      h('div',{class:'row'},b,h('label',{for:'pc2'},'A manager approves sharing this one. It goes to a human reviewer first and can be withdrawn.')))};
+  }
+  function scrubPreview(src, target){
+    const box = h('div',{class:'out',role:'status'});
+    function run(){ const r = deid(src.value); target.value = r.text; box.textContent = '';
+      const ks = Object.keys(r.hits); box.append(ks.length ? 'Removed or generalized: '+ks.map(i => P.SAFE_HARBOR[i].split(' (')[0]+' ×'+r.hits[i]).join(', ') : 'No identifiers found. A reviewer still checks by hand.'); }
+    return {box, run};
+  }
+
+  function peerShare(v){
+    const conf = h('select',null, D.RULES.map(r => h('option',{value:r.id},r.id+': '+r.q)));
+    const sit = h('textarea',{placeholder:'What was the situation? Example: night staff kept asking whether they could pour meds ahead of time.'});
+    const prac = h('textarea',{placeholder:'What does your home do now?'});
+    const res = h('textarea',{placeholder:'How did it play out? Did a surveyor see it?'});
+    const oc = h('select',null, Object.entries(P.OUTCOMES).map(([k,o]) => h('option',{value:k},o.label)));
+    const raw = h('div',{class:'small muted'},'Names, places, dates and numbers are removed automatically when you press Check. Please keep it general anyway.');
+    const out = h('div');
+    const c = consentBlock();
+    const form = h('form',{class:'card'}, h('h2',null,'Share what worked'),
+      h('label',{class:'f'},'Which rule conflict?',conf), h('label',{class:'f'},'Situation',sit), h('label',{class:'f'},'What you do',prac), h('label',{class:'f'},'How it played out',res), h('label',{class:'f'},'Outcome',oc), raw, c.el,
+      h('div',{class:'row'},h('button',{class:'btn',type:'submit'},'Check and send for review')), out);
+    form.addEventListener('submit', e => { e.preventDefault();
+      if (!prac.value.trim()){ toast('Add what your home does'); return; }
+      if (!c.a.checked || !c.b.checked){ toast('Both consent boxes are needed'); return; }
+      const parts = [sit, prac, res].map(x => deid(x.value)); const hits = {}; parts.forEach(p => Object.keys(p.hits).forEach(k => hits[k] = (hits[k]||0)+p.hits[k]));
+      S.peer.queue.push({id:'M'+uid(), kind:'practice', conflict:conf.value, settings:[setting()==='home'?'afh':setting()], state:'WI', county:'Not given', outcome:oc.value, source:'member', verified:false, votes:0,
+        title:(ruleById(conf.value)||{q:'Shared practice'}).q, situation:parts[0].text, practice:parts[1].text, result:parts[2].text, cite:(ruleById(conf.value)||{}).topic||'', hits, at:new Date().toISOString(), status:'Waiting for review'});
+      save(); out.textContent=''; out.append(h('p',{class:'small'},'Sent to the review queue. '+(Object.keys(hits).length?'The scrub removed '+Object.keys(hits).length+' kinds of identifiers. ':'')+'Nothing is published until a reviewer approves it.'));
+      form.reset(); });
+    v.append(form);
+  }
+
+  function peerIncident(v){
+    const reps = forSite(S.reports);
+    v.append(h('div',{class:'card soft'}, h('b',null,'How an incident becomes a shareable scenario'),
+      h('ol',{class:'steps'}, ['Pick a report (sample data only in this test).','The app removes the 18 HIPAA Safe Harbor identifiers and generalizes dates, times and places.','You keep only the situation, the response and the outcome, in your own general words.','Consent: your home opted in, and a manager approves this one.','A trained reviewer checks it by hand.','It joins the pooled scenarios, shown only once '+P.MIN_HOMES+' or more homes contribute.'].map(s => h('li',null,s)))));
+    const pick = h('select',{'aria-label':'Report'}, h('option',{value:''},'Type or paste a sample scenario instead'), reps.map(r => h('option',{value:r.id},fmtDate(r.at)+' · '+r.type)));
+    const src = h('textarea',{placeholder:'Example: Walt fell at 2:40 am in room 3 on Nov 24, Sam helped him up and called the nurse.'});
+    const type = h('select',null, P.PATTERNS.map(p => h('option',null,p.type)), h('option',null,'Other'));
+    const shift = h('select',null, ['Night','Morning','Day','Evening'].map(s => h('option',null,s)));
+    const sit = h('textarea'), resp = h('textarea',{placeholder:'What staff did, in order.'}), outc = h('textarea',{placeholder:'How it turned out. No health details beyond what the pattern needs.'});
+    const sp = scrubPreview(src, sit);
+    pick.addEventListener('change',()=>{ const r = reps.find(x => x.id === pick.value); src.value = r ? (r.clean || r.raw) : ''; sp.run(); });
+    src.addEventListener('input', sp.run);
+    const c = consentBlock();
+    const out = h('div');
+    const form = h('form',{class:'card'}, h('h2',null,'Share an incident pattern'),
+      h('label',{class:'f'},'Start from',pick), h('label',{class:'f'},'Original (stays in your home, never shared)',src), sp.box,
+      h('div',{class:'grid g2'}, h('label',{class:'f'},'Kind of situation',type), h('label',{class:'f'},'Shift',shift)),
+      h('label',{class:'f'},'Situation (scrubbed, edit to keep it general)',sit), h('label',{class:'f'},'Response',resp), h('label',{class:'f'},'Outcome',outc), c.el,
+      h('div',{class:'row'},h('button',{class:'btn',type:'submit'},'Send for review')), out);
+    form.addEventListener('submit', e => { e.preventDefault();
+      if (!sit.value.trim() || !resp.value.trim()){ toast('Add the situation and the response'); return; }
+      if (!c.a.checked || !c.b.checked){ toast('Both consent boxes are needed'); return; }
+      const parts = [sit, resp, outc].map(x => deid(x.value)); const hits = {}; parts.forEach(p => Object.keys(p.hits).forEach(k => hits[k] = (hits[k]||0)+p.hits[k]));
+      S.peer.queue.push({id:'I'+uid(), kind:'incident', type:type.value, shift:shift.value, situation:parts[0].text, response:parts[1].text, outcome:parts[2].text, hits, at:new Date().toISOString(), status:'Waiting for review'});
+      save(); out.textContent=''; out.append(h('p',{class:'small'},'Sent to the review queue. The original report did not leave your home\'s records.')); form.reset(); });
+    v.append(form);
+  }
+
+  function peerReview(v){
+    v.append(h('p',{class:'muted'},'In the real service, a trained Steady Shift reviewer does this, not the home. Here you can try it.'));
+    const q = S.peer.queue.filter(x => x.status === 'Waiting for review');
+    if (!q.length) v.append(h('div',{class:'card'},h('p',{class:'muted'},'Nothing waiting. Share a practice or an incident pattern to see it here.')));
+    q.forEach(x => {
+      const checks = P.SAFE_HARBOR.map((s,i) => { const id = x.id+'sh'+i; const cb = h('input',{type:'checkbox',id}); return {cb, el:h('li',{class:'row'},cb,h('label',{for:id},s+(x.hits&&x.hits[i]?' (scrub removed '+x.hits[i]+')':'')))}; });
+      const all = h('button',{class:'btn quiet sm',type:'button',onclick:()=>checks.forEach(c => c.cb.checked = true)},'I checked all 18');
+      const body = x.kind === 'incident' ? [h('p',null,h('b',null,x.type+' · '+x.shift+' shift')), h('p',null,h('b',null,'Situation: '),x.situation), h('p',null,h('b',null,'Response: '),x.response), x.outcome ? h('p',null,h('b',null,'Outcome: '),x.outcome) : null]
+        : [h('p',null,h('b',null,x.title)), x.situation ? h('p',null,h('b',null,'Situation: '),x.situation) : null, h('p',null,h('b',null,'Practice: '),x.practice), x.result ? h('p',null,h('b',null,'How it played out: '),x.result) : null];
+      const reason = h('input',{type:'text','aria-label':'Reason if sent back',placeholder:'Reason if you send it back'});
+      v.append(h('div',{class:'card'}, h('div',{class:'chips'},h('span',{class:'chip'},x.kind==='incident'?'Incident pattern':'Practice'),h('span',{class:'chip grey'},fmtDate(x.at))), body,
+        h('details',null,h('summary',null,'Safe Harbor checklist: no identifier remains'), h('ul',{class:'tourlist'},checks.map(c => c.el)), all),
+        h('p',{class:'small muted'}, x.kind==='incident' ? 'Small-group rule: this pattern stays hidden until '+P.MIN_HOMES+' homes contribute.' : 'Practices show with "Member home" and the state only.'),
+        h('div',{class:'row'},
+          h('button',{class:'btn sm',type:'button',onclick:()=>{ if (!checks.every(c => c.cb.checked)){ toast('Tick all 18 checks first'); return; } x.status = 'Published'; S.peer.published.push(x); save(); toast('Published to the shared layer'); route(); }},'Approve and publish'),
+          reason, h('button',{class:'btn quiet sm',type:'button',onclick:()=>{ x.status = 'Sent back'; x.reason = reason.value.trim(); save(); route(); }},'Send back'))));
+    });
+    const done = S.peer.queue.filter(x => x.status !== 'Waiting for review');
+    if (done.length) v.append(h('div',{class:'card'},h('h2',null,'Decided'), h('div',{class:'list'}, done.slice().reverse().map(x => h('div',{class:'item'},h('div',{class:'meta'},h('span',null,x.status),h('span',null,fmtDate(x.at))), h('span',null,x.kind==='incident'?x.type:x.title), x.reason ? h('span',{class:'small'},'Reason: '+x.reason) : null)))));
+  }
+
+  function peerLegal(v){
+    v.append(h('div',{class:'card'}, h('h2',null,'What must be in place before a real report is shared'),
+      h('p',{class:'small muted'},'Until every item is done, this screen runs on fictional sample data only. Peer practices from public sources can be shown now. Incident scenarios from real homes cannot.'),
+      h('div',{class:'list'}, P.GATES.map(g => h('div',{class:'item'}, h('div',{class:'meta'},h('span',{class:'chip red'},'Not in place')), h('b',null,g.t), h('span',{class:'small'},g.d))))));
+    v.append(h('div',{class:'card'}, h('h2',null,'The 18 Safe Harbor identifiers'), h('p',{class:'small muted'},'45 CFR 164.514(b)(2). All must be gone, and the home must have no actual knowledge that what is left could identify someone.'), h('ol',null,P.SAFE_HARBOR.map(s => h('li',null,s)))));
+    v.append(h('div',{class:'card'}, h('h2',null,'Kept separate from private documents'), h('p',null,'Each home\'s uploaded policies, procedures and reports live in that home\'s private space. The shared layer never reads them. Something reaches it only when a person in the home submits it on this screen, the scrub runs, consent is given, and a reviewer approves it.')));
+  }
 
   // Team training (manager)
   R.team = v => {

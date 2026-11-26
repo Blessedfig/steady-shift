@@ -18,3 +18,20 @@ bar at the top. In the last 3 days the plan screen opens once a day, and after t
 they see until they pick a plan. Plan choices land on the desk under Requests for Claude ("Trial: plan choice").
 Database rules: `desk/trials.sql`. Turning it on: `desk/README.md` > "Turn on trial codes". Payments:
 `supabase/functions/trial-checkout/README.md`. Until `trials.sql` is run, the app behaves exactly as before (desk members only).
+
+## What's worked for others (peer-data.js, `#/peer`)
+
+A shared "what's worked for others" library on top of the rule conflicts (C01-C18). Entries are seeded from public
+sources (DHS guidance, DQA statistics, public DQA survey reports, caregiver forums, news), each cited, plus two clearly
+marked fictional member samples. Each entry has the situation, what the home does, how it played out, an outcome
+(regulator accepted, cited, contested, untested), the rule it relates to, and upvotes. Every screen says
+"Peer practice, not legal advice".
+
+- **Kept apart from private documents.** The peer screens never read a home's procedures, policies or reports. Something
+  reaches the shared layer only when a person submits it on purpose, it is scrubbed, consent is ticked, and a reviewer
+  approves it.
+- **Incident patterns.** A report becomes a scenario (situation, response, outcome) after a HIPAA Safe Harbor scrub
+  (names, places, dates except year, times to shift, phone/email/IDs, room numbers, ages over 89). Pooled patterns show
+  only when at least 11 homes contributed.
+- **Test only.** Everything stays in the browser. The "Before real data" tab lists what must be in place first
+  (HIPAA program, BAAs, consent terms, a signed-off de-identification method, staffed review, Wisconsin confidentiality check).
