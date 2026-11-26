@@ -149,8 +149,10 @@
     if(window.SSPw)SSPw.afterSignIn(sb,session.user,how);
     await load();
   }
-  sb.auth.onAuthStateChange((_evt,session)=>{setTimeout(()=>onSession(session),0)});
-  sb.auth.getSession().then(({data})=>onSession(data.session));
+  (window.SSIdle?SSIdle.guard(sb):Promise.resolve()).then(()=>{
+    sb.auth.onAuthStateChange((_evt,session)=>{setTimeout(()=>onSession(session),0)});
+    sb.auth.getSession().then(({data})=>onSession(data.session));
+  });
   // a link that failed (expired or already used) comes back with an error in the address
   if(/error_description=/.test(location.hash)){
     const p=new URLSearchParams(location.hash.slice(1));

@@ -1637,8 +1637,10 @@
     fillSwitchers(); route();
     if (window.SSPw) SSPw.afterSignIn(sb, user, how);
   }
-  sb.auth.onAuthStateChange((_e, session) => setTimeout(() => onSession(session), 0));
-  sb.auth.getSession().then(({data}) => onSession(data.session));
+  (window.SSIdle ? SSIdle.guard(sb) : Promise.resolve()).then(() => {
+    sb.auth.onAuthStateChange((_e, session) => setTimeout(() => onSession(session), 0));
+    sb.auth.getSession().then(({data}) => onSession(data.session));
+  });
   if (/error_description=/.test(location.hash)){
     const p = new URLSearchParams(location.hash.slice(1));
     gate('That sign-in link did not work ('+(p.get('error_description')||'expired')+'). Sign in with your password, or ask for a new code below.', true);

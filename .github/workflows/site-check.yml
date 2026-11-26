@@ -1,0 +1,36 @@
+# Checks every change to the website and app before it goes live:
+# JavaScript syntax, WCAG 2.2 AA accessibility (axe-core), phone layout, and the Content-Security-Policy.
+name: Site check
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: steady-shift
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: JavaScript syntax
+        run: for f in steady-shift/app/*.js steady-shift/desk/*.js; do node --check "$f"; done
+      - name: Install checker
+        run: |
+          npm init -y >/dev/null
+          npm install --no-save playwright@1.49.1 axe-core@4.10.2
+          npx playwright install --with-deps chromium
+      - name: Serve the site and check it
+        run: |
+          python3 -m http.server 8765 >/dev/null 2>&1 &
+          sleep 1
+          NODE_PATH="$PWD/node_modules" node steady-shift/tests/a11y.js
