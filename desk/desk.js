@@ -64,7 +64,7 @@
     b.disabled=false;b.textContent='Email me a sign-in link';
     if(error){
       const m=String(error.message||'');
-      if(/signups? not allowed|not found|otp_disabled/i.test(m))signinMsg('That email is not on the desk\'s list. Ask Christian to add it.');
+      if(/signups? not allowed|not found|otp_disabled/i.test(m))signinMsg('That email is not set up for the desk yet. If you were just invited, use the link in your invite email first. Otherwise ask Christian to add you.');
       else if(/rate|seconds/i.test(m))signinMsg('Please wait a minute before asking for another link.');
       else signinMsg('Could not send the link: '+m);
       return;
