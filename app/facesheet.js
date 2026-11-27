@@ -141,7 +141,7 @@
     const sh = C.shiftNow();
     const pick = C.param ? C.param() : '';
     let cur = rs.find(r => r.code === pick) ? pick : '';
-    v.append(head('Start of shift · '+site().name, 'Face sheets and today\'s tasks', 'Read the top of each sheet before you start. Allergies, code status and risks are always first.'));
+    v.append(head('Shift checklist · '+site().name, 'Today\'s tasks, meds and cleaning', 'Medication times, cleaning and each resident\'s tasks for this shift. Read the top of each face sheet before you start: allergies, code status and risks are always first.'));
     const left = minsLeft(); const open = openTasks();
     if (left <= 60 && left >= -60 && open.length) v.append(card('warn', h('b',null,'Shift ends '+(left > 0 ? 'in '+left+' minutes' : 'now')+'. '+open.length+' task'+(open.length===1?' is':'s are')+' not done yet.'),
       h('ul',{class:'small'}, open.slice(0,6).map(t => h('li',null,t.res+': '+t.text))), h('p',{class:'small'},'Do them, or pass them on in the ', h('a',{href:'#/shift/give'},'shift change report'), '. Nothing is marked as your fault.')));
@@ -156,6 +156,8 @@
       body.textContent = '';
       if (!cur){
         body.append(card('soft', h('div',{class:'meta'}, chip(sh.name+' shift · '+sh.label)), h('p',{class:'small'},'Tap a name for the full face sheet, contacts and what helps.')));
+        const mc = medCard(); if (mc) body.append(mc);
+        const cc = cleanCard(); if (cc) body.append(cc);
         rs.forEach(r => body.append(sheet(r.code, true)));
       } else body.append(sheet(cur, false));
       body.append(helpBox('What is on a face sheet, and who sees what',
@@ -163,8 +165,37 @@
         h('p',{class:'small'},'Insurance numbers and payee details show only to managers, nurses and owners, who make the calls and book the appointments. Each time someone opens them it is logged. Caregivers see everything they need for care and emergencies.'),
         h('p',{class:'foot'},'Sample people and numbers only. Not legal advice.')));
     }
+    // Medication times for this shift (recorded on the medication screen, shown here so nothing is missed).
+    function medCard(){
+      if (!window.SSMar || !SSMar.shiftDoses || !viewOn('mar')) return null;
+      const ds = SSMar.shiftDoses(); if (!ds.length) return null;
+      const LAB = {given:['Given','calm'], refused:['Refused','amber'], held:['Held','amber'], late:['Late','red'], due:['Due now','amber'], later:['Later','grey']};
+      const left = ds.filter(d => ['late','due','later'].includes(d.state)).length;
+      const times = {}; ds.forEach(d => (times[d.tm] = times[d.tm] || []).push(d));
+      return card(ds.some(d => d.state === 'late') ? 'warn' : '',
+        h('h2',null,'💊 Medication times this shift'),
+        h('p',{class:'small muted'}, left ? left+' of '+ds.length+' dose'+(ds.length===1?'':'s')+' still to record.' : 'All '+ds.length+' doses recorded.'),
+        h('ul',{class:'medtimes'}, Object.keys(times).map(tm => h('li',null, h('b',{class:'mt-time'},fmtClock(tm)),
+          h('div',{class:'grid',style:'gap:.25rem;flex:1'}, times[tm].map(d => { const l = LAB[d.state] || [d.state,'grey'];
+            return h('div',{class:'row',style:'gap:.4rem;align-items:center'}, chip(l[0], l[1]), h('span',null, d.res+' '+d.nick+': '+d.med+' '+d.dose+(d.nurse ? ' (nurse or delegated staff only)' : ''))); }))))),
+        h('a',{class:'btn sm',href:'#/mar'},'Record a dose'));
+    }
+    // This shift's cleaning jobs, checked off right here.
+    function cleanCard(){
+      if (!window.SSClean || !SSClean.shiftJobs || !viewOn('clean')) return null;
+      const js = SSClean.shiftJobs(); if (!js.length) return null;
+      const doneN = js.filter(j => j.done).length;
+      const list = h('ul',{class:'tourlist tasks'}, js.map(j => {
+        const id = 'sc-'+j.id; const cb = h('input',{type:'checkbox',id,checked:j.done});
+        cb.addEventListener('change', () => { const r = SSClean.markJob(j.id, cb.checked); if (r === 'photo'){ cb.checked = false; toast('Photo proof is on for you. Check this one off on the cleaning screen.'); return; } draw(); });
+        return h('li',null, cb, h('label',{for:id,class:j.done?'done':''}, j.text, h('span',{class:'small muted'},' · '+j.area+(j.done ? ' · done by '+j.by : ''))));
+      }));
+      return card('', h('h2',null,'🧽 Cleaning this shift'), h('p',{class:'small muted'}, doneN+' of '+js.length+' done.'), list,
+        h('a',{class:'btn ghost sm',href:'#/clean'},'Weekly and monthly jobs'));
+    }
     draw();
   };
+  const fmtClock = tm => { const [a,b] = tm.split(':').map(Number); return ((a+11)%12+1)+(b ? ':'+String(b).padStart(2,'0') : '')+(a < 12 ? ' AM' : ' PM'); };
 
   function sheet(code, brief){
     const f = face(code); const sid = S().site;

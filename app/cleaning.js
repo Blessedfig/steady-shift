@@ -343,5 +343,19 @@
     const open = openTasks(); const left = minsLeft(); const ending = left <= 60 && left >= -60 && open.length;
     v.append(h('div',{class:'grid g2'}, A.tile('clean','🧽', ending ? 'Cleaning: '+open.length+' job'+(open.length===1?'':'s')+' left before shift change' : 'Cleaning checklist', ending ? 'Finish or pass them on in the shift report.' : open.length+' job'+(open.length===1?'':'s')+' this shift.', ending ? 'urgent' : '')));
   });
-  window.SSClean = {openTasks: sid => openTasks(sid).map(x => ({res:'House', text:x.text}))};
+  // For the shift checklist on the Start of shift screen: this shift's jobs (every-shift and today's), done or not.
+  function shiftJobs(){
+    const sh = C.shiftNow();
+    return dueNow().filter(x => !x.always && (x.freq==='shift' || (x.freq==='daily' && (x.shift===sh.name || x.shift==='Any')))).map(x => { const d = doneFor(x); return {id:x.id, text:x.text, area:x.area, done:!!d, by:d ? d.by : '', at:d ? d.at : ''}; });
+  }
+  function markJob(id, on){
+    const x = tpl().items.find(i => i.id === id); if (!x) return false;
+    const mine = me(), c = st();
+    if (on){
+      if (proofFor(mine)) return 'photo';
+      if (!doneFor(x)) c.done[S().site].push({task:x.id, period:periodKey(x.freq), at:new Date().toISOString(), by:mine, photos:0});
+    } else c.done[S().site] = c.done[S().site].filter(z => !(z.task===x.id && z.period===periodKey(x.freq)));
+    save(); return true;
+  }
+  window.SSClean = {openTasks: sid => openTasks(sid).map(x => ({res:'House', text:x.text})), shiftJobs, markJob};
 })();
