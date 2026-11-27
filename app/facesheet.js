@@ -238,7 +238,7 @@
         x.when ? h('span',{class:'small'},'When to call: '+x.when) : (i === 0 ? h('span',{class:'small'},'When to call: any emergency, hospital trip, fall or big change') : null),
         h('div',{class:'row'}, x.phone ? h('a',{class:'btn sm callbtn',href:tel(x.phone)},'📞 Call '+x.phone) : null, x.alt ? h('a',{class:'btn ghost sm callbtn',href:tel(x.alt)},'📞 Other phone '+x.alt) : null))); });
     box.append(ol);
-    if (brief && list.length > 1) box.append(h('span',{class:'small muted'},list.length-1+' more on the full face sheet'));
+    if (brief && list.length > 1) box.append(h('span',{class:'small'},list.length-1+' more on the full face sheet'));
     return box;
   }
   // One editor for every list of people on a face sheet. Managers, nurses and owners add, reorder, change and remove; each save is logged.

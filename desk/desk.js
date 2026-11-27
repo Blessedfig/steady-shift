@@ -6,6 +6,7 @@
 
   // ---------- tabs ----------
   const tabs=[...document.querySelectorAll('[role=tab]')];
+  tabs.forEach(t=>{if(!t.getAttribute('aria-label'))t.setAttribute('aria-label',t.textContent.trim())});
   function show(id){
     tabs.forEach(t=>{const on=t.getAttribute('aria-controls')===id;t.setAttribute('aria-selected',on);$(t.getAttribute('aria-controls')).hidden=!on;});
     try{localStorage.setItem('desk-tab',id)}catch(e){}

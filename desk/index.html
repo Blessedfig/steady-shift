@@ -16,9 +16,9 @@
 <style>
 /* Layout: a quiet working desk. Tab bar on top; each tab is one job (progress, leads, marketing, notes). Same palette as the public site. */
 :root{
-  --bg:#F7FAFC; --surface:#FFFFFF; --ink:#24352F; --muted:#5E6E78; --line:#E3ECF2;
+  --bg:#F7FAFC; --surface:#FFFFFF; --ink:#24352F; --muted:#52626C; --line:#E3ECF2;
   --pine:#2F7D6B; --pine-soft:#E7F4EF; --sky:#EAF3FB; --sky-deep:#D6E8F7; --night:#EAF3FB; --night-ink:#24352F;
-  --amber:#A8670F; --amber-soft:#FDF1DE; --red:#A63D32; --red-soft:#F8E4E1;
+  --amber:#8F570C; --amber-soft:#FDF1DE; --red:#A63D32; --red-soft:#F8E4E1;
   --shadow:0 14px 34px -24px rgba(40,80,110,.35);
   --display:"Nunito", "Segoe UI", system-ui, sans-serif;
   --body:"Nunito Sans", "Segoe UI", system-ui, sans-serif;
@@ -127,7 +127,7 @@ textarea{width:100%;min-height:5rem;resize:vertical}
 
 .req{border:1px solid var(--line);border-radius:18px;background:var(--bg);padding:.8rem 1rem;display:grid;gap:.5rem}
 .req .meta{font:400 .76rem/1.3 var(--mono);color:var(--muted);display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
-.req.done{opacity:.7}
+.req.done{background:var(--bg);box-shadow:none}
 .req p{white-space:pre-wrap}
 .req .reply{background:var(--pine-soft);border-radius:8px;padding:.6rem .8rem;font-size:.95rem}
 .req .row{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
@@ -148,7 +148,7 @@ header.top .signout{background:var(--surface);border:1px solid var(--line);color
 [hidden]{display:none!important}
 
 /* ---- polish pass: calm, professional ---- */
-:root{--bg:#F8FAFC;--surface:#FFFFFF;--ink:#1F2D33;--muted:#64748B;--line:#E6EDF2;--sky:#EEF5FB;--sky-deep:#DCEAF6;--pine:#2C7A68;--pine-soft:#E9F5F1;
+:root{--bg:#F8FAFC;--surface:#FFFFFF;--ink:#1F2D33;--muted:#556275;--line:#E6EDF2;--sky:#EEF5FB;--sky-deep:#DCEAF6;--pine:#2C7A68;--pine-soft:#E9F5F1;
   --shadow:0 1px 2px rgba(16,40,60,.04),0 8px 24px -16px rgba(16,40,60,.18);--mono:"Nunito Sans","Segoe UI",system-ui,sans-serif}
 body{background:var(--bg);font-size:1rem;-webkit-font-smoothing:antialiased}
 header.top{background:var(--surface);border-bottom:1px solid var(--line)}
