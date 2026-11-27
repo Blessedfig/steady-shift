@@ -17,6 +17,12 @@
   const P = (role, name, phone, extra) => Object.assign({role, name, phone}, extra||{});
   const PHARM = P('Pharmacy','Sample Pharmacy (Main St.)','715-555-0150',{call:'all',note:'Refills: call by 2 PM for next-day delivery'});
   const HOSP = 'Sample Regional Hospital';
+  // MCO (Family Care) or IRIS team. The nurse manager is the team's RN: call them about health changes, hospital stays and med changes.
+  const MCO = (n, prog) => prog === 'iris' ? [
+      P('IRIS consultant','IRIS consultant (sample)','715-555-01'+(40+n),{agency:'Sample IRIS Consultant Agency', fax:'715-555-01'+(50+n), email:'consultant'+n+'@iris.example', call:'manager', key:'cm'}),
+      P('Nurse manager (RN)','IRIS nurse (sample)','715-555-01'+(60+n),{agency:'Sample IRIS Consultant Agency', fax:'715-555-01'+(50+n), email:'rn'+n+'@iris.example', call:'manager', key:'rn', note:'Call about health changes, hospital stays and medicine changes.'})] : [
+      P('Care manager (case manager)','Care manager (sample)','715-555-01'+(20+n),{agency:'Family Care MCO (sample)', fax:'715-555-01'+(30+n), email:'care.manager'+n+'@mco.example', call:'manager', key:'cm'}),
+      P('Nurse manager (RN)','Nurse manager (sample), RN','715-555-01'+(70+n),{agency:'Family Care MCO (sample)', fax:'715-555-01'+(30+n), email:'nurse.manager'+n+'@mco.example', call:'manager', key:'rn', note:'Call about health changes, hospital stays and medicine changes.'})];
   const FACE = {
     'M-1':{dob:'1939-03-14', admit:'2023-06-01', room:'1', sex:'F', lang:'English', comm:'Hard of hearing on the left. Face her and speak low and clear.', vision:'Reading glasses', hearing:'Hearing aid, left ear (charge at night)', dentures:'Upper denture (soak at night)', mobility:'Walker at all times',
       code:'DNR', directive:'POLST (DNR, selective treatment) signed 2025-02-10', docs:'Red folder in the office, and a copy on the fridge', dx:['Osteoarthritis, both knees','High blood pressure','Mild hearing loss'], history:'Retired school cook. Widowed. Hip fracture 2021, fully healed.',
@@ -25,7 +31,7 @@
       guardian:null, poa:{name:'Daughter (sample)', type:'Health care POA', activated:false, phone:'715-555-0101', papers:'Copy in red folder'},
       payee:null, family:[P('Daughter','Daughter (sample)','715-555-0101',{call:'all'})], emergency:[P('Daughter','Daughter (sample)','715-555-0101',{call:'all'}),P('Son','Son (sample)','715-555-0102',{call:'all'})],
       team:[P('Primary doctor','Dr. Sample, family medicine','715-555-0110',{specialty:'primary', call:'all'}),P('Eye doctor','Sample Eye Clinic','715-555-0111',{specialty:'specialist', call:'manager'})],
-      mco:P('Care manager','Family Care MCO care manager (sample)','715-555-0120',{call:'manager'}), pharmacy:PHARM, hospital:HOSP,
+      mco:MCO(0), pharmacy:PHARM, hospital:HOSP,
       ins:{medicare:'SAMPLE-MBI-0001', medicaid:'SAMPLE-FH-1001', program:'Family Care (MCO)', partD:'Sample Part D plan, ID SAMPLE-D-11', supp:'None'},
       funeral:{home:'Sample Funeral Home', wishes:'Burial, church service', prepaid:'Yes, prepaid plan on file'},
       isp:[{t:'Help with shower (Tue and Fri)', shift:'Day', days:[2,5]},{t:'Walk to the mailbox with walker, if weather allows', shift:'Day'},{t:'Charge hearing aid and soak denture', shift:'Night'}]},
@@ -37,7 +43,7 @@
       poa:null, payee:{name:'Sample Payee Services', phone:'715-555-0130', handles:'Pays rent to the home on the 1st; gives a $45 a month personal allowance', note:'SSA representative payee'},
       family:[P('Son','Son (sample)','715-555-0104',{call:'all'})], emergency:[P('Guardian','Guardian (sample)','715-555-0103',{call:'all'}),P('Son','Son (sample)','715-555-0104',{call:'all'})],
       team:[P('Primary doctor','Dr. Sample, family medicine','715-555-0110',{specialty:'primary', call:'all'}),P('Psychiatry','Sample Behavioral Health','715-555-0112',{specialty:'psych', call:'manager'})],
-      mco:P('Care manager','Family Care MCO care manager (sample)','715-555-0121',{call:'manager'}), pharmacy:PHARM, hospital:HOSP,
+      mco:MCO(1), pharmacy:PHARM, hospital:HOSP,
       ins:{medicare:'SAMPLE-MBI-0002', medicaid:'SAMPLE-FH-1002', program:'Family Care (MCO)', partD:'Sample Part D plan, ID SAMPLE-D-12', supp:'None'},
       funeral:{home:'Sample Funeral Home', wishes:'Catholic funeral Mass, burial next to his wife', prepaid:'Guardian has the details'},
       isp:[{t:'Check door alarm works at start of shift', shift:'Both'},{t:'Offer a walk outside with staff', shift:'Day'},{t:'Bedtime routine at 9: music, warm milk', shift:'Night'}]},
@@ -48,7 +54,7 @@
       guardian:null, poa:{name:'Niece (sample)', type:'Health care POA', activated:true, phone:'715-555-0105', papers:'Activation letter in red folder'},
       payee:null, family:[P('Niece','Niece (sample)','715-555-0105',{call:'all'})], emergency:[P('Niece (POA)','Niece (sample)','715-555-0105',{call:'all'})],
       team:[P('Primary doctor','Dr. Sample, internal medicine','715-555-0113',{specialty:'primary', call:'all'}),P('Heart doctor','Sample Heart Clinic','715-555-0114',{specialty:'specialist', call:'manager'}),P('Delegating RN','RN (sample)','715-555-0115',{specialty:'nurse', call:'all'})],
-      mco:P('Care manager','Family Care MCO care manager (sample)','715-555-0120',{call:'manager'}), pharmacy:PHARM, hospital:HOSP,
+      mco:MCO(0), pharmacy:PHARM, hospital:HOSP,
       ins:{medicare:'SAMPLE-MBI-0003', medicaid:'SAMPLE-FH-1003', program:'Family Care (MCO)', partD:'Sample Part D plan, ID SAMPLE-D-13', supp:'None'},
       funeral:{home:'Not chosen yet', wishes:'Niece to decide', prepaid:'No'},
       isp:[{t:'Daily weight before breakfast (heart failure)', shift:'Day'},{t:'Check feet for sores at bedtime', shift:'Night'}]},
@@ -59,7 +65,7 @@
       guardian:null, poa:{name:'Wife (sample)', type:'Health care POA and financial POA', activated:true, phone:'715-555-0106', papers:'Copies in red folder'},
       payee:null, family:[P('Wife','Wife (sample)','715-555-0106',{call:'all'})], emergency:[P('Wife (POA)','Wife (sample)','715-555-0106',{call:'all'})],
       team:[P('Primary doctor','Dr. Sample, family medicine','715-555-0110',{specialty:'primary', call:'all'}),P('Speech therapy','Sample Therapy (swallowing)','715-555-0116',{specialty:'therapy', call:'manager'}),P('VA clinic','Sample VA Clinic','715-555-0117',{specialty:'specialist', call:'manager'})],
-      mco:P('Care manager','Family Care MCO care manager (sample)','715-555-0121',{call:'manager'}), pharmacy:PHARM, hospital:HOSP,
+      mco:MCO(1), pharmacy:PHARM, hospital:HOSP,
       ins:{medicare:'SAMPLE-MBI-0004', medicaid:'SAMPLE-FH-1004', program:'Family Care (MCO)', partD:'VA pharmacy benefit', supp:'VA health care'},
       funeral:{home:'Sample Funeral Home', wishes:'Military honors, burial at a veterans cemetery', prepaid:'Yes'},
       isp:[{t:'Thicken all drinks to mildly thick (IDDSI 2)', shift:'Both'},{t:'Sit upright 30 minutes after meals', shift:'Both'},{t:'Turn and check skin every 2 hours in bed', shift:'Night'}]}
@@ -68,13 +74,13 @@
   function basic(code, nick){ return {dob:'1945-05-05', admit:'2024-05-01', room:code.split('-')[1]||'1', sex:'', lang:'English', comm:'Clear', vision:'Glasses', hearing:'Normal', dentures:'None', mobility:'Walks on their own',
     code:'Full code', directive:'Not on file yet. Ask the manager.', docs:'Office binder', dx:['See the service plan'], history:'Sample resident.', risks:{fall:'Medium',elope:'Low',choke:'Low'}, faith:'', culture:'',
     helps:[], triggers:[], calm:[], guardian:null, poa:null, payee:null, family:[], emergency:[P('Family','Family contact (sample)','715-555-0190',{call:'all'})],
-    team:[P('Primary doctor','Dr. Sample','715-555-0110',{specialty:'primary', call:'all'})], mco:P('Care manager','MCO care manager (sample)','715-555-0122',{call:'manager'}), pharmacy:PHARM, hospital:HOSP,
+    team:[P('Primary doctor','Dr. Sample','715-555-0110',{specialty:'primary', call:'all'})], mco:MCO(2), pharmacy:PHARM, hospital:HOSP,
     ins:{medicare:'SAMPLE-MBI-0'+code.replace(/\D/g,'').padStart(3,'0'), medicaid:'SAMPLE-FH-2'+code.replace(/\D/g,'').padStart(3,'0'), program:'Family Care (MCO)', partD:'Sample Part D plan', supp:'None'},
     funeral:{home:'Not on file', wishes:'Not on file', prepaid:'Unknown'}, isp:[] }; }
   const OVER = {
     'B-2':{code:'DNR', dx:['COPD (nebulizer twice a day)','High blood pressure'], risks:{fall:'Medium',elope:'Low',choke:'Low'}, isp:[{t:'Nebulizer at 8 and 8 (RN-delegated)', shift:'Both'}]},
     'B-5':{dx:['Vascular dementia'], risks:{fall:'Medium',elope:'High',choke:'Low'}, helps:['Walk with him near shift change'], triggers:['Shift change noise and coats by the door'], guardian:{name:'Guardian (sample)', type:'Limited guardian of the person', scope:'Health care and placement only', letters:'Letters (sample), office binder', phone:'715-555-0107'}, payee:{name:'Sample Payee Services', phone:'715-555-0130', handles:'Rent and a weekly allowance', note:'SSA representative payee'}},
-    'B-7':{dx:['Anxiety','Lactose intolerance'], helps:['Tea and quiet talk'], isp:[{t:'Offer PRN only per plan; call the nurse if unsure', shift:'Both'}]},
+    'B-7':{mco:MCO(3,'iris'), ins:{medicare:'SAMPLE-MBI-0007', medicaid:'SAMPLE-FH-2007', program:'IRIS (self-directed)', partD:'Sample Part D plan', supp:'None'}, dx:['Anxiety','Lactose intolerance'], helps:['Tea and quiet talk'], isp:[{t:'Offer PRN only per plan; call the nurse if unsure', shift:'Both'}]},
     'B-9':{code:'POLST: DNR, comfort-focused', dx:['Advanced dementia','Weight loss','Pressure injury risk'], risks:{fall:'High',elope:'Low',choke:'High'}, mobility:'Wheelchair, two-person transfer', isp:[{t:'Hands-on help at every meal, pureed (IDDSI 4)', shift:'Both'},{t:'Turn every 2 hours, heels off the bed', shift:'Night'}]},
     'C-1':{dx:['Celiac disease','Osteoporosis']}, 'C-3':{dx:['Dementia with sundowning'], triggers:['After 4 PM'], calm:['Music from the 1950s']}
   };
@@ -87,6 +93,9 @@
       if (ho.risks && ho.risks.length) f.riskNotes = ho.risks; if (ho.whatHelps && ho.whatHelps.length) f.helps = [...new Set([...(f.helps||[]), ...ho.whatHelps])];
       if (ho.triggers && ho.triggers.length) f.triggers = [...new Set([...(f.triggers||[]), ...ho.triggers])];
       if (ho.summary) f.history = ho.summary; } } catch(e){}
+    f.ssn = f.ssn || '000-'+String(40+code.charCodeAt(0)%50)+'-'+code.replace(/\D/g,'').padStart(4,'0');   // 000 numbers are never issued
+    if (f.mco && !Array.isArray(f.mco)) f.mco = [f.mco];
+    f.mco = f.mco || [];
     f.nick = r.nick; f.code0 = code; f.note = r.note;
     return f;
   }
@@ -159,7 +168,7 @@
     const p = C.profile(code);
     const box = card('face', h('div',{class:'facehead'},
       h('div',{class:'avatar','aria-hidden':'true'}, f.nick[0]),
-      h('div',null, h('h2',null, f.nick+' (sample) ', h('span',{class:'chip'},code)), h('p',{class:'small muted'},'Room '+f.room+' · age '+age(f.dob)+' · born '+fmtDate(f.dob)+' · here since '+fmtDate(f.admit)))));
+      h('div',null, h('h2',null, f.nick+' (sample) ', h('span',{class:'chip'},code)), h('p',{class:'dob'}, h('span',null,'Date of birth '), h('b',null,fmtDate(f.dob)), h('span',null,' · age '+age(f.dob))), h('p',{class:'small muted'},'Room '+f.room+' · here since '+fmtDate(f.admit)))));
     // the band that can't be missed
     const allergy = p.allergies.length ? p.allergies.map(a => C.ALLERGENS[a]||a).join(', ') : 'No known allergies';
     const codeCls = /DNR|comfort/i.test(f.code) ? 'red' : 'amber';
@@ -194,7 +203,7 @@
     box.append(contacts(f, code));
     box.append(insurance(f, code));
     box.append(h('div',{class:'grid',style:'gap:.3rem'}, h('h3',null,'End-of-life wishes'), line('Funeral home',f.funeral.home), line('Wishes',f.funeral.wishes), line('Prepaid',f.funeral.prepaid)));
-    box.append(h('div',{class:'row noprint'}, h('button',{type:'button',class:'btn ghost sm',onclick:()=>window.print()},'Print face sheet')));
+    box.append(h('div',{class:'row noprint'}, h('button',{type:'button',class:'btn ghost sm',onclick:()=>window.print()},'Print face sheet'), h('button',{type:'button',class:'btn ghost sm',onclick:e=>{ const pk = packet(code); const host = e.target.closest('.card'); host.replaceWith(pk); pk.scrollIntoView(); }},'🚑 Emergency packet')));
     return box;
   }
 
@@ -202,6 +211,19 @@
     return h('div',{class:'item'}, h('div',{class:'meta'}, h('b',{style:'color:var(--ink)'},x.role), x.specialty ? chip(x.specialty,'grey') : null),
       h('span',null,x.name), x.note ? h('span',{class:'small muted'},x.note) : null,
       x.phone ? (allowCall ? h('a',{class:'btn ghost sm callbtn',href:tel(x.phone)},'📞 Call '+x.phone) : h('span',{class:'small muted'},'Manager or nurse calls this contact')) : null);
+  }
+  // Care team from the MCO or IRIS: care manager and nurse manager, with phone, fax and email.
+  function teamBlock(f, may){
+    const prog = /IRIS/i.test((f.ins||{}).program||'') ? 'IRIS team' : 'Family Care (MCO) team';
+    const missingRN = !f.mco.some(x => x.key === 'rn');
+    return h('div',{class:'grid',style:'gap:.5rem'}, h('h3',null,prog),
+      h('div',{class:'grid g2'}, f.mco.map(x => h('div',{class:'item'}, h('div',{class:'meta'}, h('b',{style:'color:var(--ink)'},x.role), x.key==='rn' ? chip('RN','grey') : null),
+        h('span',null,x.name+(x.agency ? ' · '+x.agency : '')), x.note ? h('span',{class:'small muted'},x.note) : null,
+        may(x) ? h('div',{class:'grid',style:'gap:.3rem'},
+          x.phone ? h('a',{class:'btn ghost sm callbtn',href:tel(x.phone)},'📞 Call '+x.phone) : null,
+          x.fax ? h('span',{class:'small'},'Fax: '+x.fax) : null,
+          x.email ? h('a',{class:'small',href:'mailto:'+x.email},x.email) : null) : h('span',{class:'small muted'},'Manager or nurse contacts the team')))),
+      missingRN ? h('p',{class:'small',style:'color:var(--amber)'},'No nurse manager on file yet. Ask the care manager who the team\'s RN is.') : null);
   }
   function contacts(f, code){
     const mgr = C.isManager();
@@ -217,8 +239,8 @@
     f.team.forEach(x => list.append(person(Object.assign({}, x, {specialty:x.specialty==='psych' && S().tier==='caregiver' ? null : x.specialty}), may(x))));
     list.append(person(f.pharmacy, may(f.pharmacy)));
     list.append(h('div',{class:'item'}, h('b',null,'Preferred hospital'), h('span',null,f.hospital), h('span',{class:'small muted'},'In an emergency, call 911 first. Paramedics choose the closest safe hospital.')));
-    list.append(person(f.mco, may(f.mco)));
     box.append(list);
+    box.append(teamBlock(f, may));
     if (f.payee){
       if (canSeeIds()){
         const det = h('details',{class:'item'}, h('summary',null,'Representative payee (restricted)'));
@@ -229,9 +251,39 @@
     }
     return box;
   }
+  // One-page emergency and hospital transfer packet: goes with the resident in the ambulance.
+  function packet(code){
+    const f = face(code), p = C.profile(code);
+    logView('Opened the emergency packet for '+code);
+    const L = (l, v) => h('p',{class:'small'}, h('b',null,l+': '), v || 'Not on file');
+    const ppl = (arr) => h('ul',{class:'small'}, arr.map(x => h('li',null, h('b',null,x.role+': '), x.name+(x.agency?' ('+x.agency+')':'')+(x.phone?' · phone '+x.phone:'')+(x.fax?' · fax '+x.fax:'')+(x.email?' · '+x.email:''))));
+    const dec = f.guardian ? 'Guardian: '+f.guardian.name+' ('+f.guardian.scope+') · '+f.guardian.phone : f.poa ? 'POA: '+f.poa.name+' ('+f.poa.type+(f.poa.activated?', activated':', not activated')+') · '+f.poa.phone : 'The resident decides';
+    const ids = canSeeIds() ? 'Medicare '+f.ins.medicare+' · Medicaid '+f.ins.medicaid+' · ' : '';
+    const box = card('face epacket',
+      h('div',{class:'row noprint',style:'justify-content:space-between'}, h('button',{type:'button',class:'btn quiet sm',onclick:()=>A.route()},'← Back to the face sheet'), h('button',{type:'button',class:'btn sm',onclick:()=>{ logView('Printed the emergency packet for '+code); window.print(); }},'Print packet')),
+      h('h2',null,'Emergency and hospital transfer packet'),
+      h('p',{class:'small muted'}, site().name+' · printed '+new Date().toLocaleString()+' · SAMPLE DATA'),
+      h('div',{class:'band'},
+        h('div',{class:'bandi '+(p.allergies.length?'red':'calm')}, h('span',null,'Allergies'), h('b',null,p.allergies.length ? p.allergies.map(a => C.ALLERGENS[a]||a).join(', ') : 'No known allergies')),
+        h('div',{class:'bandi '+(/DNR|comfort/i.test(f.code)?'red':'amber')}, h('span',null,'Code status'), h('b',null,f.code), h('small',null,f.directive))),
+      L('Resident', f.nick+' (sample) · '+code+' · born '+fmtDate(f.dob)+' · '+f.sex),
+      L('Diagnoses', f.dx.join('; ')),
+      L('Medicines', 'Send the current MAR and the pharmacy list with this sheet'),
+      L('Diet', [p.diet, p.texture, p.liquids && p.liquids!=='Thin' ? 'Drinks: '+p.liquids : 'Thin drinks'].join(' · ')),
+      L('Mobility and risks', f.mobility+' · Falls '+f.risks.fall+' · Wandering '+f.risks.elope+' · Choking '+f.risks.choke),
+      L('Communication', [f.lang, f.comm, 'Hearing: '+f.hearing, 'Vision: '+f.vision, f.dentures && f.dentures!=='None' ? 'Dentures: '+f.dentures : null].filter(Boolean).join(' · ')),
+      L('Who decides', dec),
+      h('h3',null,'Call'), ppl(f.emergency),
+      h('h3',null,(/IRIS/i.test(f.ins.program)?'IRIS':'Family Care (MCO)')+' team: tell them about the hospital stay'), f.mco.length ? ppl(f.mco) : h('p',{class:'small'},'Not on file'),
+      h('h3',null,'Doctors and pharmacy'), ppl(f.team.filter(x => x.specialty!=='psych').concat([f.pharmacy])),
+      L('Insurance', ids+f.ins.program+' · '+f.ins.partD),
+      h('p',{class:'foot'},'Call 911 first in an emergency. Send copies of the POLST or DNR, guardianship or POA papers, and the MAR. The home tells the nurse manager and care manager the same day.'));
+    return box;
+  }
   function insurance(f, code){
     const box = h('div',{class:'grid',style:'gap:.4rem'}, h('h3',null,'Insurance and benefits'));
     box.append(h('p',{class:'small'},h('b',null,'Program: '),f.ins.program+' · ',h('b',null,'Drug plan: '),f.ins.partD+' · ',h('b',null,'Other: '),f.ins.supp));
+    if (window.SSSSN){ box.append(SSSSN.field({ssn:f.ssn, site:S().site, label:code, kind:'resident'})); const g = SSSSN.grantCard(S().site); if (g) box.append(g); }
     if (!canSeeIds()){ box.append(h('p',{class:'small muted'},'Medicare and Medicaid numbers are kept with the manager and nurse, who book appointments and make insurance calls.')); return box; }
     const out = h('div',{class:'grid g2'});
     const btn = h('button',{type:'button',class:'btn quiet sm',onclick:()=>{
