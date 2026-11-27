@@ -1013,6 +1013,7 @@
     (S.orders||[]).filter(o => ids.includes(o.site) && o.status === 'pending').slice(0,1).forEach(() => ev.push({id:'ord-pending', kind:'Order check', who:'RN', site:sites[0].id,
       title:'New doctor orders waiting for a nurse check', date:today, time:'16:00', dur:15, note:'Open Doctor orders in Steady Shift to check them.', link:'#/orders'}));
     if (window.SSPeopleDates) { try { ev.push(...window.SSPeopleDates(ids)); } catch(e){ console.error(e); } }
+    (window.SSCalendarFeeds||[]).forEach(f => { try { ev.push(...f(ids)); } catch(e){ console.error(e); } });
     return ev.sort((a,b) => (a.date+(a.time||'')).localeCompare(b.date+(b.time||'')));
   }
   const appUrl = e => location.origin + location.pathname + e.link;

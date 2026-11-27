@@ -24,10 +24,11 @@
     residents:{'M-1':'12-08','M-2':'04-17','M-3':'12-26','M-4':'08-30','B-2':'12-15','B-5':'06-01','B-7':'01-09','B-9':'10-22','C-1':'12-02','C-2':'07-19'}
   };
   const APP_ACCOUNTS = [
-    ['Supplies','Expense','Supplies & Materials'],['PPE','Expense','Supplies & Materials'],['Food','Expense','Resident Meals'],['Equipment','Expense','Equipment (under $2,500)'],
+    ['Pharmacy','Expense','Pharmacy & Medical Supplies'],['Supplies','Expense','Supplies & Materials'],['PPE','Expense','Supplies & Materials'],['Food','Expense','Resident Meals'],['Equipment','Expense','Equipment (under $2,500)'],
     ['Repairs and maintenance','Expense','Repairs & Maintenance'],['Utilities','Expense','Utilities'],['Insurance','Expense','Insurance'],['Licenses and fees','Expense','Licenses & Fees'],
     ['Training','Expense','Training & Education'],['Other','Expense','Other Business Expenses'],
     ['Family Care (MCO)','Income','Resident Care Income: Family Care'],['IRIS','Income','Resident Care Income: IRIS'],['Private pay','Income','Resident Care Income: Private Pay'],
+    ['Resident personal items billed','Income','Resident Reimbursed Expenses'],['Resident funds held','Liability','Resident Trust Funds (held for residents)'],
     ['Caregiver wages','Payroll','Wages: Direct Care'],['Overtime','Payroll','Wages: Overtime']];
   function st(){
     const s = S();
@@ -35,6 +36,7 @@
       s.money = {v:1, map:Object.fromEntries(APP_ACCOUNTS.map(a => [a[0], a[2]])), tool:'qbo', payroll:'gusto', paid:{}, log:[]};
       A.save();
     }
+    APP_ACCOUNTS.forEach(x => { if (!s.money.map[x[0]]) s.money.map[x[0]] = x[2]; });
     return s.money;
   }
   function log(what){ const L = st().log; L.unshift({at:new Date().toISOString(), what}); L.splice(30); A.save(); }
@@ -45,7 +47,8 @@
     const ac = window.SSAcademy && SSAcademy.state ? SSAcademy.state() : S().academy;
     const own = ac && ac.exp ? ac.exp.filter(e => e.site === sid) : [];
     const food = (((S().care||{}).spend)||[]).filter(e => e.site === sid).map(e => ({date:e.date, cat:'Food', amt:e.amt, note:e.store||'Groceries'}));
-    const all = own.concat(food).filter(e => e.date >= from).sort((a,b) => a.date.localeCompare(b.date));
+    const vend = window.SSVendors ? SSVendors.purchases(sid, from) : [];
+    const all = own.concat(food, vend).filter(e => e.date >= from).sort((a,b) => a.date.localeCompare(b.date));
     return all.length ? all : [{date:addDays(isoDay(new Date()),-12), cat:'Supplies', amt:84.12, note:'Briefs and wipes (sample)'},{date:addDays(isoDay(new Date()),-6), cat:'PPE', amt:41.5, note:'Gloves (sample)'},{date:addDays(isoDay(new Date()),-3), cat:'Food', amt:212.4, note:'Groceries (sample)'}];
   }
   function lastWeekStart(){ const d = new Date(); d.setDate(d.getDate() - d.getDay() - 7); return isoDay(d); }
@@ -72,7 +75,8 @@
   function invCsv(sid){ // QuickBooks Online invoice import (private pay only)
     const ms = monthStart(), due = addDays(ms, 14), m = st().map; let no = 1001;
     return csv([['InvoiceNo','Customer','InvoiceDate','DueDate','Item(Product/Service)','ItemDescription','ItemQuantity','ItemRate','ItemAmount']]
-      .concat(billing(sid).filter(b => b.payer === 'Private pay').map(b => [String(no++), 'Resident '+b.res+' (sample)', mdy(ms), mdy(due), m['Private pay'], 'Room, board and care, '+fmtDate(ms).replace(/ \d+,/,''), '1', b.rate.toFixed(2), b.rate.toFixed(2)])));
+      .concat(billing(sid).filter(b => b.payer === 'Private pay').map(b => [String(no++), 'Resident '+b.res+' (sample)', mdy(ms), mdy(due), m['Private pay'], 'Room, board and care, '+fmtDate(ms).replace(/ \d+,/,''), '1', b.rate.toFixed(2), b.rate.toFixed(2)]))
+      .concat((window.SSResFunds ? SSResFunds.charges(sid, addDays(ms, -31), isoDay(new Date())) : []).map(c => [String(no++), 'Resident '+c.res+' (sample)', mdy(ms), mdy(due), m['Resident personal items billed'], c.note+' ('+mdy(c.date)+')', '1', c.amt.toFixed(2), c.amt.toFixed(2)])));
   }
   function depCsv(sid){ // expected MCO and IRIS payments, as deposits
     const m = st().map, ms = monthStart();
@@ -132,15 +136,17 @@
     // send
     const exp = expenses(sid,30), expT = exp.reduce((t,e) => t+e.amt, 0);
     const bill = billing(sid), priv = bill.filter(b => b.payer === 'Private pay'), mco = bill.filter(b => b.payer !== 'Private pay');
+    const chg = window.SSResFunds ? SSResFunds.charges(sid, addDays(monthStart(), -31), isoDay(new Date())) : [];
     const pr = payrollRows(sid), prT = pr.rows.reduce((t,r) => t + r.reg*r.rate + r.ot*r.rate*1.5, 0);
     const item = (title, sub, amt, btn, fn, file) => h('div',{class:'item'}, h('div',{class:'meta'}, h('span',{class:'chip'},amt), h('span',null,sub)), h('b',null,title),
       h('div',{class:'row'}, h('button',{class:'btn ghost sm',type:'button',onclick:()=>{ download(file,'text/csv',fn()); log(btn+' ('+sname+')'); }},btn)));
     v.append(h('div',{class:'card'}, h('h2',null,'Send to your books'),
       h('div',{class:'list'},
-        item('Expenses, last 30 days', exp.length+' expenses from Inventory and expenses and groceries', money(expT), 'Bank upload file (.csv)', () => expCsv(sid), 'steady-shift-expenses.csv'),
-        item('Private-pay invoices, this month', priv.length+' resident'+(priv.length===1?'':'s')+', due in 14 days', money(priv.reduce((t,b)=>t+b.rate,0)), 'Invoice import file (.csv)', () => invCsv(sid), 'steady-shift-invoices.csv'),
+        item('Expenses, last 30 days', exp.length+' expenses from Inventory and expenses, groceries and Vendors', money(expT), 'Bank upload file (.csv)', () => expCsv(sid), 'steady-shift-expenses.csv'),
+        item('Invoices, this month', priv.length+' private-pay resident'+(priv.length===1?'':'s')+(chg.length ? ' and '+chg.length+' personal item'+(chg.length===1?'':'s')+' bought for residents' : '')+', due in 14 days', money(priv.reduce((t,b)=>t+b.rate,0)+chg.reduce((t,c)=>t+c.amt,0)), 'Invoice import file (.csv)', () => invCsv(sid), 'steady-shift-invoices.csv'),
         item('Family Care and IRIS payments expected', mco.length+' residents; mark them received when the deposit lands', money(mco.reduce((t,b)=>t+b.rate,0)), 'Deposits file (.csv)', () => depCsv(sid), 'steady-shift-deposits.csv'),
         item('Hours for payroll, week of '+fmtDate(pr.ws), pr.rows.length+' staff'+(pr.sample?' (sample hours; approve time sheets to use real ones)':' from approved time sheets'), money(prT)+' est.', PAYROLL[s.payroll][0]+' hours file (.csv)', () => payCsv(sid), 'steady-shift-hours-'+s.payroll+'.csv')),
+      h('div',{class:'row'}, VIEWS.vendors ? h('a',{class:'btn quiet sm',href:'#/vendors'},'Vendors') : null, VIEWS.resfunds ? h('a',{class:'btn quiet sm',href:'#/resfunds'},'Resident spending') : null),
       h('p',{class:'small muted'},'Invoices and deposits use resident codes here. Real billing names a person and counts as health information, so it waits for the privacy foundation and signed agreements.')));
     // MCO / IRIS tracker
     const ms = monthStart();
