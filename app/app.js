@@ -140,6 +140,9 @@
     window.scrollTo(0,0);
   }
   window.addEventListener('hashchange', route);
+  // wide tables scroll sideways on phones; let keyboard users reach and scroll them too
+  new MutationObserver(() => $('main').querySelectorAll('.tablewrap:not([tabindex])').forEach(w => { w.tabIndex = 0; w.setAttribute('role','region'); w.setAttribute('aria-label','Table (scrolls sideways)'); }))
+    .observe($('main'), {childList:true, subtree:true});
 
   function head(eyebrow, title, lede){ return h('div',{class:'head'}, h('span',{class:'eyebrow'},eyebrow), h('h1',null,title), lede ? h('p',{class:'muted'},lede) : null); }
   const LABEL = {rule:['Rule says','calm'], reading:['Best reading','amber'], open:['Open question','red']};
@@ -1798,7 +1801,7 @@
       const ai = await aiAvailable();
       const name = h('input',{type:'text',placeholder:'Document name, for example "Employee handbook 2026"','aria-label':'Document name'});
       const txt = h('textarea',{style:'min-height:10rem',placeholder:'Paste a procedure, policy or handbook section. Leave out resident names, health details, phone numbers and passwords.'});
-      const file = h('input',{type:'file',accept:'.txt,.md,.csv,.json,text/plain'});
+      const file = h('input',{type:'file',accept:'.txt,.md,.csv,.json,text/plain','aria-label':'Choose a text file to load'});
       file.addEventListener('change',()=>{ const f = file.files[0]; if (!f) return; if (!name.value) name.value = f.name; f.text().then(t => { txt.value = t.slice(0,60000); }); });
       const out = h('div',{class:'grid'});
       const go = h('button',{class:'btn',type:'button'}, ai ? 'Map it with AI' : 'Map it (keyword demo)');
