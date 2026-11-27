@@ -306,7 +306,20 @@ td.changed{background:var(--sky-soft)}
 .as-edit{min-height:14rem;font-size:.9rem;width:100%}
 .as-input{display:flex;gap:.5rem;align-items:flex-end}
 .as-input textarea{flex:1;min-height:48px;max-height:160px;resize:vertical}
-@media print{.top,.testbar,nav.side,.fab,.chat,.noprint{display:none!important}.shell{display:block}main{padding:0}.card{box-shadow:none}}
+.qs-btn{gap:.45rem}
+.qs-kbd{font:600 .72rem/1 var(--body);border:1px solid var(--line);border-radius:6px;padding:.2em .4em;color:var(--muted);background:var(--bg)}
+@media (max-width:560px){.qs-kbd{display:none}}
+dialog.qs{border:1px solid var(--line);border-radius:16px;padding:0;width:min(560px,calc(100% - 24px));max-height:min(70vh,560px);margin:12vh auto auto;background:var(--surface);color:var(--ink);box-shadow:0 20px 60px -20px rgba(30,70,110,.5)}
+dialog.qs::backdrop{background:rgba(31,58,82,.35)}
+.qs-form{display:flex;gap:.5rem;align-items:center;padding:.7rem .9rem;border-bottom:1px solid var(--line)}
+.qs-form input{flex:1;border:0;font-size:1.05rem;min-height:44px;background:transparent;color:var(--ink)}
+.qs-form input:focus{outline:2px solid var(--sky);outline-offset:2px;border-radius:8px}
+.qs-list{list-style:none;margin:0;padding:.4rem;overflow-y:auto;max-height:calc(min(70vh,560px) - 110px)}
+.qs-item{display:flex;align-items:center;gap:.6rem;padding:.6rem .7rem;border-radius:10px;cursor:pointer;min-height:44px}
+.qs-item[aria-selected="true"]{background:var(--sky-soft);outline:2px solid var(--sky-deep)}
+.qs-t{flex:1}
+.qs-foot{margin:0;padding:.4rem .9rem .7rem}
+@media print{.top,.testbar,nav.side,.fab,.chat,.noprint,dialog.qs{display:none!important}.shell{display:block}main{padding:0}.card{box-shadow:none}}
 .skip{position:absolute;left:-999px;top:0;z-index:2000;background:#1D6AA8;color:#fff;padding:.7rem 1rem;border-radius:0 0 12px 0;font-weight:700}.skip:focus{left:0}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
 
@@ -483,6 +496,7 @@ fieldset.goals{border:0;padding:0;margin:0;display:grid;gap:.35rem}fieldset.goal
 <script src="money.js"></script>
 <script src="choices.js"></script>
 <script src="assistant.js"></script>
+<script src="search.js"></script>
 <script src="vendors.js"></script>
 <script src="hr-data.js"></script>
 <script src="hr.js"></script>
