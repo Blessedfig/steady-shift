@@ -130,6 +130,7 @@
     param = m && m[2] ? decodeURIComponent(m[2]) : '';
     // A registered shift station only ever shows the station (see station.js).
     if (window.SSStation && SSStation.holds() && current !== 'kiosk'){ history.replaceState(null,'','#/kiosk'); current = 'kiosk'; param = ''; }
+    if (window.SSResidents) SSResidents.apply(); // moved-out residents leave every active list
     renderNav(current);
     const main = $('main'); main.textContent = '';
     const view = h('div',{class:'view'});
