@@ -508,9 +508,13 @@
       const who = whoIsOn();
       const names = staffNames(sid);
       const d = {res:{}, shiftVals:{}, todos:[]};
-      const fromSel = h('select',{'aria-label':'Your name'}, names.map(n => h('option',null,n)));
-      const toSel = h('select',{'aria-label':'Who is coming in'}, h('option',{value:''},'Not sure yet'), names.map(n => h('option',null,n)));
-      body.append(card('', h('div',{class:'meta'}, chip(sh.name+' shift · '+sh.label), who.on.length ? chip('Clocked in: '+who.on.join(', '),'calm') : null, who.next.length ? chip('Coming in: '+who.next.join(', '),'grey') : null),
+      let me = ''; try { if (window.SSSched && SSSched.me) me = SSSched.me(); } catch(e){}
+      const nextName = (who.next[0]||'').replace(/ at .*$/,'');
+      const fromSel = h('select',{'aria-label':'Your name'}, names.map(n => h('option',{selected:n===me},n)));
+      const toSel = h('select',{'aria-label':'Who is coming in'}, h('option',{value:''},'Not sure yet'), names.map(n => h('option',{selected:n===nextName},n)));
+      body.append(card('', h('div',{class:'meta'}, chip(sh.name+' shift · '+sh.label)),
+        who.on.length ? h('p',{class:'small'},h('b',null,'Clocked in now: '),who.on.join(', ')) : null,
+        who.next.length ? h('p',{class:'small'},h('b',null,'Coming in: '),who.next.join(', ')) : null,
         h('div',{class:'grid g2'}, h('label',{class:'f'},'Your name',fromSel), h('label',{class:'f'},'Handing off to',toSel))));
       // I: illness severity and what the app already knows
       body.append(card(auto.length ? 'warn' : 'calm', h('h2',null,'Already in the app this shift'),
