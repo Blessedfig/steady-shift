@@ -274,7 +274,7 @@
   const chip = (txt, cls) => h('span',{class:'chip'+(cls?' '+cls:'')},txt);
   function seg(name, options, value, onPick, opts){
     opts = opts || {};
-    const wrap = h('div',{class:'seg'+(opts.big?' big':''),role:'group','aria-label':name});
+    const wrap = h('div',{class:'pick'+(opts.big?' big':''),role:'group','aria-label':name});
     options.forEach(o => {
       const val = Array.isArray(o) ? o[0] : o, lab = Array.isArray(o) ? o[1] : o;
       const b = h('button',{type:'button','aria-pressed':String(value===val),onclick:()=>{ const now = b.getAttribute('aria-pressed')==='true' && opts.toggle ? null : val; wrap.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed','false')); if (now!=null) b.setAttribute('aria-pressed','true'); onPick(now); }}, lab);
@@ -530,6 +530,8 @@
     (st.triage||[]).filter(t => t.site===sid && t.at >= since).forEach(t => out.push({kind:'Night help', text:t.note}));
     mealFlags(sid).forEach(f => out.push({kind:'Meal flag', text:f.res+': '+f.text, res:f.res}));
     careAlerts(sid).forEach(f => out.push({kind:'Care alert', text:f.res+': '+f.text, res:f.res}));
+    try { if (window.SSMonitor){ SSMonitor.pending(sid).forEach(m => out.push({kind:m.state==='overdue'?'Follow-up check overdue':'Follow-up check due', text:m.res+': '+m.text, res:m.res}));
+      SSMonitor.active(sid).forEach(m => out.push({kind:'Follow-up checks continue', text:m.res+': '+m.kind.toLowerCase()+', '+m.left+' check'+(m.left===1?'':'s')+' left, until '+fmtTime(m.ends), res:m.res})); } } catch(e){}
     try { if (window.SSClean && SSClean.openTasks) { const cl = SSClean.openTasks(sid); if (cl.length) out.push({kind:'Cleaning not done', text:cl.length+' job'+(cl.length===1?'':'s')+': '+cl.slice(0,4).map(t => t.text).join('; ')+(cl.length>4?'; and more':'')}); } } catch(e){}
     try { if (window.SSFace && SSFace.openTasks) SSFace.openTasks(sid).forEach(t => out.push({kind:'Not done yet', text:t.res+': '+t.text, res:t.res})); } catch(e){}
     try { if (window.SSSched && SSSched.ensure){ const sc = SSSched.ensure(); (sc.shifts||[]).filter(s => s.site===sid && s.callin && s.date >= since.slice(0,10)).forEach(s => out.push({kind:'Call-in', text:(s.staff||'Open shift')+' called in for '+s.date+' '+s.start})); (sc.shifts||[]).filter(s => s.site===sid && !s.staff && s.date===today()).forEach(s => out.push({kind:'Open shift', text:'Nobody yet for '+s.start+' to '+s.end+' today'})); } } catch(e){}
@@ -590,12 +592,13 @@
           rd.adl = {};
           const lb = lastCare(sid, r.code, 'bm'), lt = lastCare(sid, r.code, 'bath');
           const nb = lb ? daysSince(lb.date) : null;
-          const dc = h('div',{class:'grid adl'}, h('h3',null,'Daily care'),
-            h('div',{class:'chips'}, chip('Last BM: '+(lb ? (nb===0?'today':nb===1?'yesterday':nb+' days ago') : 'none on record'), nb == null || nb >= thresholds().bmDays ? 'amber' : 'grey'), chip('Last bath: '+(lt ? fmtDate(lt.date) : 'none on record'),'grey')));
+          const late = nb == null || nb >= thresholds().bmDays;
+          const dc = h('div',{class:'grid'});
+          box.append(h('details',{class:'adl about',open:late}, h('summary',null,'Daily care: BM, bladder, bath, linens and more'),
+            h('div',{class:'chips'}, chip('Last BM: '+(lb ? (nb===0?'today':nb===1?'yesterday':nb+' days ago') : 'none on record'), late ? 'amber' : 'grey'), chip('Last bath: '+(lt ? fmtDate(lt.date) : 'none on record'),'grey')), dc));
           const fallBox = h('p',{class:'small',hidden:true}, 'Check them first, then write it up in ', h('a',{href:'#/report'},'Write a report'), '. Facts only.');
           adl.forEach(f => dc.append(field(f, rd.adl[f.id], val => { rd.adl[f.id] = val; if (f.id==='fall') fallBox.hidden = val !== 'Yes'; })));
           dc.append(fallBox);
-          box.append(dc);
         }
         const todo = h('input',{type:'text',maxlength:'200',placeholder:'e.g. Offer the shake at breakfast','aria-label':'To-do for the next shift for '+r.code});
         inner.append(h('label',{class:'f'},'Next shift needs to (optional)',todo));
