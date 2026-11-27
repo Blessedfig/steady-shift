@@ -121,3 +121,6 @@ body.dragging .fab{visibility:hidden}
 .share{display:inline-block;width:60px;height:8px;background:var(--sky-soft);border-radius:99px;overflow:hidden;vertical-align:middle}
 .share i{display:block;height:100%;background:var(--sky)}
 .item.rec{gap:.45rem}
+.ksum{margin:.2rem 0;padding-left:1.2rem;display:grid;gap:.15rem}
+.kcheck{flex-wrap:nowrap;align-items:flex-start;gap:.6rem;min-height:44px;cursor:pointer}
+ol.steps{display:grid;gap:.35rem;padding-left:1.3rem;margin:.3rem 0 .6rem}

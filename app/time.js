@@ -1,4 +1,4 @@
-// Steady Shift test app: time sheets and the house tablet (kiosk). Sample data only, stored in this browser.
+// Steady Shift test app: time sheets. Sample data only, stored in this browser.
 // Clock in and out against scheduled shifts, breaks, late and missed-punch flags, fixes that need a reason and approval,
 // weekly confirm and approve, overtime, and payroll spreadsheets. EVV for in-home Medicaid care is a later step.
 (function(){
@@ -253,65 +253,7 @@
         h('li',null,'Later, for the in-home care version: Wisconsin Medicaid electronic visit verification (EVV). Not built yet.')));
   }
 
-  // ---------- house tablet (kiosk) ----------
-  R.kiosk = v => {
-    const site = S().site;
-    if (site === 'family'){ ap(v, head('House tablet', 'The house tablet is for homes with staff', 'Pick a home at the top first.')); return; }
-    const k = SSAccess.kioskCfg(site);
-    if (!['manager','owner','multi'].includes(S().tier)){ ap(v, head('House tablet', 'A manager sets up the house tablet', 'Switch "View as" to House manager to open it.')); return; }
-    if (!k.on){ ap(v, head('House tablet', 'House tablet sign-in is off for this home', 'Turn it on in Services and access.'), h('a',{class:'btn ghost',href:'#/access'},'Services and access')); return; }
-    document.body.classList.add('kiosk');
-    const stage = h('div',{class:'kstage'});
-    let timer = null;
-    const arm = () => { clearTimeout(timer); timer = setTimeout(lock, (k.lockSec||20)*1000); };
-    ['pointerdown','keydown'].forEach(e => stage.addEventListener(e, arm));
-    function lock(){ clearTimeout(timer); stage.textContent = '';
-      const t = new Date();
-      ap(stage, h('div',{class:'khead'}, h('span',{class:'mark','aria-hidden':'true'}), h('div',null, h('h1',null,siteObj(site).name), h('p',{class:'muted'}, t.toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric'})+' · '+t.toLocaleTimeString(undefined,{hour:'numeric', minute:'2-digit'})))),
-        h('h2',null,'Tap your name'),
-        h('div',{class:'kgrid'}, staffNames(site).map(n => { const c = current(site, n); return h('button',{class:'kname',type:'button',onclick:()=>pin(n)}, h('b',null,n), h('span',{class:'small'}, c ? 'On the clock' : '')); })),
-        h('div',{class:'row',style:'justify-content:space-between'}, h('p',{class:'small muted'},'Test version: sample PINs are 1234. Exit PIN 0000.'), h('button',{class:'btn quiet sm',type:'button',onclick:exit},'Manager: exit tablet mode')));
-    }
-    function pad10(onDone, label){
-      const inp = h('input',{type:'password',inputmode:'numeric',autocomplete:'off',maxlength:'6',class:'kpin','aria-label':label});
-      const keys = h('div',{class:'kpad'}, ['1','2','3','4','5','6','7','8','9','⌫','0','OK'].map(d => h('button',{type:'button',class:'kkey'+(d==='OK'?' ok':''),'aria-label':d==='⌫'?'Delete':d==='OK'?'Enter':d,onclick:()=>{ if (d==='⌫') inp.value = inp.value.slice(0,-1); else if (d==='OK') onDone(inp.value); else if (inp.value.length < 6) inp.value += d; inp.focus(); }}, d)));
-      inp.addEventListener('keydown', e => { if (e.key === 'Enter') onDone(inp.value); });
-      setTimeout(() => inp.focus(), 30);
-      return [inp, keys];
-    }
-    let fails = 0;
-    function pin(n){
-      arm(); stage.textContent = '';
-      const msg = h('p',{class:'small','aria-live':'assertive'});
-      const [inp, keys] = pad10(async val => { if (fails >= 5){ msg.textContent = 'Too many tries. Ask your manager.'; return; }
-        if (await SSAccess.checkPin(site, n, val)){ fails = 0; actions(n); } else { fails++; inp.value = ''; msg.textContent = 'That PIN did not match. Try again.'; } }, 'PIN for '+n);
-      ap(stage, h('h2',null,'Hi, '+n), h('p',{class:'muted'},'Type your PIN'), inp, keys, msg, h('button',{class:'btn quiet',type:'button',onclick:lock},'Not me'));
-    }
-    function actions(n){
-      arm(); stage.textContent = '';
-      const done = r => { stage.textContent = ''; ap(stage, h('div',{class:'card calm',role:'status'}, h('h2',null, r.err ? 'Not done' : 'Done'), h('p',null, r.err || r.msg), h('p',{class:'small muted'},'Locking now.'))); clearTimeout(timer); timer = setTimeout(lock, 3500); };
-      ap(stage, h('h2',null,n), k.allow.clock ? clockCard(site, n, 'kiosk', done) : null);
-      const row = h('div',{class:'row'});
-      if (k.allow.sched) ap(row, h('button',{class:'btn ghost',type:'button',onclick:()=>{ arm(); const t = todayN(); const mine = shiftsAt(site).filter(s => s.staff === n && dn(s.date) >= t && dn(s.date) < t+7).sort((a,b) => absA(a)-absA(b));
-        list.textContent = ''; ap(list, h('h3',null,'Your next 7 days'), mine.length ? h('div',{class:'list'}, mine.map(s => h('div',{class:'item'}, h('b',null,dayFmt(dn(s.date))+' · '+tLong(s.start)+' to '+tLong(s.end))))) : h('p',{class:'muted'},'No shifts.')); }},'My schedule'));
-      if (k.allow.req) ap(row, h('button',{class:'btn ghost',type:'button',onclick:()=>{ arm(); const from = h('input',{type:'date',value:di(todayN()+7)}), to = h('input',{type:'date',value:di(todayN()+7)});
-        list.textContent = ''; ap(list, h('h3',null,'Ask for time off'), h('div',{class:'grid g2'}, field('From', from), field('To', to)), h('button',{class:'btn',type:'button',onclick:()=>{ if (!from.value || to.value < from.value){ toast('Check the dates'); return; }
-          X.ensure().requests.push({id:A.uid(), site, type:'timeoff', by:n, from:from.value, to:to.value, pto:'PTO', status:'Pending', at:new Date().toISOString(), note:'Sent from the house tablet'}); audit(n+' asked for time off (house tablet)', site); A.save(); done({msg:'Sent to your manager. You will see the answer in the app.'}); }},'Send')); }},'Ask for time off'));
-      ap(row, h('button',{class:'btn quiet',type:'button',onclick:lock},'Done'));
-      const list = h('div',{class:'grid'});
-      ap(stage, row, list);
-    }
-    function exit(){
-      stage.textContent = ''; arm();
-      const msg = h('p',{class:'small','aria-live':'assertive'});
-      const [inp, keys] = pad10(async val => { if (await SSAccess.checkPin(site, '__exit', val)){ clearTimeout(timer); document.body.classList.remove('kiosk'); audit('Left house tablet mode', site); A.save(); location.hash = '#/access'; } else { inp.value = ''; msg.textContent = 'Wrong PIN.'; } }, 'Manager exit PIN');
-      ap(stage, h('h2',null,'Manager exit'), h('p',{class:'muted'},'Type the exit PIN'), inp, keys, msg, h('button',{class:'btn quiet',type:'button',onclick:lock},'Cancel'));
-    }
-    ap(v, stage); lock();
-    audit('Opened house tablet mode', site); A.save();
-    const off = () => { if (!/^#\/kiosk/.test(location.hash)){ document.body.classList.remove('kiosk'); clearTimeout(timer); window.removeEventListener('hashchange', off); } };
-    window.addEventListener('hashchange', off);
-  };
+  // The house tablet (shift station) lives in station.js.
 
-  window.SSTime = {ensure, weekTotals, weekRows, worked, flags, toM};
+  window.SSTime = {ensure, weekTotals, weekRows, worked, flags, toM, clockCard, current};
 })();

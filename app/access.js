@@ -141,6 +141,7 @@
     }
 
     ap(v, signinCard(site));
+    if (window.SSStation) ap(v, SSStation.setupCard(site));
 
     // change log
     const items = s.audit.filter(a => isOwner() || a.site === site).slice(0, 40);
@@ -151,7 +152,7 @@
   };
 
   // ---------- sign-in choices (personal phone, email, shared house tablet) ----------
-  function kioskCfg(site){ const s = st(); s.kiosk = s.kiosk || {}; s.kiosk[site] = s.kiosk[site] || {on:true, lockSec:20, geo:false, home:null, net:false, allow:{clock:true, sched:true, req:true}}; return s.kiosk[site]; }
+  function kioskCfg(site){ const s = st(); s.kiosk = s.kiosk || {}; s.kiosk[site] = s.kiosk[site] || {on:true, lockSec:20, unlock:'both', geo:false, home:null, net:false, allow:{clock:true, sched:true, req:true}}; return s.kiosk[site]; }
   async function hashPin(site, name, pin){ const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('ss-pin|'+site+'|'+name+'|'+pin)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2,'0')).join(''); }
   async function checkPin(site, name, pin){ const s = st(); s.pins = s.pins || {}; const set = (s.pins[site]||{})[name]; if (!set) return pin === (name === '__exit' ? '0000' : '1234'); return set === await hashPin(site, name, pin); }
   async function setPin(site, name, pin){ const s = st(); s.pins = s.pins || {}; s.pins[site] = s.pins[site] || {}; s.pins[site][name] = await hashPin(site, name, pin); log((name === '__exit' ? 'Changed the tablet exit PIN' : 'Set a clock-in PIN for '+name), site); }
@@ -177,7 +178,7 @@
         sw('net','Clock-in must use the home\'s internet'),
         h('p',{class:'small muted'},'In the real app the server checks the home\'s internet address, so this cannot be faked from another place. The test version only shows the setting.'),
         h('p',{class:'small muted'},'The tablet never shows owner screens, reports, residents or anyone else\'s hours. Every punch records which device it came from.'),
-        h('div',{class:'row'}, h('a',{class:'btn sm',href:'#/kiosk'},'Open house tablet mode'), pinBtn(site, '__exit', 'Change the manager exit PIN')),
+        h('div',{class:'row'}, pinBtn(site, '__exit', 'Change the manager exit PIN')),
         h('p',{class:'small muted'},'Test version: every sample PIN is 1234 and the exit PIN is 0000 until you change them.'));
     }
     if (S().tier === 'caregiver') ap(card, h('div',{class:'row'}, pinBtn(site, meName(), 'Set my clock-in PIN')));

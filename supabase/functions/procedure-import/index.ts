@@ -93,7 +93,9 @@ Deno.serve(async (req) => {
         { type: "text", text: "Scenario catalog:\n" + JSON.stringify(catalog) + "\n\nNotify keys:\n" + JSON.stringify(keys), cache_control: { type: "ephemeral" } },
       ],
       tools: [TOOL],
-      tool_choice: { type: "tool", name: "record_mapping" },
+      // Claude Opus 5.5 rejects a forced tool_choice ("tool"/"any") with a 400. Use auto (at most one call),
+      // keep strict: true on the tool, and name the tool in the prompt.
+      tool_choice: { type: "auto", disable_parallel_tool_use: true },
       messages: [{ role: "user", content: `Document "${String(body.source ?? "").slice(0, 120)}":\n\n${text}` }],
     };
     const res = await client.beta.messages.create(params);
