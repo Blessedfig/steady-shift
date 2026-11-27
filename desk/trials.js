@@ -20,14 +20,31 @@
     const done = () => { b.textContent = 'Copied'; setTimeout(() => b.textContent = label, 1500); };
     try { navigator.clipboard.writeText(text).then(done, () => prompt('Copy this:', text)); } catch(e){ prompt('Copy this:', text); }
   }
-  function message(c){
-    return 'Hi! Here is a free ' + c.trial_days + '-day trial of Steady Shift, a shift helper for Wisconsin adult family homes and CBRFs.\n\n'
+  function message(c, name, viaAngelika){
+    const hi = name ? 'Hi ' + name + '! Here is' : 'Hi! Here is';
+    const core = hi + ' a free ' + c.trial_days + '-day trial of Steady Shift, a shift helper for Wisconsin adult family homes and CBRFs.\n\n'
       + '1. Open this link: ' + linkFor(c.code) + '\n'
       + '2. Create your account with your email and a password. Your trial code is ' + c.code + '\n'
       + '3. Check your email for a 6-digit code to confirm, and you\'re in.\n\n'
       + 'It\'s an early test version, so please use made-up names only and no real resident information.'
       + (c.expires_at ? '\nPlease use the code by ' + day(c.expires_at) + '.' : '')
       + '\n\nI\'d love to hear what you think!';
+    return viaAngelika ? 'Hi Angelika! Here is a free trial code for ' + (name || 'your contact') + '. Could you pass this along?\n\n---\n\n' + core : core;
+  }
+  // open the person's own Messages or email app with the message filled in; nothing is sent automatically
+  const isApple = /iPhone|iPad|Macintosh/.test(navigator.userAgent);
+  function smsLink(to, body){ return 'sms:' + encodeURIComponent((to || '').replace(/[^\d+]/g, '')) + (isApple ? '&' : '?') + 'body=' + encodeURIComponent(body); }
+  function mailLink(to, body){ return 'mailto:' + encodeURIComponent((to || '').trim()) + '?subject=' + encodeURIComponent('Your free Steady Shift trial') + '&body=' + encodeURIComponent(body); }
+  function sendButtons(box, getText, opts){
+    opts = opts || {};
+    box.textContent = '';
+    const a = (label, href, main) => { const x = el('a', 'btn' + (main ? '' : ' ghost'), label); x.href = href(); x.style.padding = '.5rem .85rem'; x.style.textDecoration = 'none'; x.addEventListener('click', () => { x.href = href(); }); return x; };
+    const order = opts.how === 'email' ? ['email', 'text'] : ['text', 'email'];
+    const shareFirst = !!navigator.share && (opts.how === 'share' || opts.how === 'angelika');
+    order.forEach((k, i) => box.append(k === 'text' ? a('Send by text', () => smsLink(opts.how === 'text' ? opts.to : '', getText()), i === 0 && !shareFirst)
+                                                   : a('Send by email', () => mailLink(opts.how === 'email' ? opts.to : '', getText()), i === 0 && !shareFirst)));
+    if (navigator.share){ const sh = btn('Share…', '', () => navigator.share({text:getText()}).catch(() => {})); box.prepend(sh); if (shareFirst) sh.className = 'btn'; sh.style.padding = '.5rem .85rem'; }
+    const cp = btn('Copy message', '', () => copy(getText(), cp, 'Copy message')); box.append(cp);
   }
 
   let sb = null, codes = [], people = [];
@@ -82,9 +99,11 @@
         if (error){ say('Could not change it (' + (error.code || error.message) + ').'); return; }
         await load();
       });
-      if (st === 'Ready to give out') row.append(b1, b2, b3);
+      const sendRow = el('div', 'row'); sendRow.hidden = true;
+      const b5 = btn('Send it', '', () => { if (sendRow.hidden){ sendButtons(sendRow, () => message(c), {how:'share'}); sendRow.hidden = false; } else sendRow.hidden = true; });
+      if (st === 'Ready to give out') row.append(b5, b1, b2, b3);
       row.append(b4);
-      card.append(row);
+      card.append(row, sendRow);
       box.append(card);
     });
 
@@ -131,6 +150,32 @@
     const exp = $('tr-exp');
     if (exp && !exp.value){ const d = new Date(Date.now() + 60 * 86400000); exp.value = d.toISOString().slice(0, 10); }
     $('trShowOff').addEventListener('change', render);
+    // make one code for one named person, then offer text / email / share with the message filled in
+    const how = $('ts-how'), toWrap = $('ts-toWrap'), to = $('ts-to');
+    function howChanged(){
+      const v = how.value; toWrap.hidden = !(v === 'text' || v === 'email');
+      toWrap.firstChild.textContent = v === 'email' ? 'Their email (optional)' : 'Their phone number (optional)';
+      to.inputMode = v === 'email' ? 'email' : 'tel';
+    }
+    how.addEventListener('change', howChanged); howChanged();
+    $('tsForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const name = $('ts-name').value.trim().slice(0, 60); if (!name) return;
+      const v = how.value, b = $('ts-make');
+      const row = {code:newCode(), max_uses:1, trial_days:14, expires_at:new Date(Date.now() + 60 * 86400000).toISOString(),
+                   note:(name + (v === 'angelika' ? ' (via Angelika)' : v === 'text' ? ' (sent by text)' : v === 'email' ? ' (sent by email)' : '') + ', made ' + day(new Date())).slice(0, 200)};
+      b.disabled = true; b.textContent = 'Making…';
+      let {error} = await sb.from('trial_codes').insert(row);
+      if (error && String(error.code) === '23505'){ row.code = newCode(); ({error} = await sb.from('trial_codes').insert(row)); }
+      b.disabled = false; b.textContent = 'Make code';
+      if (error){ say('Could not make the code (' + (error.code || error.message) + ').'); return; }
+      $('tsCode').textContent = row.code + ' for ' + name;
+      $('tsMsg').value = message(row, name, v === 'angelika');
+      sendButtons($('tsBtns'), () => $('tsMsg').value, {how:v, to:to.value});
+      $('tsOut').hidden = false; $('tsOut').scrollIntoView({block:'nearest'});
+      $('ts-name').value = ''; to.value = '';
+      await load();
+    });
     $('trForm').addEventListener('submit', async e => {
       e.preventDefault();
       const n = Math.min(50, Math.max(1, parseInt($('tr-count').value, 10) || 1));

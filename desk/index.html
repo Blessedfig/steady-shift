@@ -426,7 +426,23 @@ details.sum[open]>summary .lede{display:none}
     <div class="banner info">Free trial codes: each code gives someone 2 weeks with everything unlocked in the test app. They type the code on the app's sign-in screen (or open the link you send them), create an account, and near the end are asked to pick a plan. Trial users never see this desk. They're asked to use made-up data only.</div>
     <p id="trSetup" class="banner warn" hidden></p>
     <div class="card">
-      <span class="eyebrow">Make new codes</span>
+      <span class="eyebrow">Make and send a code</span>
+      <p class="muted" style="font-size:.9rem;margin:0">One code for one person, 14 days, usable for 60 days. You'll get a ready message to send by text, email or your phone's share menu.</p>
+      <form id="tsForm" class="lf">
+        <label>Their first name<input type="text" id="ts-name" maxlength="60" required autocomplete="off" placeholder="e.g. Kaitlyn"></label>
+        <label>Send it<select id="ts-how"><option value="text">By text message</option><option value="email">By email</option><option value="angelika">Through Angelika (she forwards it)</option><option value="share">Some other way</option></select></label>
+        <label id="ts-toWrap">Their phone number (optional)<input type="text" id="ts-to" maxlength="120" autocomplete="off" inputmode="tel"></label>
+        <div class="wide"><button class="btn" type="submit" id="ts-make">Make code</button></div>
+      </form>
+      <div id="tsOut" class="req" hidden>
+        <div class="meta"><span class="chip ok">Code ready</span><span id="tsCode"></span></div>
+        <label style="display:grid;gap:.25rem;font-size:.82rem;color:var(--muted)">Message (you can edit it)<textarea id="tsMsg" rows="9" maxlength="2000"></textarea></label>
+        <div class="row" id="tsBtns"></div>
+        <p class="muted" style="font-size:.85rem;margin:0">Your phone or email app opens with the message filled in. Nothing is sent until you press send there.</p>
+      </div>
+    </div>
+    <div class="card">
+      <span class="eyebrow">Make several codes</span>
       <form id="trForm" class="lf">
         <label>How many codes<input type="number" id="tr-count" min="1" max="50" value="1" required></label>
         <label>People per code<input type="number" id="tr-uses" min="1" max="500" value="1" required></label>
