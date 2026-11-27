@@ -171,6 +171,7 @@
     box.append(h('p',{class:'small'},h('b',null,'Diagnoses: '),f.dx.join('; ')));
     // care plan summary from isp.js: what helps, with read-and-acknowledge
     try { const ib = window.SSISP && SSISP.faceBlock(code); if (ib) box.append(ib); } catch(e){}
+    try { const cb = window.SSChoices && SSChoices.faceBlock(code); if (cb) box.append(cb); } catch(e){}
     // tasks
     const tasks = tasksFor(code); const dm = doneMap();
     const tl = h('ul',{class:'tourlist tasks'});
