@@ -14,7 +14,7 @@ The Stripe secret key is stored only as a Supabase secret. It is never in this r
 Start in **test mode** (fake cards, no real money). Switch to live only when prices are final and the business details are set.
 
 1. **Stripe account.** Sign up at https://dashboard.stripe.com/register. Leave "Test mode" on (toggle at the top right).
-2. **Products and prices.** Product catalog > Add product. Make one product per plan you want to sell online, each with a **recurring monthly** price, for example Home $79, Facility $199, Family $10. Copy each price's ID (starts with `price_`).
+2. **Products and prices.** Product catalog > Add product. Make one product per plan you want to sell online, each with a **recurring monthly** price, for example Home suite $59 and Facility suite $149 (CBRFs up to 20 beds). Founding-home prices ($35 Home, $89 Facility for 12 months) work best as a Stripe coupon; yearly billing (Home $590) can be a second, yearly price. CBRFs over 20 beds ($229), Multi-site ($119 per site) and Rules Check only ($22) are set up by email for now. Copy each price's ID (starts with `price_`).
 3. **Secret key.** Developers > API keys > copy the **Secret key** (`sk_test_...`). Paste it only into Supabase in step 5, nowhere else.
 4. **Deploy the functions.** Supabase > project "owner-desk" > Edge Functions > Deploy a new function > Via editor:
    - Name `trial-checkout`, paste `supabase/functions/trial-checkout/index.ts`, deploy. Leave "Verify JWT" **on**.
@@ -25,7 +25,7 @@ Start in **test mode** (fake cards, no real money). Switch to live only when pri
 6. **Webhook.** In Stripe: Developers > Webhooks > Add endpoint. URL: `https://umwebrbyusatucjixdju.supabase.co/functions/v1/stripe-webhook`. Events: `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`. Save, then copy the **Signing secret** (`whsec_...`) into a Supabase secret named `STRIPE_WEBHOOK_SECRET`.
 7. **Try it.** Sign in to the app with a trial account, open the plan screen, pick Home, and pay with Stripe's test card `4242 4242 4242 4242` (any future date, any CVC). The trial list on the Owner Desk should show "Paid until ...".
 
-Group plans and "Is the price a stretch?" requests are always handled by email, so you can agree on a price with each home. To give a home a lower price in Stripe, make a coupon (Product catalog > Coupons) and send them a promotion code; the checkout page accepts codes.
+Multi-site plans and "Is the price a stretch?" answers (Rules Check at $22, or one more free month) are handled by email, so you can agree on a price with each home. To give a home a lower price in Stripe, make a coupon (Product catalog > Coupons) and send them a promotion code; the checkout page accepts codes.
 
 ## Before taking real money
 
