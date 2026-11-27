@@ -71,8 +71,8 @@
     sites:{t:'All sites', ic:'🏘️'},
     handoff:{t:'Hand-off packet', ic:'🧾'},
     mytraining:{t:'My training', ic:'🎓'},
-    procedures:{t:'Company procedures', ic:'🗂️'},
-    setup:{t:'Facility setup', ic:'🏁'},
+    procedures:{t:'Policies and procedures', ic:'🗂️'},
+    setup:{t:'Facility setup and policy upload', ic:'🏁'},
     askpolicy:{t:'Ask our policy', ic:'🔎'},
     review:{t:'Feedback review', ic:'👍'},
     sync:{t:'Sync and calendar', ic:'🔗'},
@@ -88,10 +88,10 @@
   };
   const NAV = {
     caregiver:['home','schedule','time','check','askpolicy','whatif','report','night','behavior','cards','peer','mytraining','access'],
-    manager:['home','setup','schedule','time','kiosk','inbox','orders','questions','check','askpolicy','whatif','report','night','behavior','team','review','survey','decide','ask','cards','peer','watch','procedures','required','sync','access'],
+    manager:['home','setup','procedures','schedule','time','kiosk','inbox','orders','questions','check','askpolicy','whatif','report','night','behavior','team','review','survey','decide','ask','cards','peer','watch','required','sync','access'],
     rn:['home','delegations','orders','schedule','time','sync','check','askpolicy','whatif','cards','night','behavior','watch'],
-    owner:['home','owner','insights','outlook','labor','setup','schedule','time','access','sync','review','peer','askpolicy','whatif','procedures','required','survey','questions','decide','ask','watch','cards'],
-    multi:['home','sites','owner','insights','outlook','labor','setup','schedule','time','access','sync','review','peer','askpolicy','whatif','procedures','required','survey','watch','ask','cards'],
+    owner:['home','owner','insights','outlook','labor','setup','procedures','schedule','time','access','sync','review','peer','askpolicy','whatif','required','survey','questions','decide','ask','watch','cards'],
+    multi:['home','sites','owner','insights','outlook','labor','setup','procedures','schedule','time','access','sync','review','peer','askpolicy','whatif','required','survey','watch','ask','cards'],
     family:['home','check','night','behavior','handoff','cards','watch']
   };
 
