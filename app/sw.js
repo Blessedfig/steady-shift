@@ -1,6 +1,6 @@
 // Service worker for the installed test app. Network first, so testers always get the latest version;
 // the cached copy is used only when the phone is offline. Sign-in and data calls (other sites) are never cached.
-const CACHE = 'ss-app-v6';
+const CACHE = 'ss-app-v7';
 const SHELL = ['./', './index.html', './app.js', './trial.js', './data.js', './peer-data.js', './manifest.webmanifest', './icons/icon-192.png',
   '../desk/config.js', '../desk/pw.js', '../desk/idle.js', '../desk/vendor/supabase-js-2.118.0.js'];
 
