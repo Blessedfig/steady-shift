@@ -26,7 +26,7 @@
   const DRILLS = {
     fire:{t:'Fire drill', ic:'🔥'},
     night:{t:'Fire drill during sleeping hours', ic:'🌙'},
-    weather:{t:'Tornado or severe weather drill', ic:'🌪️'},
+    weather:{t:'Tornado drill (severe weather)', ic:'🌪️'},
     evac:{t:'Evacuation evaluation (each resident timed)', ic:'⏱️'}
   };
   const EQUIP = {
@@ -116,6 +116,9 @@
         out.push({id:'e-'+r.code, t:'Resident '+r.code+' evacuation evaluation'+(l ? ' ('+mmss(l.secs)+' on '+fmtDate(l.date)+')' : ' (none on file)'), ok, sev:ok ? (l.secs > LIMIT_SEC ? 'warn' : 'ok') : (l && daysSince(l.date) <= 395 ? 'due' : 'over'),
           cite:'DHS 88.05(4)(d)', extra:l && l.secs > LIMIT_SEC ? 'Over 2 minutes: staff must be told, and the plan should say who helps.' : ''});
       });
+      // Not a DHS 88 rule, but Wisconsin gets tornadoes: practice getting everyone to the shelter spot once a year.
+      const tw = dr.filter(d => d.kind === 'weather' && yearOf(d.date) === yearOf(t)).length;
+      out.push({id:'tw', t:'Tornado drill this year: '+tw+' of 1', ok:tw >= 1, sev:tw >= 1 ? 'ok' : 'due', cite:'Good practice (not required by DHS 88)'});
     }
     (EQUIP[set] || []).forEach(e => {
       const l = mine(s.equip, sid).filter(x => x.kind === e.id).sort((a,b) => b.date.localeCompare(a.date))[0];
@@ -155,7 +158,7 @@
 
     // log a drill
     if (isMgr()){
-      const kinds = set === 'cbrf' ? ['fire','night','weather'] : ['evac','fire'];
+      const kinds = set === 'cbrf' ? ['fire','night','weather'] : ['evac','fire','weather'];
       const kind = h('select',{'aria-label':'Kind of drill'}, kinds.map(k => h('option',{value:k},DRILLS[k].t)));
       const date = h('input',{type:'date',value:today(),max:today()});
       const time = h('input',{type:'time',value:'10:00'});
