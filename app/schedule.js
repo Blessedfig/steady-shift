@@ -34,7 +34,7 @@
   const uid = A.uid;
   function ensure(){
     const s = S();
-    if (s.sched && s.sched.v === 1) return s.sched;
+    if (s.sched && s.sched.v === 1){ if (!s.sched.awakeOnly){ s.sched.templates = s.sched.templates.filter(t => !t.asleep); s.sched.shifts.forEach(x => { delete x.asleep; }); Object.values(s.sched.rules||{}).forEach(r => { delete r.awake; }); s.sched.awakeOnly = true; A.save(); } return s.sched; }
     // add the sample staff and RN clearances the scheduler needs (once)
     for (const k in SD.extraStaff){ s.staff[k] = s.staff[k] || []; SD.extraStaff[k].forEach(p => { if (!s.staff[k].some(x => x.n === p.n)) s.staff[k].push(Object.assign({}, p)); }); }
     SD.extraDelegations.forEach(d => { if (!s.delegations.some(x => x.site===d.site && x.cg===d.cg && x.task===d.task)) s.delegations.push(Object.assign({}, d)); });
@@ -46,10 +46,10 @@
     const t0 = todayN(), w0 = weekStartOf(t0, 0);
     const shifts = [], requests = [];
     const add = (site, d, start, end, staff, x) => { const o = Object.assign({id:uid(), site, date:di(d), start, end, staff:staff||null, kind:'shift'}, x||{}); shifts.push(o); return o; };
-    // Maple Grove (AFH): 12-hour 6a-6p / 6p-6a, awake overnight (night toileting rounds). Helper shifts for the new caregiver.
+    // Maple Grove (AFH): 12-hour 6a-6p / 6p-6a, overnight awake shift with night rounds. Helper shifts for the new caregiver.
     const mDay = ['Caregiver B','Caregiver C','Caregiver B','Caregiver C','Caregiver B','Caregiver C','Manager'];
     const mNight = ['Caregiver D','Caregiver E','Caregiver D','Caregiver E','Caregiver D',null,'Caregiver E'];
-    // Birch Hollow (CBRF): 8-hour shifts, 2 on days and evenings, 1 awake overnight.
+    // Birch Hollow (CBRF): 8-hour shifts, 2 on days and evenings, 1 overnight (awake, like every shift).
     const bDay = [['Caregiver L','Caregiver P'],['Caregiver F','Caregiver L'],['Caregiver F','Caregiver P'],['Caregiver F','Caregiver L'],['Caregiver F','Caregiver P'],['Caregiver L','Caregiver P'],['Caregiver F','Caregiver L']];
     const bEve = [['Caregiver G','Caregiver M'],['Caregiver G','Caregiver H'],['Caregiver M','Caregiver H'],['Caregiver G','Caregiver M'],['Caregiver G','Caregiver H'],['Caregiver M','Caregiver H'],['Caregiver G','Caregiver M']];
     const bNight = ['Caregiver N','Caregiver N','Caregiver N','Caregiver Q','Caregiver Q','Caregiver Q','Caregiver Q'];
@@ -90,7 +90,7 @@
         requests.push(r);
       }
     });
-    return {v:1, templates:SD.templates.map(t => Object.assign({}, t)), rules:JSON.parse(JSON.stringify(SD.rules)), shifts, requests,
+    return {v:1, awakeOnly:true, templates:SD.templates.map(t => Object.assign({}, t)), rules:JSON.parse(JSON.stringify(SD.rules)), shifts, requests,
       oncall:{maple:{def:'Manager', days:{}}, birch:{def:'On-call RN', days:{}}, cedar:{def:'Manager', days:{}}},
       published:{maple:{[di(w0-7)]:{at:iso(w0-10,15)}, [di(w0)]:{at:iso(w0-3,15)}}, birch:{[di(w0)]:{at:iso(w0-3,15)}}},
       ui:{view:'week', layout:'', cursor:di(t0), copyMode:false}};
@@ -105,7 +105,7 @@
   const staffNames = site => (S().staff[site]||[]).map(p => p.n);
   const prof = n => SD.profiles[n] || {alone:true, meds:false, rate:18, pto:0};
   const rec = (site, n) => (S().staff[site]||[]).find(p => p.n === n);
-  const rulesFor = site => Object.assign({dayMin:1, nightMin:1, awake:false, nightStart:'22:00', nightEnd:'06:00', otWeek:40, minRest:8, maxStretch:16, weekStart:0}, ensure().rules[site]||{});
+  const rulesFor = site => Object.assign({dayMin:1, nightMin:1, nightStart:'22:00', nightEnd:'06:00', otWeek:40, minRest:8, maxStretch:16, weekStart:0}, ensure().rules[site]||{});
   const MGR = ['manager','owner','multi'];
   const me = () => { const t = S().tier; if (t === 'caregiver') return staffNames(S().site)[1] || 'Caregiver'; if (t === 'manager') return 'Manager'; return A.tier().name; };
   const actor = () => S().tier === 'caregiver' ? me() : A.tier().name;
@@ -124,7 +124,6 @@
     const st = siteObj(site).setting;
     return ({
       cover: st==='cbrf' ? 'DHS 83 staffing: enough qualified staff for residents\' needs and your license class. The number is your home\'s own minimum.' : 'DHS 88: enough qualified staff on duty for residents\' needs. The number is your home\'s own minimum.',
-      awake: 'Awake overnight staff when a resident\'s assessment or plan needs night care, or your license requires it (DHS '+(st==='cbrf'?'83':'88')+'). Set in Coverage rules.',
       alone: st==='cbrf' ? 'Orientation and training before working alone (DHS 83.20 to 83.25).' : 'Training for new staff (DHS 88.04(5)).',
       meds: 'Medication training and your home\'s medication policy (DHS '+(st==='cbrf'?'83.37':'88.07')+').',
       delegation: 'RN delegation: task, resident and caregiver must match (N 6.03(3)).',
@@ -151,7 +150,6 @@
     const flush = () => { if (!cur) return;
       const opens = list.filter(s => !s.staff && s.kind!=='training' && absA(s) < cur.b && absB(s) > cur.a).length;
       if (cur.type === 'short') push({d:Math.floor(cur.a/1440), sev:'fix', cat:'Coverage', text:rangeText(cur.a,cur.b)+': '+cur.n+' on duty, your minimum is '+cur.need+'.'+(opens?' An open shift is posted for this time.':''), cite:citeFor(site,'cover'), a:cur.a, b:cur.b, short:cur.need-cur.n});
-      if (cur.type === 'awake') push({d:Math.floor(cur.a/1440), sev:'fix', cat:'Awake overnight', text:'No one is scheduled awake '+rangeText(cur.a,cur.b)+'. This home is set to need awake overnight staff.', cite:citeFor(site,'awake'), a:cur.a, b:cur.b});
       if (cur.type === 'alone') push({d:Math.floor(cur.a/1440), sev:'fix', cat:'Training', text:cur.info+' would be the only staff on duty '+rangeText(cur.a,cur.b)+' and has not finished the training needed to work alone.', cite:citeFor(site,'alone'), a:cur.a, who:cur.info});
       cur = null; };
     for (let i = 0; i < P.length-1; i++){
@@ -159,7 +157,6 @@
       const on = work.filter(x => x.a <= a && x.b >= b), night = inNight(((a%1440)+1440)%1440, r), need = night ? r.nightMin : r.dayMin;
       let type = null, info = '';
       if (on.length < need){ type = 'short'; info = on.length+'/'+need; }
-      else if (night && r.awake && on.length && on.every(x => x.s.asleep)) type = 'awake';
       else if (on.length && on.every(x => !prof(x.s.staff).alone)){ type = 'alone'; info = on.map(x => x.s.staff).join(' and '); }
       if (type && cur && cur.type === type && cur.info === info && cur.b === a) cur.b = b;
       else { flush(); if (type) cur = {type, info, a, b, n:on.length, need}; }
@@ -263,15 +260,13 @@
       const date = h('input',{type:'date', value:t.date});
       const st = h('input',{type:'time', value:t.start, step:'900'}), en = h('input',{type:'time', value:t.end, step:'900'});
       const who = sel([['','Open shift (anyone can ask for it)']].concat(staffNames(site).map(n => [n, n])), t.staff||'');
-      const asleep = h('input',{type:'checkbox', id:'fAsleep', checked:!!t.asleep});
       const kind = sel([['shift','Work shift'],['training','Training time']], t.kind||'shift');
       const note = h('input',{type:'text', value:t.note||'', maxlength:'120', placeholder:'Short note. No resident names or health details.'});
       const checks = h('div',{class:'list','aria-live':'polite'});
       const during = h('div');
       const fit = h('div');
       [tplSel,date,st,en,who,kind,note].forEach(x => x.disabled = !editing);
-      asleep.disabled = !editing;
-      const read = () => { t.date = date.value || t.date; t.start = st.value || t.start; t.end = en.value || t.end; t.staff = who.value || null; t.asleep = asleep.checked; t.kind = kind.value; t.note = note.value.trim(); };
+      const read = () => { t.date = date.value || t.date; t.start = st.value || t.start; t.end = en.value || t.end; t.staff = who.value || null; t.kind = kind.value; t.note = note.value.trim(); };
       function refresh(){
         read();
         const d = dn(t.date);
@@ -279,7 +274,6 @@
         const iss = check(site, d-1, d+1, list).filter(i => (i.ids||[]).includes(t.id) || (i.a >= absA(t) && i.a < absB(t)) || (t.staff && i.who === t.staff));
         checks.textContent = '';
         ap(checks, iss.length ? iss.map(i => issueRow(i)) : h('p',{class:'small'},'✓ No problems found for this shift.'));
-        asleepRow.hidden = absB(t) - dn(t.date)*1440 <= 1440 && !inNight(tmin(t.start), rulesFor(site)) && !inNight((tmin(t.end)+1439)%1440, rulesFor(site));
         fit.textContent = '';
         if (editing && t.kind !== 'training'){
           const c = candidates(t).slice(0, 5);
@@ -289,10 +283,8 @@
             h('div',{class:'row'}, h('button',{class:'btn ghost sm',type:'button',onclick:()=>{ who.value = x.n; refresh(); }},'Put '+x.n+' here'))))));
         }
       }
-      const asleepRow = h('label',{class:'row small',for:'fAsleep'}, asleep, 'Staff may sleep on this overnight shift (not an awake shift)');
-      tplSel.addEventListener('change', () => { const x = tpls.find(y => y.id === tplSel.value); if (x){ st.value = x.start; en.value = x.end; asleep.checked = !!x.asleep; kind.value = x.kind||'shift'; t.tpl = x.id; } else t.tpl = ''; refresh(); });
+      tplSel.addEventListener('change', () => { const x = tpls.find(y => y.id === tplSel.value); if (x){ st.value = x.start; en.value = x.end; kind.value = x.kind||'shift'; t.tpl = x.id; } else t.tpl = ''; refresh(); });
       [date,st,en,who,kind].forEach(x => x.addEventListener('change', () => { if (x === st || x === en) { t.tpl = ''; tplSel.value = ''; } refresh(); }));
-      asleep.addEventListener('change', refresh);
       // what happened during this shift (counts only)
       if (!isNew){
         const a = absA(shift), b = absB(shift);
@@ -305,7 +297,7 @@
         editing ? field('Shift template', tplSel) : null,
         h('div',{class:'grid g3'}, field('Date', date), field('Starts', st), field('Ends', en)),
         h('p',{class:'small muted'},'Ending before it starts means it ends the next morning.'),
-        field('Who', who), asleepRow, editing ? field('Type', kind) : null, field('Note', note),
+        field('Who', who), editing ? field('Type', kind) : null, field('Note', note),
         during, h('h3',null,'Checks'), checks, fit);
       const row = h('div',{class:'row'});
       if (editing){
@@ -404,11 +396,11 @@
   // ---------- shift chip ----------
   function pill(s, issMap, showName){
     const iss = issMap.get(s.id) || [];
-    const lbl = (s.staff || 'Open shift')+', '+dayFmt(dn(s.date),{weekday:'long', month:'long', day:'numeric'})+', '+tLong(s.start)+' to '+tLong(s.end)+(s.kind==='training'?', training':'')+(s.asleep?', asleep allowed':'')+(iss.length?', '+iss.length+' to check':'');
+    const lbl = (s.staff || 'Open shift')+', '+dayFmt(dn(s.date),{weekday:'long', month:'long', day:'numeric'})+', '+tLong(s.start)+' to '+tLong(s.end)+(s.kind==='training'?', training':'')+(iss.length?', '+iss.length+' to check':'');
     const b = h('button',{type:'button', class:'sp'+(s.staff?'':' open')+(s.kind==='training'?' train':'')+(iss.some(i => i.sev==='fix')?' bad':iss.length?' warn':''), 'aria-label':lbl, 'data-id':s.id},
       h('b',null,span(s)),
       showName ? h('span',null, s.staff || 'Open shift') : (s.staff ? null : h('span',null,'Open')),
-      s.kind==='training' ? h('span',{class:'tag'},'Training') : s.asleep ? h('span',{class:'tag'},'Asleep OK') : null,
+      s.kind==='training' ? h('span',{class:'tag'},'Training') : null,
       iss.length ? h('span',{class:'tag flag','aria-hidden':'true'},'⚠ '+iss.length) : null);
     b.addEventListener('click', () => { if (Date.now() - justDragged < 400) return; editor(s); });
     draggable(b, s);
@@ -492,7 +484,7 @@
     if (!canEdit()) return null;
     return h('button',{class:'addb',type:'button','aria-label':label,onclick:()=>{
       const tp = ensure().templates.find(t => t.id === (ensure().ui.lastTpl||'')) || ensure().templates[0];
-      editor({id:uid(), site, date:di(d), start:tp.start, end:tp.end, staff:staff||null, kind:tp.kind||'shift', asleep:!!tp.asleep, tpl:tp.id}, true);
+      editor({id:uid(), site, date:di(d), start:tp.start, end:tp.end, staff:staff||null, kind:tp.kind||'shift', tpl:tp.id}, true);
     }},'+');
   }
   function personView(site, d0, issues, issMap){
@@ -663,7 +655,7 @@
   }
   function checkCard(site, issues){
     const card = h('div',{class:'card',id:'sChk'}, h('h2',null,'Schedule check'),
-      h('p',{class:'small muted'},'Checks staffing minimums, awake overnight, who is cleared to work alone, medication and RN-delegated tasks, double bookings, rest between shifts, overtime, time off and background rechecks. The minimums are your home\'s settings below.'));
+      h('p',{class:'small muted'},'Checks staffing minimums, who is cleared to work alone, medication and RN-delegated tasks, double bookings, rest between shifts, overtime, time off and background rechecks. The minimums are your home\'s settings below.'));
     if (!issues.length){ ap(card, h('p',null,'✓ Nothing found for these dates.')); return card; }
     const groups = {fix:'Must fix before you publish', check:'Worth a look', note:'Notes'};
     Object.keys(groups).forEach(k => { const g = issues.filter(i => i.sev === k); if (!g.length) return;
@@ -717,7 +709,7 @@
         let added = 0, skipped = 0;
         for (let w = 0; w < Math.max(1, Math.min(12, +weeks.value||1)); w++) for (let i = 0; i < 7; i++){
           const d = d0 + w*7 + i; if (!picked.has(dow(d))) continue;
-          const s = {id:uid(), site, date:di(d), start:t.start, end:t.end, staff:who.value||null, kind:t.kind||'shift', asleep:!!t.asleep, tpl:t.id};
+          const s = {id:uid(), site, date:di(d), start:t.start, end:t.end, staff:who.value||null, kind:t.kind||'shift', tpl:t.id};
           if (s.staff && sc.shifts.some(x => x.site===site && x.staff===s.staff && absA(x) < absB(s) && absB(x) > absA(s))){ skipped++; continue; }
           sc.shifts.push(s); added++;
         }
@@ -784,7 +776,7 @@
           news.length ? h('div',{class:'card alert',role:'alert'}, h('b',null, news.length+' new warning'+(news.length === 1 ? '' : 's')),
               h('div',{class:'chips'}, Object.keys(byCat).map(c => h('span',{class:'chip amber'}, c+': '+byCat[c]))),
               h('ul',{class:'small blist'}, news.slice(0, 8).map(i => h('li',null, i.text))), news.length > 8 ? h('span',{class:'small'},'And '+(news.length-8)+' more. You can still save and fix them in the schedule.') : null)
-            : h('div',{class:'card calm',role:'status'}, h('b',null,'No new warnings'), h('span',{class:'small'},'Coverage, awake overnight, double-booking, rest and overtime were checked.')),
+            : h('div',{class:'card calm',role:'status'}, h('b',null,'No new warnings'), h('span',{class:'small'},'Coverage, double-booking, rest and overtime were checked.')),
           h('details',{open:hit.length <= 12}, h('summary',{class:'small'},'See every change'), h('ul',{class:'small blist'}, rows)));
         plan = {after, n:hit.length, a, warn:news.length};
         apply.disabled = false;
@@ -819,27 +811,26 @@
     const sc = ensure();
     const name = h('input',{type:'text',maxlength:'40',placeholder:'For example: Short evening'});
     const st = h('input',{type:'time',value:'16:00',step:'900'}), en = h('input',{type:'time',value:'22:00',step:'900'});
-    const asleep = h('input',{type:'checkbox',id:'tplAsleep'}), tr = h('input',{type:'checkbox',id:'tplTr'});
+    const tr = h('input',{type:'checkbox',id:'tplTr'});
     return h('div',{class:'card'}, h('h2',null,'Shift templates'),
       h('div',{class:'chips'}, sc.templates.map(t => h('span',{class:'chip '+(t.kind==='training'?'calm':'grey')}, t.name+' · '+tShort(t.start)+'–'+tShort(t.end)+' · '+hrs((tmin(t.end)-tmin(t.start)+1440)%1440||1440)+' hrs',
         t.custom ? h('button',{type:'button',class:'x','aria-label':'Remove template '+t.name,onclick:()=>{ sc.templates = sc.templates.filter(x => x !== t); A.save(); A.route(); }},'×') : null))),
       h('h3',null,'Add your own'),
       h('div',{class:'grid g3'}, field('Name', name), field('Starts', st), field('Ends', en)),
-      h('div',{class:'row'}, h('label',{class:'row small',for:'tplAsleep'}, asleep, 'Overnight, asleep allowed'), h('label',{class:'row small',for:'tplTr'}, tr, 'Training time')),
+      h('div',{class:'row'}, h('label',{class:'row small',for:'tplTr'}, tr, 'Training time')),
       h('div',{class:'row'}, h('button',{class:'btn sm',type:'button',onclick:()=>{ if (!name.value.trim()){ toast('Name the template'); return; }
-        sc.templates.push({id:'c'+uid(), name:name.value.trim(), start:st.value, end:en.value, asleep:asleep.checked, kind:tr.checked?'training':'shift', custom:true}); audit('Added shift template '+name.value.trim()); A.save(); A.route(); toast('Template added'); }},'Add template')));
+        sc.templates.push({id:'c'+uid(), name:name.value.trim(), start:st.value, end:en.value, kind:tr.checked?'training':'shift', custom:true}); audit('Added shift template '+name.value.trim()); A.save(); A.route(); toast('Template added'); }},'Add template')));
   }
   function rulesCard(site){
     const r = Object.assign({}, rulesFor(site)), st = siteObj(site).setting;
     const num = (k, min, max) => { const i = h('input',{type:'number',min:String(min),max:String(max),value:String(r[k])}); i.addEventListener('change',()=>{ r[k] = Math.max(min, Math.min(max, +i.value||min)); }); return i; };
     const tm = k => { const i = h('input',{type:'time',value:r[k],step:'900'}); i.addEventListener('change',()=>{ r[k] = i.value; }); return i; };
-    const aw = h('input',{type:'checkbox',id:'rAwake',checked:r.awake}); aw.addEventListener('change',()=>{ r.awake = aw.checked; });
     const ws = sel(DOWL.map((d,i) => [i, d]), r.weekStart); ws.addEventListener('change',()=>{ r.weekStart = +ws.value; });
     return h('details',{class:'card'}, h('summary',null,h('h2',{style:'display:inline'},'Coverage and fairness rules')),
-      h('p',{class:'small'}, st==='cbrf' ? 'CBRF rules (DHS 83) tie staffing to residents\' needs and your license class, with awake overnight staff when residents need care at night. Set the minimums your license and resident plans require.' : 'AFH rules (DHS 88) tie staffing to residents\' needs. If any resident needs help at night (toileting rounds, wandering, turning), keep "awake overnight" on.'),
+      h('p',{class:'small'}, st==='cbrf' ? 'CBRF rules (DHS 83) tie staffing to residents\' needs and your license class, including staff on duty overnight. Set the minimums your license and resident plans require.' : 'AFH rules (DHS 88) tie staffing to residents\' needs. Set the overnight minimum for residents who need help at night (toileting rounds, wandering, turning).'),
       h('div',{class:'grid g3'}, field('Minimum staff, day and evening', num('dayMin',0,20)), field('Minimum staff, overnight', num('nightMin',0,20)), field('Workweek starts', ws)),
       h('div',{class:'grid g3'}, field('Overnight starts', tm('nightStart')), field('Overnight ends', tm('nightEnd'))),
-      h('label',{class:'row small',for:'rAwake'}, aw, 'Overnight staff must be awake'),
+      h('p',{class:'small muted'},'Every overnight shift is an awake, working shift.'),
       h('div',{class:'grid g3'}, field('Overtime after (hours a week)', num('otWeek',1,80)), field('Least hours off between shifts', num('minRest',0,16)), field('Most hours in a row', num('maxStretch',8,26))),
       h('div',{class:'row'}, h('button',{class:'btn sm',type:'button',onclick:()=>{ ensure().rules[site] = r; audit('Changed coverage rules', site); A.save(); A.route(); toast('Rules saved'); }},'Save rules')));
   }
@@ -854,7 +845,7 @@
     const who = sel([['','Everyone']].concat(staffNames(site).map(n => [n, n])), S().tier==='caregiver' ? me() : '');
     const pick = () => list.filter(s => !who.value || s.staff === who.value);
     const csv = () => { const rows = [['Date','Start time','End date','End time','Employee','Position','Location','Shift type','Notes']];
-      pick().forEach(s => rows.push([s.date, s.start, di(Math.floor(absB(s)/1440)), s.end, s.staff||'(open)', s.kind==='training'?'Training':'Caregiver', siteObj(s.site).name, s.asleep?'Asleep allowed':'Awake', s.note||'']));
+      pick().forEach(s => rows.push([s.date, s.start, di(Math.floor(absB(s)/1440)), s.end, s.staff||'(open)', s.kind==='training'?'Training':'Caregiver', siteObj(s.site).name, 'Awake', s.note||'']));
       return rows.map(r => r.map(csvCell).join(',')).join('\r\n')+'\r\n'; };
     return h('div',{class:'card',id:'sExport'}, h('h2',null,'Export and sync'),
       h('p',{class:'small'},'Uses the same calendar files as Sync and calendar. Shifts carry the staff name, times and home. No resident details.'),

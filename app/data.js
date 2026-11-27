@@ -275,8 +275,8 @@ window.SS_DATA = (function(){
       sides:'For choice: resident rights (DHS 83.32, 88.07(1)). For pushing: hygiene and skin health. The middle: offer, document, update the plan.'},
     {id:'C06', title:'Lift or call 911 after a fall', options:['Always call 911 (no-lift policy)','Lift with equipment when no injury signs','Call the on-call nurse to decide'],
       sides:'No Wisconsin rule found either way. Fire departments may charge lift-assist fees. Injury signs always mean 911.'},
-    {id:'C15', title:'Paid or unpaid overnight sleep time', options:['Pay all overnight hours','Unpaid sleep only on 24-hour shifts with 5 hours of sleep','Ask an employment lawyer first'],
-      sides:'Federal FLSA allows unpaid sleep only on 24-hour-plus shifts. Wisconsin rules not confirmed. Route to owner and payroll.'},
+    {id:'C15', title:'Keeping night staff awake and alert', options:['Hourly rounds and call-system log-ins','Planned breaks and a relief plan','Coach on the first missed round, not the third'],
+      sides:'Every overnight shift is an awake, working shift. Rounds, logged call responses and a relief plan keep night staff alert and residents safe.'},
     {id:'C16', title:'Family wants to change the DNR', options:['Follow the current signed form until a new one is signed','Call the manager and nurse before any change','Ask the guardian or POA to provide paperwork'],
       sides:'Wis. Stat. ch. 154 and POLST acceptance need legal confirmation. Never change code status on a phone call.'},
     {id:'C17', title:'What can I tell the family?', options:['Only what the release list allows','Refer every question to the manager','General "doing well today" only'],
@@ -287,7 +287,6 @@ window.SS_DATA = (function(){
     {id:'C04', to:'DQA licensing specialist', subject:'PRN orders that need staff judgment', body:'Can unlicensed AFH or CBRF staff give a PRN medication when the order\'s criteria need judgment (for example, "for anxiety")? We are reading DHS 83.37(1)(i), DHS 88.07(3)(d) and N 6.03(3). What written criteria would you expect to see?'},
     {id:'C10', to:'Care manager (MCO)', subject:'Member incident reporting timelines', body:'What member-incident timelines does your contract set for providers, and how do they line up with DHS 13.05 and the federal HCBS incident system due July 9, 2027?'},
     {id:'C14', to:'DQA licensing specialist', subject:'TB screening for new staff', body:'Is a TB skin or blood test still required for new staff under DHS 83.17(2)(a) and DHS 88.04(2)(g)1, or is a symptom screen enough?'},
-    {id:'C15', to:'Employment attorney', subject:'Overnight sleep time pay', body:'Do Wisconsin wage rules (DWD 274) allow unpaid sleep time for overnight staff in an adult family home or CBRF? Do any CBRF classes require awake overnight staff?'},
     {id:'C16', to:'Health law attorney', subject:'DNR and POLST forms', body:'How do Wisconsin\'s out-of-hospital DNR rules (Wis. Stat. ch. 154) treat POLST-style forms in adult family homes and CBRFs?'},
     {id:'C06', to:'Local fire department', subject:'Lift-assist calls', body:'What is your policy and any fee for lift-assist calls from an adult family home when a resident has fallen with no injury?'}
   ];
@@ -406,15 +405,14 @@ window.SS_DATA = (function(){
       {id:'t12n', name:'Night (12 hr)', start:'19:00', end:'07:00'},
       {id:'t6d', name:'6a to 6p (12 hr)', start:'06:00', end:'18:00'},
       {id:'t6n', name:'6p to 6a (12 hr)', start:'18:00', end:'06:00'},
-      {id:'tsl', name:'Overnight, asleep allowed', start:'21:00', end:'07:00', asleep:true},
       {id:'thelp', name:'Helper (6 hr)', start:'09:00', end:'15:00'},
       {id:'ttr', name:'Training (2 hr)', start:'13:00', end:'15:00', kind:'training'}
     ],
     // Minimums are the home's own setting. DHS 88 and DHS 83 tie staffing to residents' needs and the license, not to one fixed ratio.
     rules:{
-      maple:{dayMin:1, nightMin:1, awake:true, nightStart:'22:00', nightEnd:'06:00', otWeek:40, minRest:8, maxStretch:16, weekStart:0},
-      birch:{dayMin:2, nightMin:1, awake:true, nightStart:'23:00', nightEnd:'07:00', otWeek:40, minRest:8, maxStretch:16, weekStart:0},
-      cedar:{dayMin:1, nightMin:1, awake:false, nightStart:'22:00', nightEnd:'06:00', otWeek:40, minRest:8, maxStretch:16, weekStart:0}
+      maple:{dayMin:1, nightMin:1, nightStart:'22:00', nightEnd:'06:00', otWeek:40, minRest:8, maxStretch:16, weekStart:0},
+      birch:{dayMin:2, nightMin:1, nightStart:'23:00', nightEnd:'07:00', otWeek:40, minRest:8, maxStretch:16, weekStart:0},
+      cedar:{dayMin:1, nightMin:1, nightStart:'22:00', nightEnd:'06:00', otWeek:40, minRest:8, maxStretch:16, weekStart:0}
     },
     // alone: finished the orientation topics needed before working without another staff member on duty.
     // meds: finished medication training. licensed: a nurse license (no delegation needed). rate: sample $/hour. pto: sample hours banked.

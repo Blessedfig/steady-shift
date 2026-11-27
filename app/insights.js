@@ -45,7 +45,7 @@
     const r = X.rulesFor(site), names = staffNames(site);
     const tot = names.map(n => T.weekTotals(site, n, ws));
     const iss = check(site, ws, ws+6);
-    const gap = iss.filter(i => (i.cat === 'Coverage' || i.cat === 'Awake overnight') && i.b).reduce((t,i) => t + (i.b - Math.max(i.a, ws*1440))*(i.short||1), 0);
+    const gap = iss.filter(i => i.cat === 'Coverage' && i.b).reduce((t,i) => t + (i.b - Math.max(i.a, ws*1440))*(i.short||1), 0);
     const calls = shiftsAt(site).filter(s => s.callin && dn(s.date) >= ws && dn(s.date) < ws+7).length;
     const sched = shiftsAt(site).filter(s => s.staff && dn(s.date) >= ws && dn(s.date) < ws+7).reduce((t,s) => t + (absB(s)-absA(s)), 0);
     return {work:tot.reduce((t,x) => t+x.work, 0), ot:tot.reduce((t,x) => t+x.ot, 0), cost:tot.reduce((t,x) => t+x.cost, 0), sched, gap, calls, flags:tot.reduce((t,x) => t+x.flags, 0)};
