@@ -98,8 +98,17 @@
   function renderNav(view){
     const nav = $('nav'); nav.textContent = '';
     const on = v => !window.SSAccess || SSAccess.viewOn(v);
+    if (simpleOn()){
+      // Simple view for floor staff: only the everyday buttons, plus one way out to everything else.
+      nav.append(h('div',{class:'grp'},'On shift'));
+      nav.append(navLink('home', view));
+      SIMPLE.filter(x => VIEWS[x[0]] && on(x[0])).forEach(([v, ic, t]) => nav.append(h('a',{href:'#/'+v,'aria-current':v===view?'page':null},h('span',{class:'ic','aria-hidden':'true'},ic),t)));
+      nav.append(h('a',{href:'#/home',onclick:e=>{ e.preventDefault(); setSimple(false); }},h('span',{class:'ic','aria-hidden':'true'},'➕'),'Show all options'));
+      return;
+    }
     const mine = NAV[S.tier].filter(on);
     nav.append(h('div',{class:'grp'},(/^[aeiou]/i.test(tier().name)?'For an ':'For a ')+tier().name.toLowerCase()));
+    if (S.tier === 'caregiver') nav.append(h('a',{href:'#/home',onclick:e=>{ e.preventDefault(); setSimple(true); }},h('span',{class:'ic','aria-hidden':'true'},'🔲'),'Back to simple view'));
     mine.forEach(v => nav.append(navLink(v, view)));
     const rest = Object.keys(VIEWS).filter(v => !mine.includes(v) && on(v));
     nav.append(h('div',{class:'grp'},'Everything else (unlocked)'));
@@ -222,6 +231,7 @@
     if (['manager','owner','multi'].includes(t) && window.SSReminders){ const rb = SSReminders.banner(); if (rb) v.append(rb); }
     if (t === 'owner') return R.owner(v, true);
     if (t === 'multi') return R.sites(v, true);
+    if (simpleOn()) return homeSimple(v);
     const ic = installCard(); if (ic) v.append(ic); const pc = pulseCard(); if (pc) v.append(pc);
     if (t === 'caregiver') homeCaregiver(v);
     if (t === 'manager') homeManager(v);
@@ -249,6 +259,52 @@
     if (window.SSISP) { const ic = SSISP.homeCard(); if (ic) v.append(ic); }
     if (window.SSSched && SSAccess.viewOn('schedule')) { const nc = SSSched.myNextCard(); if (nc) v.append(nc); }
     if (mine.length) v.append(h('div',{class:'card calm'},h('h3',null,'Tasks you\'re cleared for'), mine.map(d => h('p',null,d.task+' for '+d.res+' · review by '+fmtDate(d.review)))));
+  }
+
+  // ---------- Simple view for caregivers (Christian, 2026-11-27): big buttons, few choices ----------
+  // On by default for the caregiver plan. "Show all options" switches to the full view, and it can be switched back.
+  const SIMPLE = [
+    ['face','🪪','Start of shift'],
+    ['mar','💊','Medications'],
+    ['notes','📝','Care notes'],
+    ['report','⚠️','Report something'],
+    ['shift','🔁','Shift report'],
+    ['meals','🍽️','Meals'],
+    ['night','📞','Who do I call?'],
+    ['check','❓','Ask a question']
+  ];
+  function simpleOn(){ return S.tier === 'caregiver' && S.simple !== false; }
+  function setSimple(on){ S.simple = !!on; save(); toast(on ? 'Simple view' : 'All options are showing'); go('home'); }
+  function homeSimple(v){
+    const hr = new Date().getHours();
+    const shift = hr < 6 || hr >= 22 ? 'Night shift' : hr < 14 ? 'Day shift' : 'Evening shift';
+    v.append(head(shift+' · '+site().name, 'What do you need?', null));
+    const on = x => VIEWS[x] && (!window.SSAccess || SSAccess.viewOn(x));
+    // Run the usual home cards off screen and keep only what they say: counts for the buttons, and anything urgent.
+    const scratch = h('div',null);
+    homeHooks.forEach(f => { try { f(scratch, 'caregiver'); } catch(e){ console.error(e); } });
+    const info = {};
+    scratch.querySelectorAll('a.tile').forEach(a => {
+      const key = (a.getAttribute('href')||'').replace(/^#\//,'').split('/')[0];
+      const b = a.querySelector('b'); if (!key || !b || info[key]) return;
+      info[key] = {text:b.textContent.trim(), urgent:a.classList.contains('urgent'), href:a.getAttribute('href')};
+    });
+    const mine = SIMPLE.filter(x => on(x[0]));
+    const now = Object.keys(info).filter(k => info[k].urgent && !mine.some(x => x[0] === k) && on(k)).slice(0, 3);
+    if (now.length) v.append(h('div',{class:'bignow',role:'region','aria-label':'Needs you now'},
+      now.map(k => h('a',{class:'bigbtn wide '+(['voice','myfile','hr','celebrate'].includes(k) ? 'info' : 'urgent'),href:info[k].href}, h('span',{class:'ic','aria-hidden':'true'},VIEWS[k].ic), h('b',null,info[k].text)))));
+    v.append(h('div',{class:'biggrid'}, mine.map(([id, ic, label]) => {
+      const x = info[id]; const status = x && /\d/.test(x.text) ? x.text.replace(/^[^:]*:\s*/,'') : '';
+      return h('a',{class:'bigbtn'+(x && x.urgent ? ' urgent' : ''),href:x && x.href ? x.href : '#/'+id},
+        h('span',{class:'ic','aria-hidden':'true'},ic), h('b',null,label), status ? h('span',{class:'st'},status) : null);
+    })));
+    const more = [];
+    if (on('time')) more.push(['time','⏱️','Clock in or out']);
+    if (on('schedule')) more.push(['schedule','📅','My schedule']);
+    v.append(h('div',{class:'bigmore'},
+      more.map(([id, ic, t]) => h('a',{class:'btn ghost',href:'#/'+id}, ic+' '+t)),
+      h('button',{class:'btn quiet',type:'button',onclick:()=>setSimple(false)},'➕ Show all options')));
+    const ic = installCard(); if (ic) v.append(ic); const pc = pulseCard(); if (pc) v.append(pc);
   }
 
   function homeManager(v){
