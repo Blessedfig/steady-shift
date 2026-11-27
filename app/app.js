@@ -238,6 +238,7 @@
     v.append(h('div',{class:'card'}, h('h2',null,'Residents tonight'), h('p',{class:'small muted'},'Sample residents. Records use codes, not names.'),
       h('div',{class:'list'}, rs.map(r => h('div',{class:'item'}, h('div',{class:'meta'},h('span',{class:'chip'},r.code),h('b',{style:'color:var(--ink)'},r.nick+' (sample)')), h('span',{class:'small'},r.note))))));
     const mine = S.delegations.filter(d => d.site === S.site && d.cg === 'Caregiver B');
+    if (window.SSISP) { const ic = SSISP.homeCard(); if (ic) v.append(ic); }
     if (window.SSSched && SSAccess.viewOn('schedule')) { const nc = SSSched.myNextCard(); if (nc) v.append(nc); }
     if (mine.length) v.append(h('div',{class:'card calm'},h('h3',null,'Tasks you\'re cleared for'), mine.map(d => h('p',null,d.task+' for '+d.res+' · review by '+fmtDate(d.review)))));
   }
@@ -261,6 +262,7 @@
     v.append(h('div',{class:'grid g2'},
       tile('inbox','📥','Review reports','Approve, or ask for more facts. No one is named in public.'),
       tile('questions','💬','What staff asked','Patterns show where training or policy is unclear.')));
+    if (window.SSISP) { const ic = SSISP.homeCard(); if (ic) v.append(ic); }
     if (window.SSSched && SSAccess.viewOn('schedule')) { const hc = SSSched.homeCard(); if (hc) v.append(hc); }
     const soon = D.WATCH.filter(w => w.date && w.applies.includes(setting()) && daysUntil(w.date) >= 0).slice(0,2);
     if (soon.length) v.append(h('div',{class:'card soft'},h('h3',null,'Coming up'), soon.map(w => h('p',null,h('b',null,w.title),' · in '+daysUntil(w.date)+' days')), h('a',{href:'#/watch'},'All rule changes')));

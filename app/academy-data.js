@@ -203,7 +203,8 @@ window.SS_ACADEMY = (function(){
       {id:'a4a', t:'Run the sample admission packet through Admission intake.', auto:'intake', link:'intake'},
       {id:'a4b', t:'Open a face sheet and check the shift tasks from the service plan.', link:'face'},
       {id:'a4c', t:'Check a doctor order with the RN view.', link:'orders'},
-      {id:'a4d', t:'Read the BYOD phone and tablet rules.', link:'intake/policy'}]},
+      {id:'a4d', t:'Read the BYOD phone and tablet rules.', link:'intake/policy'},
+      {id:'a4e', t:'Write or review a care plan (ISP) with "Guide me" on, then check which staff have read its summary.', link:'isp'}]},
     {id:'a5', title:'Reports, night help and triage', mins:10, link:'report', items:[
       {id:'a5a', t:'Write a sample report and see the professional rewrite.', auto:'reports', link:'report'},
       {id:'a5b', t:'Review it as the manager in Reports to review.', auto:'reviewed', link:'inbox'},

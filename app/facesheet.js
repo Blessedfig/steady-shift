@@ -169,6 +169,8 @@
       h('div',{class:'bandi'}, h('span',null,'Diet'), h('b',null,p.diet), h('small',null,[p.texture, p.liquids && p.liquids!=='Thin' ? 'Drinks: '+p.liquids : 'Thin drinks'].join(' · '))),
       h('div',{class:'bandi'}, h('span',null,'Risks'), h('b',null,['fall','elope','choke'].map(k => ({fall:'Falls',elope:'Wandering/leaving',choke:'Choking'})[k]+': '+f.risks[k]).join(' · ')))));
     box.append(h('p',{class:'small'},h('b',null,'Diagnoses: '),f.dx.join('; ')));
+    // care plan summary from isp.js: what helps, with read-and-acknowledge
+    try { const ib = window.SSISP && SSISP.faceBlock(code); if (ib) box.append(ib); } catch(e){}
     // tasks
     const tasks = tasksFor(code); const dm = doneMap();
     const tl = h('ul',{class:'tourlist tasks'});
