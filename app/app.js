@@ -128,6 +128,8 @@
     const m = (location.hash||'').match(/^#\/([a-z]+)(?:\/(.*))?/);
     current = m && VIEWS[m[1]] ? m[1] : 'home';
     param = m && m[2] ? decodeURIComponent(m[2]) : '';
+    // A registered shift station only ever shows the station (see station.js).
+    if (window.SSStation && SSStation.holds() && current !== 'kiosk'){ history.replaceState(null,'','#/kiosk'); current = 'kiosk'; param = ''; }
     renderNav(current);
     const main = $('main'); main.textContent = '';
     const view = h('div',{class:'view'});
@@ -2331,6 +2333,7 @@
     if (location.hash && /access_token|error/.test(location.hash)) history.replaceState(null,'',location.pathname+'#/home');
     $('whoEmail').textContent = user.email || '';
     $('gate').hidden = true; $('app').hidden = false;
+    if (window.SSStation){ const sv = await SSStation.verify(); if (sv && sv.gone) toast('This tablet is no longer a shift station. A manager can set it up again in Services and access.'); }
     fillSwitchers(); route();
     if (window.SSPw) SSPw.afterSignIn(sb, user, how);
     if (trial){
