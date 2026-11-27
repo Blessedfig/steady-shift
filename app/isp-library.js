@@ -194,6 +194,7 @@ window.SS_ISP_LIB = (function(){
 
   // New manager path: links to screens that already exist in the app.
   const PATH = [
+    ['academy','Work through the Getting started academy (manager track)','Getting started academy'],
     ['setup','Add your home\'s policies and handbook','Facility setup'],
     ['intake','Admit someone (assessment comes from the admission papers)','New resident admission'],
     ['orders','Check every order is verified by a nurse','Doctor orders'],

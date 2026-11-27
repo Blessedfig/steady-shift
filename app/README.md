@@ -85,3 +85,14 @@ A start-of-shift face sheet for each sample resident, laid out like a standard l
 - **Required reports** (`#/required`): every report, planned change, record to keep and regular duty for the home's setting (AFH or CBRF),
   plus where reports go and all four regional offices with their counties.
 - The county comes from Facility setup (with a list of all 72 counties). AFHs also say whether DQA or a county licensed them.
+
+## Getting started academy (academy.js, `#/academy`)
+
+For new homes, new owners and people getting into care. Content is in `academy-data.js`; the free public preview of Track 1 is `../academy.html`.
+
+- **Track 1, start a home in Wisconsin:** AFH vs CBRF, DQA licensing steps, forms and fees, policies, staffing and required training, Family Care, IRIS and private-pay contracts, insurance and budgeting, and the most-cited rules (from the Survey-Ready data, the peer library and Regulatory Watch). Every unit says whether it rests on an official rule (linked) or is Steady Shift guidance.
+- **Track 2, set up Steady Shift:** a checklist per area that ticks itself where the app can tell (profile, documents, procedure layer, shifts, training blocks, admissions, reports).
+- **Track 3, role training:** short modules for caregivers, managers and owners with quizzes (pass mark 80%) and printable certificates. Suggested hours wait on Team training until a manager counts them; counted hours go on the staff record the scheduler's training check reads. Marked everywhere as in-house training, not DHS-approved.
+- **Track 4, run the business:** LLC and registrations, permits beyond DQA, insurance, bookkeeping, the building, pay and growth. Units carry `verticals` so in-home care and adult day services can reuse them later.
+- **Toolkit:** inventory and expenses (food receipts from Menu are added in; totals show on the Owner view), pay benchmarks, hiring cost planner, startup and expansion model.
+- **Pay data:** `wages-data.js` (`window.SS_WAGES`) is the one shared source for the academy and owner labor analytics. Wisconsin area values (`DATA`) are empty until read from the BLS OEWS May 2025 tables; screens show the verified national anchors with a "being checked" mark and a link to the official area lookup.

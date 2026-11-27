@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+
+<title>Start a Care Home | Steady Shift</title>
+<meta name="description" content="A free guide to starting an adult family home or CBRF in Wisconsin: license types, DQA licensing steps and fees, required training, contracts, money and first-year citations.">
+<link rel="icon" type="image/png" href="app/icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;800&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600&display=swap">
+<style>
+
+/* Same tokens as the main site (Core Design Workbook): sky on white, rounded type, color held back for meaning. */
+:root{
+  --bg:#F5F9FC; --surface:#FFFFFF; --ink:#1F3A52; --muted:#5A6F80; --line:#D3E1EC; --line-strong:#7891A6;
+  --pine:#1D6AA8; --pine-soft:#E8F3FC; --night:#E8F3FC;
+  --calm:#276B4E; --calm-soft:#E6F2EC; --amber:#9A5B0F; --amber-soft:#FBF1E2; --sun:#E7AE55;
+  --display:"Nunito","Segoe UI",system-ui,sans-serif;
+  --body:"Nunito Sans","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141C26; --surface:#1B2532; --ink:#E6EEF5; --muted:#A9B9C7; --line:#2C3A4A; --line-strong:#6F869B;
+  --pine:#7FB8E8; --pine-soft:#1E2E40; --night:#1B2939;
+  --calm:#7CC9A3; --calm-soft:#1B3129; --amber:#E7AE55; --amber-soft:#2E2414; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141C26; --surface:#1B2532; --ink:#E6EEF5; --muted:#A9B9C7; --line:#2C3A4A; --line-strong:#6F869B;
+  --pine:#7FB8E8; --pine-soft:#1E2E40; --night:#1B2939;
+  --calm:#7CC9A3; --calm-soft:#1B3129; --amber:#E7AE55; --amber-soft:#2E2414; color-scheme:dark}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 1.0625rem/1.5 var(--body)}
+img,svg{max-width:100%}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--display);line-height:1.12;text-wrap:balance;margin:0}
+h1{font-size:clamp(2rem,5vw,3rem);font-weight:800;letter-spacing:-.02em}
+h2{font-size:clamp(1.45rem,3vw,1.9rem);font-weight:800}
+h3{font-size:1.15rem;font-weight:800}
+p{margin:0;max-width:65ch}
+a{color:var(--pine)}
+:focus-visible{outline:3px solid var(--pine);outline-offset:2px}
+.eyebrow{font:700 1rem/1.2 var(--display);color:var(--pine)}
+.lede{font-size:1.15rem;color:var(--muted)}
+.muted{color:var(--muted)}
+.small{font-size:.93rem}
+
+.top{border-bottom:1px solid var(--line);background:var(--surface)}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;padding-block:.8rem}
+.brand{min-height:44px;font:700 1.15rem/1 var(--display);display:flex;align-items:center;gap:.6rem;color:var(--ink);text-decoration:none}
+.brand-mark{width:30px;height:30px;border-radius:50%;background:var(--pine);flex:none}
+.top nav{display:flex;gap:1.1rem;flex-wrap:wrap;font-size:.95rem}
+.top nav a{color:var(--muted);text-decoration:none;min-height:44px;display:inline-flex;align-items:center}
+.top nav a:hover{color:var(--ink)}
+main{padding-block:2.5rem 3.5rem}
+article{display:grid;gap:1.6rem;max-width:72ch}
+article section{display:grid;gap:.6rem}
+article ul{margin:0;padding-left:1.2rem;display:grid;gap:.4rem}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:1.1rem 1.2rem}
+.note{background:var(--amber-soft);border-radius:12px;padding:.8rem 1rem}
+footer{border-top:1px solid var(--line);padding-block:1.5rem;font-size:.9rem;color:var(--muted)}
+footer nav{display:flex;gap:1rem;flex-wrap:wrap}
+footer a{min-height:44px;display:inline-flex;align-items:center}
+.skip{position:absolute;left:-999px;top:0;z-index:2000;background:#1D6AA8;color:#fff;padding:.7rem 1rem;border-radius:0 0 12px 0;font-weight:700}.skip:focus{left:0}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important;scroll-behavior:auto!important}}
+
+.units{display:grid;gap:1rem}
+details.card{padding:0}
+details.card>summary{cursor:pointer;list-style:none;padding:1.1rem 1.2rem;display:grid;gap:.3rem;min-height:44px}
+details.card>summary::-webkit-details-marker{display:none}
+details.card>summary b{font:800 1.15rem/1.25 var(--display)}
+details.card .body{padding:0 1.2rem 1.2rem;display:grid;gap:.8rem}
+details.card ul,details.card ol{margin:0;padding-left:1.2rem;display:grid;gap:.35rem}
+.chip{display:inline-flex;align-items:center;font:700 .78rem/1 var(--body);padding:.4em .7em;border-radius:99px;background:var(--pine-soft);color:var(--pine);justify-self:start}
+.chip.calm{background:var(--calm-soft);color:var(--calm)}.chip.grey{background:var(--bg);color:var(--muted);border:1px solid var(--line)}.chip.amber{background:var(--amber-soft);color:var(--amber)}
+.ck{display:flex;gap:.6rem;align-items:flex-start;min-height:44px;padding:.3rem 0}
+.ck input{width:22px;height:22px;margin-top:.15rem;flex:none;accent-color:var(--pine)}
+.bar{height:10px;background:var(--pine-soft);border-radius:99px;overflow:hidden}.bar i{display:block;height:100%;background:var(--calm);border-radius:99px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}@media (max-width:640px){.grid2{grid-template-columns:1fr}}
+.btn{display:inline-flex;align-items:center;justify-content:center;font:700 1rem/1 var(--display);border-radius:99px;padding:.85rem 1.3rem;min-height:48px;border:1px solid var(--pine);background:var(--pine);color:#fff;text-decoration:none}
+.btn.ghost{background:var(--surface);color:var(--pine)}
+.row{display:flex;gap:.7rem;flex-wrap:wrap;align-items:center}
+.cta{background:var(--pine-soft);border-color:var(--line)}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to main content</a>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="./"><span class="brand-mark" aria-hidden="true"></span>Steady Shift</a>
+    <nav aria-label="Sections"><a href="./">Home</a><a href="demo.html">See a demo</a><a href="get-app.html">Get the app</a></nav>
+  </div>
+</header>
+<main id="main" tabindex="-1"><div class="wrap" style="display:grid;gap:1.6rem;max-width:860px">
+<header style="display:grid;gap:.8rem"><span class="eyebrow">Free guide · Getting started academy</span><h1>Starting an adult family home or CBRF in Wisconsin</h1>
+<p class="lede">Six short lessons on license types, DQA licensing steps and fees, required training, contracts, money, and the citations that catch new homes. Every rule links to the official source.</p>
+<div class="bar" role="img" id="prog" aria-label="0% of the checklist done"><i style="width:0%"></i></div><p class="small muted" id="progTxt">Tick items as you go. Your ticks stay in this browser only.</p></header>
+<p class="note small">Steady Shift guidance, not legal advice and not Wisconsin DHS-approved training. Rule facts were checked against DHS pages in November 2026. Always confirm with DQA before you act.</p>
+<section class="units" id="units" aria-label="Lessons"></section>
+<section class="card cta" style="display:grid;gap:.8rem" aria-labelledby="more-h"><h2 id="more-h">The full academy is in the app</h2>
+<div class="grid2">
+<div><h3>Set up Steady Shift</h3><p class="small muted">Profile and policies, staff, scheduler, admissions, reports and night triage, with progress that ticks itself.</p></div>
+<div><h3>Train your team</h3><p class="small muted">Short modules for new caregivers, new managers and owners, with quizzes, certificates and training hours that feed the schedule.</p></div>
+<div><h3>Run the business</h3><p class="small muted">LLC and registrations, permits, insurance, bookkeeping, and the building.</p></div>
+<div><h3>Business toolkit</h3><p class="small muted">Inventory and expenses, pay benchmarks by area, a hiring cost planner and a startup and expansion model.</p></div>
+</div>
+<div class="row"><a class="btn" href="./#pilot">Ask for a free trial</a><a class="btn ghost" href="demo.html">See a demo</a></div>
+<p class="small muted">Designed by a small family for small businesses.</p></section>
+</div></main>
+<footer><div class="wrap"><nav aria-label="Footer"><a href="./">Home</a><a href="privacy.html">Privacy</a><a href="accessibility.html">Accessibility</a></nav>Steady Shift is a working name. This guide supports your judgment. It does not replace legal advice or the official rules.</div></footer>
+<script src="app/academy-data.js"></script>
+<script>
+(function(){
+  var AC = window.SS_ACADEMY; if (!AC) return;
+  var KEY = 'ss-academy-public', ticks = {};
+  try { ticks = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch(e){ ticks = {}; }
+  function el(tag, attrs, kids){ var e = document.createElement(tag); if (attrs) for (var k in attrs){ if (k === 'text') e.textContent = attrs[k]; else if (k === 'class') e.className = attrs[k]; else e.setAttribute(k, attrs[k]); } (kids||[]).forEach(function(c){ if (c) e.append(c); }); return e; }
+  var KIND = {official:['Official rule, linked','calm'], mixed:['Official rules plus our guidance','amber'], guide:['Steady Shift guidance, not official','grey']};
+  var all = [];
+  function prog(){ var d = all.filter(function(i){ return ticks[i]; }).length, p = all.length ? Math.round(d/all.length*100) : 0;
+    var b = document.getElementById('prog'); b.setAttribute('aria-label', p+'% of the checklist done'); b.firstChild.style.width = p+'%';
+    document.getElementById('progTxt').textContent = d+' of '+all.length+' checklist items done. Your ticks stay in this browser only.'; }
+  var box = document.getElementById('units');
+  AC.START.forEach(function(u, n){
+    var k = KIND[u.kind] || KIND.guide;
+    var body = el('div',{class:'body'},[el('p',{text:u.intro})]);
+    if (u.steps) body.append(el('h3',{text:'Step by step'}), el('ol',null,u.steps.map(function(s){ return el('li',{text:s.t + (s.cite ? ' ('+s.cite+')' : '')}); })));
+    if (u.points) body.append(el('h3',{text:'What to know'}), el('ul',null,u.points.map(function(p){ return el('li',{text:p}); })));
+    if (u.checklist){ body.append(el('h3',{text:'Your checklist'}));
+      u.checklist.forEach(function(i){ all.push(i.id); var cb = el('input',{type:'checkbox',id:'p-'+i.id}); cb.checked = !!ticks[i.id];
+        cb.addEventListener('change', function(){ ticks[i.id] = cb.checked; try { localStorage.setItem(KEY, JSON.stringify(ticks)); } catch(e){} prog(); });
+        body.append(el('label',{class:'ck',for:'p-'+i.id},[cb, el('span',{text:i.t + (i.cite ? ' ('+i.cite+')' : '')})])); }); }
+    var src = (u.sources||[]).map(function(s){ return AC.SRC[s]; }).filter(Boolean);
+    if (src.length) body.append(el('h3',{text:'Sources'}), el('ul',{class:'small'}, src.map(function(s){ return el('li',null,[el('a',{href:s.url,rel:'noopener',text:s.label}), document.createTextNode(s.official ? ' (official)' : ' (not a government source)')]); })));
+    box.append(el('details',{class:'card'},[el('summary',null,[el('span',{class:'small muted',text:'Lesson '+(n+1)+' of '+AC.START.length+' · '+u.mins+' min'}), el('b',{text:u.title}), el('span',{class:'chip '+k[1],text:k[0]})]), body]));
+  });
+  prog();
+})();
+</script>
+</body>
+</html>
