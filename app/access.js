@@ -6,7 +6,7 @@
   const S = () => A.state();
   const ap = (el, ...k) => { el.append(...k.flat(9).filter(x => x != null && x !== false)); return el; };
   const SD = D.SCHED;
-  const VIEW_MOD = {schedule:'schedule', time:'time', kiosk:'time', insights:'insights'};
+  const VIEW_MOD = {schedule:'schedule', time:'time', kiosk:'time', insights:'insights', labor:'insights'};
   const ALL_TIERS = D.TIERS.map(t => t.id);
   const DEFAULT_TIERS = {schedule:ALL_TIERS.filter(t => t !== 'family'), time:ALL_TIERS.filter(t => t !== 'family'), insights:['owner','multi']};
 

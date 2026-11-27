@@ -419,15 +419,29 @@ window.SS_DATA = (function(){
     // alone: finished the orientation topics needed before working without another staff member on duty.
     // meds: finished medication training. licensed: a nurse license (no delegation needed). rate: sample $/hour. pto: sample hours banked.
     profiles:{
-      'Caregiver A':{alone:false, meds:false, rate:17, pto:4},  'Caregiver B':{alone:true, meds:true, rate:19, pto:32},
+      'Caregiver A':{alone:false, meds:false, rate:17, pto:4},  'Caregiver B':{alone:true, meds:true, rate:19, pto:32, lead:true},
       'Caregiver C':{alone:true, meds:true, rate:18, pto:20},   'Caregiver D':{alone:true, meds:true, rate:18.5, pto:16},
       'Caregiver E':{alone:true, meds:true, rate:19.5, pto:40}, 'Manager':{alone:true, meds:true, licensed:'LPN', rate:28, pto:56},
-      'Caregiver F':{alone:true, meds:true, rate:19, pto:24},   'Caregiver G':{alone:true, meds:true, rate:18, pto:12},
+      'Caregiver F':{alone:true, meds:true, rate:19, pto:24, lead:true},   'Caregiver G':{alone:true, meds:true, rate:18, pto:12},
       'Caregiver H':{alone:false, meds:false, rate:16.5, pto:0},'Caregiver L':{alone:true, meds:true, rate:18, pto:30},
       'Caregiver M':{alone:true, meds:true, rate:18.5, pto:18}, 'Caregiver N':{alone:true, meds:true, rate:19, pto:22},
       'Caregiver P':{alone:true, meds:true, rate:17.5, pto:8},  'Caregiver Q':{alone:true, meds:true, rate:18, pto:14},
       'Caregiver J':{alone:true, meds:true, rate:18, pto:26},   'Caregiver K':{alone:true, meds:false, rate:17, pto:10}
     },
+    // People paid outside the shift schedule (sample). salary = per year; hourly = rate x usual hours a week.
+    payExtra:[
+      {site:'maple', n:'RN consultant (contract)', role:'RN', kind:'hourly', rate:48, hrsWeek:3},
+      {site:'birch', n:'House manager', role:'Manager', kind:'salary', annual:56000},
+      {site:'birch', n:'RN (part-time)', role:'RN', kind:'hourly', rate:46, hrsWeek:12},
+      {site:'cedar', n:'RN consultant (contract)', role:'RN', kind:'hourly', rate:48, hrsWeek:3}
+    ],
+    // Public wage benchmarks (U.S. Bureau of Labor Statistics). Medians are national; the Wausau figures are area means for broad groups.
+    bench:[
+      {label:'Home health and personal care aides, U.S. median', hourly:17.21, period:'May 2025', src:'BLS Occupational Outlook Handbook'},
+      {label:'Nursing assistants and orderlies, U.S. median', hourly:20.13, period:'May 2025', src:'BLS Occupational Outlook Handbook'},
+      {label:'Personal care and service jobs, Wausau WI area mean', hourly:17.80, period:'May 2024', src:'BLS OEWS, Wausau'},
+      {label:'Healthcare support jobs, Wausau WI area mean', hourly:18.91, period:'May 2024', src:'BLS OEWS, Wausau'}
+    ],
     extraStaff:{
       birch:[{n:'Caregiver L',hours:12,need:15,bg:'2024-08-12',status:'On track'},{n:'Caregiver M',hours:15,need:15,bg:'2023-03-30',status:'On track'},{n:'Caregiver N',hours:10,need:15,bg:'2024-11-02',status:'On track'},{n:'Caregiver P',hours:6,need:15,bg:'2025-02-17',status:'Behind'},{n:'Caregiver Q',hours:15,need:15,bg:'2022-09-01',status:'On track'}]
     },
