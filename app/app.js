@@ -76,23 +76,29 @@
     review:{t:'Feedback review', ic:'👍'},
     sync:{t:'Sync and calendar', ic:'🔗'},
     orders:{t:'Doctor orders', ic:'📄'},
-    peer:{t:'What\'s worked for others', ic:'🤲'}
+    peer:{t:'What\'s worked for others', ic:'🤲'},
+    schedule:{t:'Schedule', ic:'📅'},
+    time:{t:'Time sheets', ic:'⏱️'},
+    insights:{t:'Owner insights', ic:'📈'},
+    access:{t:'Services and access', ic:'🔑'},
+    kiosk:{t:'House tablet', ic:'🖥️'}
   };
   const NAV = {
-    caregiver:['home','check','askpolicy','whatif','report','night','behavior','cards','peer','mytraining'],
-    manager:['home','setup','inbox','orders','questions','check','askpolicy','whatif','report','night','behavior','team','review','survey','decide','ask','cards','peer','watch','procedures','sync'],
-    rn:['home','delegations','orders','sync','check','askpolicy','whatif','cards','night','behavior','watch'],
-    owner:['home','owner','setup','sync','review','peer','askpolicy','whatif','procedures','survey','questions','decide','ask','watch','cards'],
-    multi:['home','sites','owner','setup','sync','review','peer','askpolicy','whatif','procedures','survey','watch','ask','cards'],
+    caregiver:['home','schedule','time','check','askpolicy','whatif','report','night','behavior','cards','peer','mytraining','access'],
+    manager:['home','setup','schedule','time','kiosk','inbox','orders','questions','check','askpolicy','whatif','report','night','behavior','team','review','survey','decide','ask','cards','peer','watch','procedures','sync','access'],
+    rn:['home','delegations','orders','schedule','time','sync','check','askpolicy','whatif','cards','night','behavior','watch'],
+    owner:['home','owner','insights','setup','schedule','time','access','sync','review','peer','askpolicy','whatif','procedures','survey','questions','decide','ask','watch','cards'],
+    multi:['home','sites','owner','insights','setup','schedule','time','access','sync','review','peer','askpolicy','whatif','procedures','survey','watch','ask','cards'],
     family:['home','check','night','behavior','handoff','cards','watch']
   };
 
   function renderNav(view){
     const nav = $('nav'); nav.textContent = '';
-    const mine = NAV[S.tier];
+    const on = v => !window.SSAccess || SSAccess.viewOn(v);
+    const mine = NAV[S.tier].filter(on);
     nav.append(h('div',{class:'grp'},(/^[aeiou]/i.test(tier().name)?'For an ':'For a ')+tier().name.toLowerCase()));
     mine.forEach(v => nav.append(navLink(v, view)));
-    const rest = Object.keys(VIEWS).filter(v => !mine.includes(v));
+    const rest = Object.keys(VIEWS).filter(v => !mine.includes(v) && on(v));
     nav.append(h('div',{class:'grp'},'Everything else (unlocked)'));
     rest.forEach(v => nav.append(navLink(v, view)));
   }
@@ -122,7 +128,7 @@
     renderNav(current);
     const main = $('main'); main.textContent = '';
     const view = h('div',{class:'view'});
-    (R[current] || R.home)(view);
+    if (window.SSAccess && !SSAccess.viewOn(current)) SSAccess.offView(view, current); else (R[current] || R.home)(view);
     main.append(view);
     if (S.tour) { S.tour[current] = true; save(); }
     window.scrollTo(0,0);
@@ -226,6 +232,7 @@
     v.append(h('div',{class:'card'}, h('h2',null,'Residents tonight'), h('p',{class:'small muted'},'Sample residents. Records use codes, not names.'),
       h('div',{class:'list'}, rs.map(r => h('div',{class:'item'}, h('div',{class:'meta'},h('span',{class:'chip'},r.code),h('b',{style:'color:var(--ink)'},r.nick+' (sample)')), h('span',{class:'small'},r.note))))));
     const mine = S.delegations.filter(d => d.site === S.site && d.cg === 'Caregiver B');
+    if (window.SSSched && SSAccess.viewOn('schedule')) { const nc = SSSched.myNextCard(); if (nc) v.append(nc); }
     if (mine.length) v.append(h('div',{class:'card calm'},h('h3',null,'Tasks you\'re cleared for'), mine.map(d => h('p',null,d.task+' for '+d.res+' · review by '+fmtDate(d.review)))));
   }
 
@@ -248,6 +255,7 @@
     v.append(h('div',{class:'grid g2'},
       tile('inbox','📥','Review reports','Approve, or ask for more facts. No one is named in public.'),
       tile('questions','💬','What staff asked','Patterns show where training or policy is unclear.')));
+    if (window.SSSched && SSAccess.viewOn('schedule')) { const hc = SSSched.homeCard(); if (hc) v.append(hc); }
     const soon = D.WATCH.filter(w => w.date && w.applies.includes(setting()) && daysUntil(w.date) >= 0).slice(0,2);
     if (soon.length) v.append(h('div',{class:'card soft'},h('h3',null,'Coming up'), soon.map(w => h('p',null,h('b',null,w.title),' · in '+daysUntil(w.date)+' days')), h('a',{href:'#/watch'},'All rule changes')));
   }
@@ -553,6 +561,7 @@
         h('ol',{class:'steps'}, t.steps.map(s=>h('li',null,h('span',null,s)))),
         h('p',null,h('b',null,'Who: '),t.who), t.clock ? h('p',{class:'small'},h('b',null,'Deadline: '),t.clock) : null,
         t.id==='behav' ? h('a',{href:'#/behavior'},'Open Behavior help') : null,
+        t.id==='callin' && window.SSSched && SSAccess.viewOn('schedule') ? h('p',null,h('a',{href:'#/schedule/cover'},'Open the shift and see who can cover'),h('span',{class:'small muted'},' (lists staff with no overtime or rest problems first)')) : null,
         h('label',{class:'f'},'Log it',note));
       const lb = h('button',{class:'btn',type:'button'}, level==='morning' ? 'Log it for the morning' : 'Log it');
       lb.addEventListener('click',()=>{ S.triage.push({id:t.id, site:S.site, at:new Date().toISOString(), note:note.value.trim()||'(no note)', woke:level==='now'||level==='wake'}); save();
@@ -563,7 +572,8 @@
     if (S.tier === 'manager' || S.tier === 'owner'){
       const opt = (k, label) => { const cb = h('input',{type:'checkbox',checked:!!S.oncall[k]}); cb.addEventListener('change',()=>{S.oncall[k]=cb.checked;save();}); return h('label',{class:'row small'},cb,label); };
       v.append(h('div',{class:'card soft'}, h('h3',null,'Your on-call rules'), h('p',{class:'small'},'Emergencies and missing residents always call. Choose what else wakes you.'),
-        opt('fallok','Wake me for falls even without injury'), opt('callin','Wake me if a shift is uncovered by 5 AM')));
+        opt('fallok','Wake me for falls even without injury'), opt('callin','Wake me if a shift is uncovered by 5 AM'),
+        window.SSSched && SSAccess.viewOn('schedule') ? h('p',{class:'small'},'On call tonight: ',h('b',null,SSSched.onCallTonight()),'. ',h('a',{href:'#/schedule'},'Change it in the schedule')) : null));
     }
   };
 
@@ -912,7 +922,8 @@
       body.append(h('tr',null, h('td',null,p.n), h('td',null, h('div',{class:'bar '+(pct>=100?'calm':'amber')},h('i',{style:'width:'+pct+'%'})), h('span',{class:'small'},p.hours+' of '+p.need)), h('td',null, due ? h('span',{class:'chip '+(soon?'amber':'grey')},fmtDate(due)) : '–'), h('td',null,p.status)));
     });
     tb.append(body);
-    v.append(h('div',{class:'card'}, h('div',{class:'tablewrap'},tb), h('p',{class:'small muted'},'Names are placeholders. Caregivers only see their own record.')));
+    v.append(h('div',{class:'card'}, h('div',{class:'tablewrap'},tb), h('p',{class:'small muted'},'Names are placeholders. Caregivers only see their own record.'),
+      window.SSAccess && SSAccess.viewOn('schedule') ? h('p',{class:'small'},'Training blocks you put on the schedule add hours here when you mark them attended. ',h('a',{href:'#/schedule'},'Schedule training time')) : null));
   };
 
   // My training (caregiver)
@@ -992,12 +1003,12 @@
   const appUrl = e => location.origin + location.pathname + e.link;
   const compact = (date, time) => date.replace(/-/g,'') + (time ? 'T'+time.replace(':','')+'00' : '');
   function gcalUrl(e){
-    const dates = e.time ? compact(e.date,e.time)+'/'+compact(e.date,addMin(e.time,e.dur)) : compact(e.date)+'/'+compact(addDays(e.date,1));
+    const dates = e.time ? compact(e.date,e.time)+'/'+compact(e.endDate||e.date,addMin(e.time,e.dur)) : compact(e.date)+'/'+compact(addDays(e.date,1));
     return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent(e.title)+'&dates='+dates+'&ctz='+encodeURIComponent(TZ)+'&details='+encodeURIComponent(e.note+'\n\nOpen in Steady Shift: '+appUrl(e));
   }
   function outlookUrl(e){
     const p = new URLSearchParams({path:'/calendar/action/compose', rru:'addevent', subject:e.title, body:e.note+'\n\nOpen in Steady Shift: '+appUrl(e)});
-    if (e.time){ p.set('startdt', e.date+'T'+e.time+':00'); p.set('enddt', e.date+'T'+addMin(e.time,e.dur)+':00'); }
+    if (e.time){ p.set('startdt', e.date+'T'+e.time+':00'); p.set('enddt', (e.endDate||e.date)+'T'+addMin(e.time,e.dur)+':00'); }
     else { p.set('startdt', e.date); p.set('enddt', addDays(e.date,1)); p.set('allday','true'); }
     return 'https://outlook.office.com/calendar/0/deeplink/compose?'+p.toString();
   }
@@ -1010,7 +1021,7 @@
       'BEGIN:STANDARD','TZOFFSETFROM:-0500','TZOFFSETTO:-0600','TZNAME:CST','DTSTART:19701101T020000','RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU','END:STANDARD','END:VTIMEZONE'];
     list.forEach(e => {
       L.push('BEGIN:VEVENT', 'UID:'+e.id+'-'+e.date+'@steady-shift.test', 'DTSTAMP:'+stamp);
-      if (e.time){ L.push('DTSTART;TZID='+TZ+':'+compact(e.date,e.time), 'DTEND;TZID='+TZ+':'+compact(e.date,addMin(e.time,e.dur))); }
+      if (e.time){ L.push('DTSTART;TZID='+TZ+':'+compact(e.date,e.time), 'DTEND;TZID='+TZ+':'+compact(e.endDate||e.date,addMin(e.time,e.dur))); }
       else { L.push('DTSTART;VALUE=DATE:'+compact(e.date), 'DTEND;VALUE=DATE:'+compact(addDays(e.date,1))); }
       L.push('SUMMARY:'+icsEsc(e.title), 'DESCRIPTION:'+icsEsc(e.note+'\nOpen in Steady Shift: '+appUrl(e)), 'CATEGORIES:'+icsEsc(e.kind), 'URL:'+appUrl(e));
       if (e.time) L.push('BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+icsEsc(e.title),'TRIGGER:-PT15M','END:VALARM');
@@ -1097,6 +1108,9 @@
           h('li',null,'Google Chat: in the space, open Apps and integrations, then Webhooks, add one, and copy the link.'),
           h('li',null,'Use a test channel. Sample data only.')))));
 
+    if (window.SSSched && SSAccess.viewOn('schedule')) v.append(h('div',{class:'card'}, h('h2',null,'Shift schedule'),
+      h('p',{class:'small'},'The built-in schedule exports the same way: a calendar file for the whole team or one person, Google and Outlook links for each shift, and a spreadsheet for When I Work, Deputy or ShiftCare. Shifts carry the staff name, the home and the times, never resident details.'),
+      h('div',{class:'row'}, h('a',{class:'btn ghost sm',href:'#/schedule/export'},'Export the schedule'))));
     v.append(h('div',{class:'card soft'}, h('h2',null,'Coming next'),
       h('ul',{class:'small'},
         h('li',null,'A live calendar feed each manager subscribes to once, so new items appear on their own.'),
@@ -1105,6 +1119,8 @@
         h('li',null,'Health record systems only after the privacy foundation and signed agreements are in place.'))));
   };
 
+  // Shared helpers for the scheduling, time sheet, insights and access modules (schedule.js, time.js, insights.js, access.js)
+  window.SSApp = {D, h, state:()=>S, save, toast, copy, site, setting, tier, fmtDate, fmtTime, head, download, toIcs, gcalUrl, outlookUrl, csvCell, R, VIEWS, NAV, route:()=>route(), go:v=>go(v), isoDay, addDays, uid, renderNav:()=>renderNav(current), fillSwitchers:()=>fillSwitchers(), param:()=>param};
   // ---------- Doctor orders: intake, RN verification, current orders (sample data only) ----------
   // One shared order store (S.orders). Other screens read verified, active orders through window.SS_ordersFor(site, res).
   const ORDER_KINDS = {med:'Medication', diet:'Diet', activity:'Activity or therapy', appointment:'Appointment or follow-up', lab:'Lab or test', monitor:'Monitoring', other:'Other'};
