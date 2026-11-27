@@ -44,7 +44,7 @@
     if (missing){ const s = X.ensure().shifts.find(x => x.id === missing.shift); editReqs.push({id:A.uid(), punch:missing.id, site:missing.site, by:missing.staff, in:missing.in, out:fromM(absB(s)), reason:'Forgot to clock out, left on time after report to night shift.', status:'Pending', at:new Date().toISOString()}); }
     return {v:1, punches, editReqs, weeks:{}, settings:{}};
   }
-  const setFor = site => Object.assign({grace:GRACE, sleepExcl:false, unpaidBreakMin:30}, ensure().settings[site]||{});
+  const setFor = site => Object.assign({grace:GRACE, unpaidBreakMin:30}, ensure().settings[site]||{});
   const shiftById = id => X.ensure().shifts.find(s => s.id === id);
   const breakMin = p => p.breaks.reduce((t,b) => t + (b.e ? Math.max(0, toM(b.e)-toM(b.s)) : 0), 0);
   // Breaks of 30 minutes or more, when the person is fully relieved, are unpaid. Shorter ones are paid (federal and Wisconsin rules).
@@ -243,13 +243,12 @@
   function rulesNote(site){
     const st = setFor(site);
     const gr = h('input',{type:'number',min:'0',max:'15',value:String(st.grace)}); gr.addEventListener('change',()=>{ ensure().settings[site] = Object.assign(setFor(site), {grace:Math.max(0, Math.min(15, +gr.value||0))}); A.save(); });
-    return h('details',{class:'card'}, h('summary',null,h('h2',{style:'display:inline'},'Pay rules and sleep time')),
+    return h('details',{class:'card'}, h('summary',null,h('h2',{style:'display:inline'},'Pay rules')),
       field('Minutes before a punch counts as late or early', gr),
       h('ul',{class:'small'},
         h('li',null,'Overtime: over 40 hours in the workweek, at 1.5 times the regular rate (federal FLSA; Wisconsin DWD 274). Wisconsin has no daily overtime for adults.'),
         h('li',null,'Breaks: under 30 minutes are paid. A meal period of 30 minutes or more is unpaid only when the person is fully relieved of duty. In a small home where staff must stay available, it is paid.'),
-        h('li',null,'Sleep time: for shifts under 24 hours, all hours count, even when staff may sleep. For 24-hour or longer shifts, federal rules let up to 8 hours of sleep be left out only with a written agreement, a real bed, and at least 5 hours of uninterrupted sleep; any interruption is paid. Wisconsin rules can be stricter, so the app counts every hour unless your payroll advisor confirms otherwise.'),
-        h('li',null,'Live-in and companionship exemptions mostly apply to private in-home care, not AFH or CBRF staff employed by the home.'),
+        h('li',null,'Every hour of an overnight shift is paid work time. Overnight shifts are awake shifts.'),
         h('li',null,'Later, for the in-home care version: Wisconsin Medicaid electronic visit verification (EVV). Not built yet.')));
   }
 

@@ -94,7 +94,7 @@ window.SS_ACADEMY = (function(){
       intro:'Surveyors read your written policies, then check that staff actually do them. Write them in plain words, train on them, and keep proof.',
       points:[
         'Core written policies: program statement, resident rights and grievances, admission and discharge, assessment and service plan, medication management, emergency and disaster plan with fire evacuation, abuse and neglect reporting, and house rules that meet the HCBS Settings Rule.',
-        'Staffing: enough qualified staff on duty for the residents\' needs and your license. Neither rule sets one fixed ratio. Plan awake overnight staff when an assessment or the license needs it.',
+        'Staffing: enough qualified staff on duty for the residents\' needs and your license. Neither rule sets one fixed ratio. Overnight staff are on duty and awake for the whole shift, the same as day staff.',
         'CBRF approved training: standard precautions, fire safety, first aid and choking, and medication administration and management must be approved by DHS and taught by DHS-approved trainers listed with the UW-Green Bay registry.',
         'CBRF: medication training before anyone gives meds, most topic training within 90 days of hire, then 15 continuing education hours a year (DHS 83.20 to 83.25).',
         'AFH: 15 hours of training within 6 months of starting, then 8 hours a year (DHS 88.04(5)). First aid and fire safety are part of it.',
@@ -195,7 +195,7 @@ window.SS_ACADEMY = (function(){
       {id:'a2b', t:'Review each staff member\'s training hours and background check date.', link:'team'},
       {id:'a2c', t:'Set a house tablet PIN if staff share a tablet.', link:'kiosk'}]},
     {id:'a3', title:'Scheduler and time sheets', mins:12, link:'schedule', items:[
-      {id:'a3a', t:'Set coverage rules (day and night minimums, awake nights).', link:'schedule'},
+      {id:'a3a', t:'Set coverage rules (day and night minimums).', link:'schedule'},
       {id:'a3b', t:'Build next week and fix every red check before publishing.', auto:'shifts', link:'schedule'},
       {id:'a3c', t:'Add a training block for anyone behind on hours.', auto:'trainblock', link:'schedule'},
       {id:'a3d', t:'Look at time sheets and the payroll export.', link:'time'}]},
