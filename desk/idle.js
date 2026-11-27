@@ -14,7 +14,9 @@
   const last = () => { try { return +localStorage.getItem(KEY) || 0; } catch(e) { return 0; } };
   let wrote = 0;
   const touch = () => { const t = now(); if (t - wrote < 60000) return; wrote = t; try { localStorage.setItem(KEY, String(t)); } catch(e) {} };
-  const stale = () => { const l = last(); return l > 0 && now() - l > LIMIT_MS; };
+  // A registered shift station (app/station.js) locks itself after every use, so it is not signed out for being idle.
+  const station = () => { try { return /\/app\//.test(location.pathname) && !!localStorage.getItem('ss-station'); } catch(e) { return false; } };
+  const stale = () => { const l = last(); return l > 0 && now() - l > LIMIT_MS && !station(); };
 
   function notice(){
     let seen = false; try { seen = sessionStorage.getItem(NOTE); sessionStorage.removeItem(NOTE); } catch(e) {}

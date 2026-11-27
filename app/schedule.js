@@ -575,7 +575,7 @@
     const reqs = sc.requests.filter(x => x.site === site && x.by === n).sort((a,b) => b.at.localeCompare(a.at)).slice(0,6);
     const wrap = h('div',{class:'grid g2'});
     ap(wrap, h('div',{class:'card'}, h('h2',null,'Your next two weeks ('+n+')'),
-      mine.length ? h('div',{class:'list'}, mine.map(s => h('div',{class:'item'}, h('div',{class:'meta'}, h('span',{class:'chip'},dayFmt(dn(s.date),{weekday:'short', month:'short', day:'numeric'})), s.kind==='training' ? h('span',{class:'chip calm'},'Training') : null), h('b',null,tLong(s.start)+' to '+tLong(s.end)),
+      mine.length ? h('div',{class:'list'}, mine.map(s => h('div',{class:'item'}, h('div',{class:'meta'}, h('span',{class:'chip'},dayFmt(dn(s.date),{weekday:'short', month:'short', day:'numeric'})), s.kind==='training' ? h('span',{class:'chip calm'},'Training') : null), h('b',null,tLong(s.start)+' to '+tLong(s.end)), window.SSStation ? SSStation.codeChip(s) : null,
         h('div',{class:'row'}, h('button',{class:'btn quiet sm',type:'button',onclick:()=>requestDialog('cover', s)},'Ask someone to cover'), h('button',{class:'btn quiet sm',type:'button',onclick:()=>requestDialog('giveup', s)},'I can\'t make it')), calRow(s)))) : h('p',{class:'muted'},'No shifts in the next two weeks.'),
       h('div',{class:'row'}, h('button',{class:'btn ghost sm',type:'button',onclick:()=>requestDialog('timeoff')},'Ask for time off'), h('button',{class:'btn ghost sm',type:'button',onclick:()=>requestDialog('change')},'Ask for a schedule change'),
         mine.length ? h('button',{class:'btn quiet sm',type:'button',onclick:()=>download('my-shifts.ics','text/calendar',toIcs(mine.map(shiftEvent)))},'All my shifts (.ics)') : null)));
