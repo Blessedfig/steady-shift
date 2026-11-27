@@ -467,9 +467,9 @@
       const list = SSSched.shiftsAt(S().site) || [];
       const nowMin = d.getHours()*60 + d.getMinutes();
       const todays = list.filter(s => s.date === today() && s.staff);
-      if (todays.length){ const s = todays.find(x => { const a = toMin(x.start), b = toMin(x.end); return b > a ? nowMin >= a && nowMin < b : nowMin >= a || nowMin < b; }); if (s) return {label:s.start+' to '+s.end, name:(hr>=6&&hr<18?'Day':'Night')}; }
+      if (todays.length){ const s = todays.find(x => { const a = toMin(x.start), b = toMin(x.end); return b > a ? nowMin >= a && nowMin < b : nowMin >= a || nowMin < b; }); if (s) return {label:s.start+' to '+s.end, name:(hr>=6&&hr<18?'Day':'Night'), end:s.end, key:(nowMin < toMin(s.end) && toMin(s.end) <= toMin(s.start) ? addDays(today(),-1) : today())+' '+s.start}; }
     } } catch(e){}
-    return hr >= 6 && hr < 18 ? {label:'6 AM to 6 PM', name:'Day', next:'Night'} : {label:'6 PM to 6 AM', name:'Night', next:'Day'};
+    return hr >= 6 && hr < 18 ? {label:'6 AM to 6 PM', name:'Day', next:'Night', end:'18:00', key:today()+' Day'} : {label:'6 PM to 6 AM', name:'Night', next:'Day', end:'06:00', key:(hr < 6 ? addDays(today(),-1) : today())+' Night'};
   }
   const toMin = s => { const [a,b] = String(s||'0:0').split(':'); return (+a)*60 + (+b||0); };
   function whoIsOn(){
@@ -485,6 +485,7 @@
     (st.reports||[]).filter(r => r.site===sid && r.at >= since).forEach(r => out.push({kind:'Report', text:(r.type||'Report')+(r.resident?' · '+r.resident:'')+' · '+r.status, res:r.resident}));
     (st.triage||[]).filter(t => t.site===sid && t.at >= since).forEach(t => out.push({kind:'Night help', text:t.note}));
     mealFlags(sid).forEach(f => out.push({kind:'Meal flag', text:f.res+': '+f.text, res:f.res}));
+    try { if (window.SSFace && SSFace.openTasks) SSFace.openTasks(sid).forEach(t => out.push({kind:'Not done yet', text:t.res+': '+t.text, res:t.res})); } catch(e){}
     try { if (window.SSSched && SSSched.ensure){ const sc = SSSched.ensure(); (sc.shifts||[]).filter(s => s.site===sid && s.callin && s.date >= since.slice(0,10)).forEach(s => out.push({kind:'Call-in', text:(s.staff||'Open shift')+' called in for '+s.date+' '+s.start})); (sc.shifts||[]).filter(s => s.site===sid && !s.staff && s.date===today()).forEach(s => out.push({kind:'Open shift', text:'Nobody yet for '+s.start+' to '+s.end+' today'})); } } catch(e){}
     return out;
   }
@@ -617,7 +618,7 @@
   };
   // background from the admission intake (SBAR "B"), when that module has filled it in
   function aboutRes(sid, code){
-    let p = null; try { p = ((((S().intake||{}).profiles||{})[sid]||{})[code]||{}).handoff; } catch(e){}
+    let p = null; try { if (window.SS_residentProfile) p = (window.SS_residentProfile(sid, code)||{}).handoff; } catch(e){}
     if (!p) return null;
     const line = (l, a) => a && a.length ? h('span',{class:'small'},h('b',null,l+': '),[].concat(a).join('; ')) : null;
     return h('details',{class:'about'}, h('summary',null,'About this resident'), h('div',{class:'grid',style:'gap:.25rem'}, p.summary ? h('span',{class:'small'},p.summary) : null, line('Watch for',p.risks), line('Triggers',p.triggers), line('What helps',p.whatHelps), line('Code status',p.codeStatus)));
@@ -924,6 +925,8 @@
 
   // ---------- route param helper ----------
   function param(){ const m = (location.hash||'').match(/^#\/[a-z]+\/(.+)/); return m ? decodeURIComponent(m[1]) : ''; }
+
+  window.SSCare = {ensure, shiftNow, ordersFor, profile, trackItems, mealFlags, dietChips, ALLERGENS, staffNames, isManager, today, addDays, chip, card, helpBox, param};
 
   // ---------- register views, nav, home tiles, owner card ----------
   VIEWS.meals = {t:'Meals', ic:'🍽️'};
