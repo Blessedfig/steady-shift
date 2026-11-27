@@ -75,13 +75,15 @@ Deno.serve(async (req) => {
     // deno-lint-ignore no-explicit-any
     const params: any = {
       model: MODEL,
-      max_tokens: 2000,
+      max_tokens: 4000,
       betas: ["server-side-fallback-2026-07-01"],
       fallbacks: "default",
       output_config: { effort: "low" },
       system: [{ type: "text", text: SYSTEM, cache_control: { type: "ephemeral" } }],
       tools: [TOOL],
-      tool_choice: { type: "tool", name: "answer" },
+      // Claude Opus 5.5 rejects a forced tool_choice ("tool"/"any") with a 400. Use auto (at most one call),
+      // keep strict: true on the tool, and name the tool in the prompt.
+      tool_choice: { type: "auto", disable_parallel_tool_use: true },
       messages: [{
         role: "user",
         content: `Question: ${question}\n\nLaw summary (context only):\n${law.join("\n") || "(none)"}\n\nPassages from this home's documents:\n` +
