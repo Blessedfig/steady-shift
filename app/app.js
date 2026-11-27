@@ -71,8 +71,8 @@
     sites:{t:'All sites', ic:'🏘️'},
     handoff:{t:'Hand-off packet', ic:'🧾'},
     mytraining:{t:'My training', ic:'🎓'},
-    procedures:{t:'Company procedures', ic:'🗂️'},
-    setup:{t:'Facility setup', ic:'🏁'},
+    procedures:{t:'Policies and procedures', ic:'🗂️'},
+    setup:{t:'Facility setup and policy upload', ic:'🏁'},
     askpolicy:{t:'Ask our policy', ic:'🔎'},
     review:{t:'Feedback review', ic:'👍'},
     sync:{t:'Sync and calendar', ic:'🔗'},
@@ -88,10 +88,10 @@
   };
   const NAV = {
     caregiver:['home','schedule','time','check','askpolicy','whatif','report','night','behavior','cards','peer','mytraining','access'],
-    manager:['home','setup','schedule','time','kiosk','inbox','orders','questions','check','askpolicy','whatif','report','night','behavior','team','review','survey','decide','ask','cards','peer','watch','procedures','required','sync','access'],
+    manager:['home','setup','procedures','schedule','time','kiosk','inbox','orders','questions','check','askpolicy','whatif','report','night','behavior','team','review','survey','decide','ask','cards','peer','watch','required','sync','access'],
     rn:['home','delegations','orders','schedule','time','sync','check','askpolicy','whatif','cards','night','behavior','watch'],
-    owner:['home','owner','insights','outlook','labor','setup','schedule','time','access','sync','review','peer','askpolicy','whatif','procedures','required','survey','questions','decide','ask','watch','cards'],
-    multi:['home','sites','owner','insights','outlook','labor','setup','schedule','time','access','sync','review','peer','askpolicy','whatif','procedures','required','survey','watch','ask','cards'],
+    owner:['home','owner','insights','outlook','labor','setup','procedures','schedule','time','access','sync','review','peer','askpolicy','whatif','required','survey','questions','decide','ask','watch','cards'],
+    multi:['home','sites','owner','insights','outlook','labor','setup','procedures','schedule','time','access','sync','review','peer','askpolicy','whatif','required','survey','watch','ask','cards'],
     family:['home','check','night','behavior','handoff','cards','watch']
   };
 
@@ -1260,7 +1260,7 @@
       h('h3',null,'What the order says'), linesBox,
       h('div',{class:'row'}, h('button',{class:'btn quiet sm',type:'button',onclick:()=>addLine()},'Add another line'),
         h('button',{class:'btn quiet sm',type:'button',onclick:()=>{ linesBox.textContent=''; srcSel.value = SAMPLE_VISIT.source; spSel.value = SAMPLE_VISIT.specialty; spNote.hidden = true; presc.value = SAMPLE_VISIT.prescriber; SAMPLE_VISIT.lines.forEach(l => addLine(Object.assign({}, l, {start: l.kind==='appointment' ? addDays(isoDay(new Date()),21) : ''}))); toast('Sample visit summary filled in'); }},'Fill in a sample visit summary')),
-      h('p',{class:'small muted'},'Phone orders: read the order back to the prescriber, then enter it here. Nothing changes for staff until a nurse checks it.'),
+      h('p',{class:'small muted'},'Phone orders: read the order back to the prescriber, then enter it here. A medication from a phone order stays waiting until the signed written order is in the file (DHS 88.07(3)(d), DHS 83.37(1)(a)). Nothing changes for staff until a nurse checks it.'),
       h('button',{class:'btn',type:'submit'},'Send to the nurse to check'));
     f.addEventListener('submit', e => { e.preventDefault();
       const lines = [...linesBox.children].map(b => b._read()).filter(Boolean);
@@ -1275,6 +1275,8 @@
     if (!pend.length) checkCard.append(h('p',{class:'muted'},'Nothing waiting.'));
     pend.forEach(o => {
       const steps = ['Matches the paper, fax or read-back word for word', 'Anything unclear was clarified with the prescriber', o.kind==='med' ? 'Pharmacy has it and the MAR is updated' : 'Care plan or service plan updated', 'Staff doing it are trained or delegated'];
+      // Wisconsin AFHs and CBRFs need a signed written order on file before any medication is given (DHS 88.07(3)(d), DHS 83.37(1)(a)).
+      if (o.kind === 'med' && /phone/i.test(o.source||'')) steps.unshift('Signed written order received (fax, portal or paper) and filed. Not given before then (DHS 88.07(3)(d), 83.37(1)(a))');
       const boxes = steps.map(s => h('label',{class:'row small'},h('input',{type:'checkbox'}),s));
       const note = h('input',{type:'text',placeholder:'Note for the sender (optional)'});
       const ok = h('button',{class:'btn sm',type:'button',disabled:!rn},'Checked, make it active');
