@@ -349,6 +349,7 @@ details.item>summary::-webkit-details-marker{display:none}
 .dob{font-size:1.05rem;margin:.15rem 0}
 .dob b{font-family:var(--display)}
 @media print{.ssn{display:none!important}}
+@media print{body.print-report .view > *:not(.yr-print):not(:has(.yr-print)){display:none!important}body.print-report .yr-print{display:grid!important}}
 .ec{display:grid;gap:.5rem;border:2px solid #EBB4AE;background:var(--red-soft);border-radius:16px;padding:.8rem 1rem}
 .ec ol.eclist{list-style:none;margin:0;padding:0;display:grid;gap:.5rem}
 .ec .chip{white-space:normal;line-height:1.3}
