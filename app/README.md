@@ -65,3 +65,13 @@ Admitting someone from a hospital, another home, an MCO or family, with whatever
 ## Face sheets and shift tasks (facesheet.js, `#/face`)
 
 A start-of-shift face sheet for each sample resident, laid out like a standard long-term care admission face sheet. The top band always shows allergies, code status (with where the papers are), diet and texture, and fall, wandering and choking risk. Below: this shift's tasks (service plan, verified orders with tracking items, appointments from orders, and the last shift's to-dos) with check-offs, an end-of-shift reminder of anything not done (also pulled into the shift change report), communication and devices, history, faith and culture, "what helps", contacts with tap-to-call (guardian type and scope, POA and whether it is activated, emergency contacts, family, care team by specialty, pharmacy, preferred hospital, MCO care manager), insurance and end-of-life wishes. Medicare and Medicaid numbers and representative payee details show only to managers, RNs and owners, and each view is logged (`SSAccess.log`). New residents from admission intake fill in through `SS_residentProfile`. All people, phone numbers (555-01xx) and IDs are made up.
+## Report something and Required reports (reports.js)
+
+- **Report something** (`#/report`): staff describe what happened once. The app makes it professional, matches it to the events
+  in `../data/reports/wi-reports.json`, and lists every report it needs: who gets each one (the DQA regional office for the home's county,
+  the licensing agency, the Misconduct Reporting System, police, county adult protective services, the ombudsman, the health department,
+  the MCO and the guardian), the deadline with a timer, the form, and the rule. "Track these reports" files a copy for the home, sends it to
+  the manager's review list, and opens a tracker (`#/report/case:<id>`) with a pre-filled draft and "Mark sent" for each one.
+- **Required reports** (`#/required`): every report, planned change, record to keep and regular duty for the home's setting (AFH or CBRF),
+  plus where reports go and all four regional offices with their counties.
+- The county comes from Facility setup (with a list of all 72 counties). AFHs also say whether DQA or a county licensed them.

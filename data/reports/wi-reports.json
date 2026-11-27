@@ -1,0 +1,1883 @@
+{
+ "version": 1,
+ "state": "WI",
+ "checked": "2026-11-27",
+ "disclaimer": "Not legal advice. Check P-02007 and your license for your home.",
+ "sources": {
+  "p02007": {
+   "title": "DQA P-02007, Reporting requirements for assisted living (09/2026)",
+   "url": "https://www.dhs.wisconsin.gov/publications/p02007.pdf"
+  },
+  "dqa-map": {
+   "title": "DQA Bureau of Assisted Living regional offices (revised Oct 6, 2026)",
+   "url": "https://www.dhs.wisconsin.gov/dqa/bal-regionalmap.htm"
+  },
+  "dhs88": {
+   "title": "Wis. Admin. Code ch. DHS 88 (Register May 2011 No. 665)",
+   "url": "https://docs.legis.wisconsin.gov/code/admin_code/dhs/030/88"
+  },
+  "dhs83": {
+   "title": "Wis. Admin. Code ch. DHS 83",
+   "url": "https://docs.legis.wisconsin.gov/code/admin_code/dhs/030/83"
+  }
+ },
+ "central": {
+  "name": "DQA Bureau of Assisted Living, central office",
+  "email": "dhsdqabalcentral@dhs.wisconsin.gov",
+  "fax": "608-226-5494",
+  "licensing_email": "dhsdqaballicensing@dhs.wisconsin.gov",
+  "licensing_phone": "608-266-8482"
+ },
+ "regions": {
+  "nw": {
+   "name": "Northwestern Regional Office",
+   "city": "Eau Claire",
+   "address": "221 W. Madison St., Suite 205, Eau Claire, WI 54703",
+   "phone": "715-836-4790",
+   "fax": "608-224-5705",
+   "email": "dhsdqabalwro@dhs.wisconsin.gov",
+   "counties": [
+    "Ashland",
+    "Barron",
+    "Bayfield",
+    "Buffalo",
+    "Burnett",
+    "Chippewa",
+    "Clark",
+    "Douglas",
+    "Dunn",
+    "Eau Claire",
+    "Florence",
+    "Forest",
+    "Iron",
+    "Jackson",
+    "Juneau",
+    "Langlade",
+    "La Crosse",
+    "Lincoln",
+    "Marathon",
+    "Monroe",
+    "Oneida",
+    "Pepin",
+    "Pierce",
+    "Polk",
+    "Price",
+    "Rusk",
+    "Sawyer",
+    "St. Croix",
+    "Taylor",
+    "Trempealeau",
+    "Vernon",
+    "Vilas",
+    "Washburn"
+   ],
+   "status": "verified",
+   "source": "dqa-map"
+  },
+  "ne": {
+   "name": "Northeastern Regional Office",
+   "city": "Green Bay",
+   "address": "200 N. Jefferson St., Suite 501, Green Bay, WI 54301",
+   "phone": "920-448-5252",
+   "fax": "608-224-5704",
+   "email": "dhsdqabalnero@dhs.wisconsin.gov",
+   "counties": [
+    "Adams",
+    "Brown",
+    "Calumet",
+    "Door",
+    "Fond du Lac",
+    "Green Lake",
+    "Kewaunee",
+    "Manitowoc",
+    "Marinette",
+    "Marquette",
+    "Menominee",
+    "Oconto",
+    "Outagamie",
+    "Ozaukee",
+    "Portage",
+    "Shawano",
+    "Sheboygan",
+    "Washington",
+    "Waushara",
+    "Waupaca",
+    "Winnebago",
+    "Wood"
+   ],
+   "status": "verified",
+   "source": "dqa-map"
+  },
+  "s": {
+   "name": "Southern Regional Office",
+   "city": "Madison",
+   "address": "201 E. Washington Ave., Room E300, Madison, WI 53703",
+   "phone": "608-264-9888",
+   "fax": "608-264-9889",
+   "email": "dhsdqabalsro@dhs.wisconsin.gov",
+   "counties": [
+    "Columbia",
+    "Crawford",
+    "Dane",
+    "Dodge",
+    "Grant",
+    "Green",
+    "Iowa",
+    "Jefferson",
+    "Lafayette",
+    "Richland",
+    "Rock",
+    "Sauk",
+    "Walworth",
+    "Waukesha"
+   ],
+   "status": "verified",
+   "source": "dqa-map"
+  },
+  "se": {
+   "name": "Southeastern Regional Office",
+   "city": "Milwaukee",
+   "address": "819 N. 6th St., Room 609B, Milwaukee, WI 53203-1606",
+   "phone": "414-227-2005",
+   "fax": "414-227-3903",
+   "email": "dhsdqabalsero@dhs.wisconsin.gov",
+   "counties": [
+    "Kenosha",
+    "Milwaukee",
+    "Racine"
+   ],
+   "status": "verified",
+   "source": "dqa-map"
+  }
+ },
+ "recipients": {
+  "dqa_region": {
+   "name": "DQA regional office (Bureau of Assisted Living)",
+   "how": "Fax or email the completed form to the regional office for your county (P-02007).",
+   "status": "verified"
+  },
+  "licensing": {
+   "name": "Licensing agency",
+   "how": "For most adult family homes this is the DQA regional office. If a county licensed your home, report to that county instead (DHS 88.02).",
+   "status": "verified"
+  },
+  "dqa_death": {
+   "name": "DQA Death Reporting Coordinator",
+   "how": "Form F-62470. Send it as the form instructs.",
+   "status": "verified"
+  },
+  "plan_review": {
+   "name": "DQA Office of Plan Review",
+   "how": "Form F-62500.",
+   "email": "DHSDQAPlanReview@dhs.wisconsin.gov",
+   "fax": "608-267-0352",
+   "address": "201 E. Washington Ave., Room E300, Madison, WI 53703",
+   "status": "verified"
+  },
+  "mrs": {
+   "name": "DQA Misconduct Reporting System (Office of Caregiver Quality)",
+   "how": "Online through the Misconduct Reporting System (MRS). Form F-62447 lists what to include. If MRS is down and it can't wait, email DHSOfficeofCaregiverQuality@dhs.wisconsin.gov.",
+   "email": "DHSOfficeofCaregiverQuality@dhs.wisconsin.gov",
+   "status": "verified"
+  },
+  "police": {
+   "name": "Law enforcement",
+   "how": "Call 911 for an emergency, or your local police or sheriff non-emergency line.",
+   "status": "verified"
+  },
+  "e911": {
+   "name": "911",
+   "how": "Call 911.",
+   "status": "verified"
+  },
+  "aps": {
+   "name": "County adult protective services (adult at risk)",
+   "how": "Call the county intake number saved in Facility setup.",
+   "status": "verified"
+  },
+  "ombudsman": {
+   "name": "Board on Aging and Long Term Care ombudsman (age 60 and over)",
+   "phone": "1-800-815-0015",
+   "how": "Phone.",
+   "status": "verified"
+  },
+  "drw": {
+   "name": "Disability Rights Wisconsin (under 60)",
+   "how": "Phone or online intake. Check the current number at disabilityrightswi.org.",
+   "status": "unverified"
+  },
+  "health": {
+   "name": "Local health officer (county or city health department)",
+   "how": "Category I and outbreaks: phone right away. Category II: WEDSS or form F-44151.",
+   "phone_state": "608-267-9003",
+   "status": "verified"
+  },
+  "mco": {
+   "name": "MCO care team (Family Care)",
+   "how": "Your MCO's incident process. Deadlines come from your MCO contract, often 24 hours.",
+   "status": "house"
+  },
+  "guardian": {
+   "name": "Guardian, POA or family (per the service plan)",
+   "how": "Phone, then note it in the record.",
+   "status": "verified"
+  },
+  "physician": {
+   "name": "Physician, prescriber or nurse",
+   "how": "Phone or fax.",
+   "status": "verified"
+  },
+  "coroner": {
+   "name": "Medical examiner or coroner",
+   "how": "Usually through 911 or police. Wis. Stat. 979.01 requires unexplained, accident and suicide deaths to be reported right away.",
+   "status": "unverified"
+  },
+  "record": {
+   "name": "Resident or home record",
+   "how": "File a copy in the record.",
+   "status": "verified"
+  }
+ },
+ "events": [
+  {
+   "id": "death-restraint",
+   "group": "Deaths",
+   "title": "Death that may be linked to restraint, seclusion, psychotropic medicine or suicide",
+   "match": "\\b(died|dead|death|passed away|deceased|suicide)\\b.*\\b(restrain|seclu|psychotropic|antipsychotic|suicid)|\\b(suicide)\\b",
+   "reports": [
+    {
+     "to": "e911",
+     "clock": {
+      "type": "immediate"
+     },
+     "cite": "",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "status": "verified",
+     "required": true,
+     "note": "If anyone may still be helped."
+    },
+    {
+     "to": "dqa_death",
+     "clock": {
+      "type": "hours",
+      "n": 24
+     },
+     "cite": "DHS 83.12(1)(a); DQA P-02007",
+     "settings": [
+      "cbrf"
+     ],
+     "status": "verified",
+     "required": true,
+     "form": "F-62470"
+    },
+    {
+     "to": "dqa_death",
+     "clock": {
+      "type": "hours",
+      "n": 24
+     },
+     "cite": "DHS 88.03(5)(e)1; DQA P-02007",
+     "settings": [
+      "afh"
+     ],
+     "status": "verified",
+     "required": true,
+     "form": "F-62470"
+    },
+    {
+     "to": "coroner",
+     "clock": {
+      "type": "immediate"
+     },
+     "cite": "Wis. Stat. 979.01",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "status": "unverified",
+     "required": true
+    },
+    {
+     "to": "guardian",
+     "clock": {
+      "type": "immediate"
+     },
+     "cite": "DHS 88.03(5)(e)2; DHS 83.12(5)",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "status": "verified",
+     "required": true
+    },
+    {
+     "to": "mco",
+     "clock": {
+      "type": "hours",
+      "n": 24
+     },
+     "cite": "MCO contract",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "status": "house",
+     "required": false,
+     "when_pay": "Family Care (MCO)"
+    },
+    {
+     "to": "record",
+     "clock": {
+      "type": "none"
+     },
+     "cite": "DHS 88.03(5)(e)2",
+     "settings": [
+      "afh"
+     ],
+     "status": "verified",
+     "required": true,
+     "note": "Record date, time, circumstances and who received the body."
+    }
+   ]
+  },
+  {
+   "id": "death-accident",
+   "group": "Deaths",
+   "title": "Death from an accident or injury",
+   "match": "\\b(died|dead|death|passed away|deceased)\\b.*\\b(fell|fall|accident|injur|chok|burn|drown)|\\b(fell|fall|accident|choked)\\b.*\\b(died|death|passed away)\\b",
+   "reports": [
+    {
+     "to": "e911",
+     "clock": {
+      "type": "immediate"
+     },
+     "cite": "",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "status": "verified",
+     "required": true
+    },
+    {
+     "to": "dqa_region",
+     "clock": {
+      "type": "business_days",
+      "n": 3
+     },
+     "cite": "DHS 83.12(1)(b); DQA P-02007",
+     "settings": [
+      "cbrf"
+     ],
+     "status": "verified",
+     "required": true,
+     "form": "F-02208 (optional)"
+    },
+    {
+     "to": "licensing",
+     "clock": {
+      "type": "hours",
+      "n": 24
+     },
+     "cite": "DHS 88.03(5)(e)1 and (e)2; DQA P-02007",
+     "settings": [
+      "afh"
+     ],
+     "status": "open",
+     "required": true,
+     "note": "DHS 88 lists accidental deaths under both the 24-hour rule and the 3-day rule. The app uses 24 hours, the safer reading, until DQA answers."
+    },
+    {
+     "to": "coroner",
+     "clock": {
+      "type": "immediate"
+     },
+     "cite": "Wis. Stat. 979.01",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "status": "unverified",
+     "required": true
+    },
+    {
+     "to": "guardian",
+     "clock": {
+      "type": "immediate"
+     },
+     "cite": "DHS 88.03(5)(e)2; DHS 83.12",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "status": "verified",
+     "required": true
+    },
+    {
+     "to": "mco",
+     "clock": {
+      "type": "hours",
+      "n": 24
+     },
+     "cite": "MCO contract",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "status": "house",
+     "required": false,
+     "when_pay": "Family Care (MCO)"
+    },
+    {
+     "to": "record",
+     "clock": {
+      "type": "none"
+     },
+     "cite": "DHS 88.03(5)(e)2",
+     "settings": [
+      "afh"
+     ],
+     "status": "verified",
+     "required": true,
+     "note": "Record date, time, circumstances and who received the body."
+    }
+   ]
+  },
+  {
+   "id": "death-other",
+   "group": "Deaths",
+   "title": "Other death that was not natural or expected",
+   "match": "\\b(unexpected|unexplained|sudden)\\b.*\\b(death|died)\\b|\\b(died|death)\\b.*\\b(unexpected|unexplained|sudden)\\b",
+   "reports": [
+    {
+     "to": "licensing",
+     "clock": {
+      "type": "days",
+      "n": 3
+     },
+     "cite": "DHS 88.03(5)(e)2",
+     "settings": [
+      "afh"
+     ],
+     "status": "verified",
+     "required": true
+    },
+    {
+     "to": "coroner",
+     "clock": {
+      "type": "immediate"
+     },
+     "cite": "Wis. Stat. 979.01",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "status": "unverified",
+     "required": true
+    },
+    {
+     "to": "guardian",
+     "clock": {
+      "type": "immediate"
+     },
+     "cite": "DHS 88.03(5)(e)2",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "status": "verified",
+     "required": true
+    },
+    {
+     "to": "record",
+     "clock": {
+      "type": "none"
+     },
+     "cite": "DHS 88.03(5)(e)2",
+     "settings": [
+      "afh"
+     ],
+     "status": "verified",
+     "required": true,
+     "note": "Record date, time, circumstances and who received the body."
+    }
+   ]
+  },
+  {
+   "id": "death-natural",
+   "group": "Deaths",
+   "title": "Expected or natural death (for example on hospice)",
+   "match": "\\b(hospice)\\b.*\\b(died|passed)|\\b(passed away peacefully|natural death|expected death)\\b",
+   "not_dqa": "Natural deaths are not reported to DQA (P-02007; DHS 83.12(1)(c)).",
+   "reports": [
+    {
+     "to": "guardian",
+     "clock": {
+      "type": "immediate"
+     },
+     "cite": "DHS 88.03(5)(e)2; DHS 83.12",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "status": "verified",
+     "required": true
+    },
+    {
+     "to": "mco",
+     "clock": {
+      "type": "hours",
+      "n": 24
+     },
+     "cite": "MCO contract",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "status": "house",
+     "required": false,
+     "when_pay": "Family Care (MCO)"
+    },
+    {
+     "to": "record",
+     "clock": {
+      "type": "none"
+     },
+     "cite": "DHS 88.09(1); DHS 83",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "status": "verified",
+     "required": true,
+     "note": "Record the date, time and who was notified."
+    }
+   ]
+  },
+  {
+   "id": "fire",
+   "group": "Fire and emergencies",
+   "title": "Fire (fire department came or helped)",
+   "match": "\\b(fire|flames|burning|fire department)\\b",
+   "reports": [
+    {
+     "to": "e911",
+     "clock": {
+      "type": "immediate"
+     },
+     "cite": "",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "status": "verified",
+     "required": true
+    },
+    {
+     "to": "plan_review",
+     "clock": {
+      "type": "business_days",
+      "n": 3
+     },
+     "cite": "DHS 83.12(4)(e); DQA P-02007",
+     "settings": [
+      "cbrf"
+     ],
+     "status": "verified",
+     "required": true,
+     "form": "F-62500"
+    },
+    {
+     "to": "plan_review",
+     "clock": {
+      "type": "hours",
+      "n": 72
+     },
+     "cite": "DHS 88.05(4)(e); DQA P-02007",
+     "settings": [
+      "afh"
+     ],
+     "status": "verified",
+     "required": true,
+     "form": "F-62500",
+     "note": "Required when the fire department helped."
+    },
+    {
+     "to": "guardian",
+     "clock": {
+      "type": "hours",
+      "n": 24
+     },
+     "cite": "",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "status": "verified",
+     "required": false
+    }
+   ]
+  },
+  {
+   "id": "catastrophe",
+   "group": "Fire and emergencies",
+   "title": "Catastrophe, evacuation or damage to the home (storm, flood, gas, power loss that forced a move)",
+   "match": "\\b(evacuat|flood|tornado|storm damage|gas leak|carbon monoxide|roof|collapsed|no heat|power outage)\\b",
+   "reports": [
+    {
+     "to": "dqa_region",
+     "clock": {
+      "type": "business_days",
+      "n": 3
+     },
+     "cite": "DHS 83.12(4)(d) and (f); DQA P-02007",
+     "settings": [
+      "cbrf"
+     ],
+     "status": "verified",
+     "required": true
+    },
+    {
+     "to": "licensing",
+     "clock": {
+      "type": "days",
+      "n": 7
+     },
+     "cite": "DHS 88.03(5)(d); DQA P-02007",
+     "settings": [
+      "afh"
+     ],
+     "status": "verified",
+     "required": true,
+     "note": "Damage or hazards that affect the home's structure."
+    },
+    {
+     "to": "guardian",
+     "clock": {
+      "type": "hours",
+      "n": 24
+     },
+     "cite": "",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "status": "verified",
+     "required": false
+    }
+   ]
+  },
+  {
+   "id": "missing",
+   "group": "Residents",
+   "title": "Missing resident",
+   "match": "\\b(missing|left the building|eloped|wandered off|couldn't find|could not find|can't find)\\b",
+   "reports": [
+    {
+     "to": "police",
+     "clock": {
+      "type": "immediate"
+     },
+     "cite": "DHS 83.12(4)(a); DQA P-02007",
+     "settings": [
+      "cbrf"
+     ],
+     "status": "verified",
+     "required": true
+    },
+    {
+     "to": "police",
+     "clock": {
+      "type": "immediate"
+     },
+     "cite": "Home's missing person plan",
+     "settings": [
+      "afh"
+     ],
+     "status": "house",
+     "required": true,
+     "note": "Call police right away once a short search fails."
+    },
+    {
+     "to": "dqa_region",
+     "clock": {
+      "type": "business_days",
+      "n": 3
+     },
+     "cite": "DHS 83.12(4)(a); DQA P-02007",
+     "settings": [
+      "cbrf"
+     ],
+     "status": "verified",
+     "required": true
+    },
+    {
+     "to": "licensing",
+     "clock": {
+      "type": "hours",
+      "n": 24
+     },
+     "cite": "DHS 88.03(5)(e)1; DQA P-02007",
+     "settings": [
+      "afh"
+     ],
+     "status": "verified",
+     "required": true
+    },
+    {
+     "to": "guardian",
+     "clock": {
+      "type": "immediate"
+     },
+     "cite": "DHS 88.07(2)(b)6",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "status": "verified",
+     "required": true
+    },
+    {
+     "to": "mco",
+     "clock": {
+      "type": "hours",
+      "n": 24
+     },
+     "cite": "MCO contract",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "status": "house",
+     "required": false,
+     "when_pay": "Family Care (MCO)"
+    }
+   ]
+  },
+  {
+   "id": "hospital",
+   "group": "Residents",
+   "title": "Injury or incident that needed ER or hospital care",
+   "match": "\\b(er|emergency room|hospital|ambulance|admitted|911)\\b",
+   "reports": [
+    {
+     "to": "dqa_region",
+     "clock": {
+      "type": "business_days",
+      "n": 3
+     },
+     "cite": "DHS 83.12(4)(c); DQA P-02007",
+     "settings": [
+      "cbrf"
+     ],
+     "status": "verified",
+     "required": true
+    },
+    {
+     "to": "licensing",
+     "clock": {
+      "type": "hours",
+      "n": 24
+     },
+     "cite": "DHS 88.03(5)(e)1; DQA P-02007",
+     "settings": [
+      "afh"
+     ],
+     "status": "verified",
+     "required": true,
+     "note": "Significant change, including hospitalization."
+    },
+    {
+     "to": "guardian",
+     "clock": {
+      "type": "hours",
+      "n": 24
+     },
+     "cite": "DHS 88.07(2)(b)6",
+     "settings": [
+      "afh"
+     ],
+     "status": "verified",
+     "required": true
+    },
+    {
+     "to": "guardian",
+     "clock": {
+      "type": "immediate"
+     },
+     "cite": "DHS 83.12(5)(a)",
+     "settings": [
+      "cbrf"
+     ],
+     "status": "verified",
+     "required": true
+    },
+    {
+     "to": "physician",
+     "clock": {
+      "type": "hours",
+      "n": 24
+     },
+     "cite": "",
+     "settings": [
+      "afh"
+     ],
+     "status": "verified",
+     "required": false
+    },
+    {
+     "to": "physician",
+     "clock": {
+      "type": "immediate"
+     },
+     "cite": "DHS 83.12(5)(a)",
+     "settings": [
+      "cbrf"
+     ],
+     "status": "verified",
+     "required": true
+    },
+    {
+     "to": "mco",
+     "clock": {
+      "type": "hours",
+      "n": 24
+     },
+     "cite": "MCO contract",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "status": "house",
+     "required": false,
+     "when_pay": "Family Care (MCO)"
+    }
+   ]
+  },
+  {
+   "id": "police",
+   "group": "Residents",
+   "title": "Police or law enforcement came to the home",
+   "match": "\\b(police|officer|sheriff|deputy|law enforcement)\\b",
+   "reports": [
+    {
+     "to": "dqa_region",
+     "clock": {
+      "type": "business_days",
+      "n": 3
+     },
+     "cite": "DHS 83.12(4)(b); DQA P-02007",
+     "settings": [
+      "cbrf"
+     ],
+     "status": "verified",
+     "required": true
+    }
+   ]
+  },
+  {
+   "id": "misconduct",
+   "group": "Abuse, neglect and theft",
+   "title": "Possible abuse, neglect, theft of a resident's money or things, or an injury no one can explain",
+   "match": "\\b(abuse|abused|neglect|neglected|stole|stolen|missing money|slapped|pushed|shoved|unexplained bruise|bruise.{0,20}(unknown|no one knows)|injury of unknown)\\b",
+   "reports": [
+    {
+     "to": "mrs",
+     "clock": {
+      "type": "days",
+      "n": 7
+     },
+     "cite": "DHS 83.12(2)(a); DHS 13.05; DQA P-02007",
+     "settings": [
+      "cbrf"
+     ],
+     "status": "verified",
+     "required": true,
+     "note": "Within 7 calendar days, after the home's own look into what happened."
+    },
+    {
+     "to": "mrs",
+     "clock": {
+      "type": "immediate"
+     },
+     "cite": "DHS 88.11(1); DQA P-02007",
+     "settings": [
+      "afh"
+     ],
+     "status": "verified",
+     "required": true,
+     "note": "Adult family homes report right away."
+    },
+    {
+     "to": "police",
+     "clock": {
+      "type": "immediate"
+     },
+     "cite": "DHS 88.11(1)",
+     "settings": [
+      "afh"
+     ],
+     "status": "verified",
+     "required": true,
+     "note": "If a crime may have happened."
+    },
+    {
+     "to": "police",
+     "clock": {
+      "type": "immediate"
+     },
+     "cite": "DHS 13.05",
+     "settings": [
+      "cbrf"
+     ],
+     "status": "verified",
+     "required": false,
+     "note": "If a crime may have happened."
+    },
+    {
+     "to": "aps",
+     "clock": {
+      "type": "none"
+     },
+     "cite": "Wis. Stat. 46.90 and 55.043",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "status": "verified",
+     "required": false,
+     "note": "You may also report to the county. Good-faith reporters are protected."
+    },
+    {
+     "to": "ombudsman",
+     "clock": {
+      "type": "none"
+     },
+     "cite": "",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "status": "verified",
+     "required": false,
+     "note": "Optional, for residents 60 and over."
+    },
+    {
+     "to": "guardian",
+     "clock": {
+      "type": "hours",
+      "n": 24
+     },
+     "cite": "",
+     "settings": [
+      "afh"
+     ],
+     "status": "verified",
+     "required": true
+    },
+    {
+     "to": "guardian",
+     "clock": {
+      "type": "immediate"
+     },
+     "cite": "DHS 83.12(5)(b)",
+     "settings": [
+      "cbrf"
+     ],
+     "status": "verified",
+     "required": true,
+     "note": "Abuse or neglect: right away. Theft of money or things: within 72 hours."
+    },
+    {
+     "to": "mco",
+     "clock": {
+      "type": "hours",
+      "n": 24
+     },
+     "cite": "MCO contract",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "status": "house",
+     "required": false,
+     "when_pay": "Family Care (MCO)"
+    }
+   ]
+  },
+  {
+   "id": "adult-at-risk",
+   "group": "Abuse, neglect and theft",
+   "title": "Adult at risk (abuse or self-neglect by someone outside the home, or financial exploitation)",
+   "match": "\\b(exploit|scam|self.neglect|family member took|son took|daughter took|visitor took)\\b",
+   "reports": [
+    {
+     "to": "aps",
+     "clock": {
+      "type": "none"
+     },
+     "cite": "Wis. Stat. 46.90(4)(ab)1 and 55.043(1m)(a); DQA P-02007",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "status": "verified",
+     "required": true,
+     "note": "No set deadline. Report soon. Law enforcement or the ombudsman also take these."
+    },
+    {
+     "to": "police",
+     "clock": {
+      "type": "none"
+     },
+     "cite": "",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "status": "verified",
+     "required": false
+    }
+   ]
+  },
+  {
+   "id": "restraint",
+   "group": "Residents",
+   "title": "Emergency physical restraint was used",
+   "match": "\\b(restrain|held (him|her|them) down|physical hold)\\b",
+   "reports": [
+    {
+     "to": "licensing",
+     "clock": {
+      "type": "next_business_day"
+     },
+     "cite": "DHS 88.10(3)(n)2",
+     "settings": [
+      "afh"
+     ],
+     "status": "verified",
+     "required": true
+    },
+    {
+     "to": "record",
+     "clock": {
+      "type": "none"
+     },
+     "cite": "DHS 83 (restraint rules); DQA P-02007",
+     "settings": [
+      "cbrf"
+     ],
+     "status": "verified",
+     "required": true,
+     "note": "CBRFs document it in the resident record. No DQA report."
+    },
+    {
+     "to": "guardian",
+     "clock": {
+      "type": "hours",
+      "n": 24
+     },
+     "cite": "",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "status": "verified",
+     "required": true
+    }
+   ]
+  },
+  {
+   "id": "disease",
+   "group": "Health",
+   "title": "Reportable illness or outbreak (for example flu or COVID cluster, TB, stomach bug going around)",
+   "match": "\\b(outbreak|tb|tuberculosis|covid|influenza|flu|norovirus|stomach bug|vomiting.{0,20}(several|many|residents)|scabies|measles)\\b",
+   "reports": [
+    {
+     "to": "health",
+     "clock": {
+      "type": "immediate"
+     },
+     "cite": "DHS 145.04; DQA P-02007",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "status": "verified",
+     "required": true,
+     "note": "Category I diseases and any outbreak: phone right away."
+    },
+    {
+     "to": "health",
+     "clock": {
+      "type": "hours",
+      "n": 72
+     },
+     "cite": "DHS 145.04; DQA P-02007",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "status": "verified",
+     "required": false,
+     "form": "F-44151",
+     "note": "Category II diseases: within 72 hours through WEDSS or form F-44151."
+    }
+   ]
+  },
+  {
+   "id": "change",
+   "group": "Health",
+   "title": "Big change in a resident's health, illness over 3 days, or away over 24 hours",
+   "match": "\\b(sick for|ill for|getting worse|big change|decline|away overnight|not back)\\b",
+   "reports": [
+    {
+     "to": "guardian",
+     "clock": {
+      "type": "hours",
+      "n": 24
+     },
+     "cite": "DHS 88.07(2)(b)6",
+     "settings": [
+      "afh"
+     ],
+     "status": "verified",
+     "required": true
+    },
+    {
+     "to": "mco",
+     "clock": {
+      "type": "hours",
+      "n": 24
+     },
+     "cite": "DHS 88.07(2)(b)6; MCO contract",
+     "settings": [
+      "afh"
+     ],
+     "status": "verified",
+     "required": true,
+     "note": "The placing agency.",
+     "when_pay": "Family Care (MCO)"
+    },
+    {
+     "to": "licensing",
+     "clock": {
+      "type": "hours",
+      "n": 24
+     },
+     "cite": "DHS 88.03(5)(e)1",
+     "settings": [
+      "afh"
+     ],
+     "status": "verified",
+     "required": false,
+     "note": "Required when it is a significant change in status, such as hospitalization."
+    },
+    {
+     "to": "physician",
+     "clock": {
+      "type": "hours",
+      "n": 24
+     },
+     "cite": "",
+     "settings": [
+      "afh"
+     ],
+     "status": "verified",
+     "required": true
+    },
+    {
+     "to": "guardian",
+     "clock": {
+      "type": "immediate"
+     },
+     "cite": "DHS 83.12(5)(a)",
+     "settings": [
+      "cbrf"
+     ],
+     "status": "verified",
+     "required": true
+    },
+    {
+     "to": "physician",
+     "clock": {
+      "type": "immediate"
+     },
+     "cite": "DHS 83.12(5)(a)",
+     "settings": [
+      "cbrf"
+     ],
+     "status": "verified",
+     "required": true
+    }
+   ]
+  },
+  {
+   "id": "medication",
+   "group": "Health",
+   "title": "Medication error, or a medicine refused twice in a row",
+   "match": "\\b(missed dose|wrong dose|wrong med|med error|medication error|gave .{0,20} wrong|refused .{0,25}(med|pill))\\b",
+   "reports": [
+    {
+     "to": "physician",
+     "clock": {
+      "type": "immediate"
+     },
+     "cite": "DHS 83.37; DHS 88.07(3)(e)",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "status": "verified",
+     "required": true,
+     "note": "Errors: call the nurse or pharmacist now. Two refusals in a row in a CBRF: tell the prescriber."
+    },
+    {
+     "to": "record",
+     "clock": {
+      "type": "none"
+     },
+     "cite": "DHS 88.07(3)(e)1; DHS 83.37",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "status": "verified",
+     "required": true,
+     "note": "Write it on the medication record (errors and omissions)."
+    },
+    {
+     "to": "mco",
+     "clock": {
+      "type": "hours",
+      "n": 24
+     },
+     "cite": "MCO contract",
+     "settings": [
+      "afh",
+      "cbrf"
+     ],
+     "status": "house",
+     "required": false,
+     "when_pay": "Family Care (MCO)"
+    }
+   ]
+  },
+  {
+   "id": "charges",
+   "group": "Staff and the home",
+   "title": "A staff member, licensee or household member was charged with or convicted of a crime",
+   "match": "\\b(arrested|charged with|convicted|pending charge)\\b",
+   "reports": [
+    {
+     "to": "licensing",
+     "clock": {
+      "type": "hours",
+      "n": 48
+     },
+     "cite": "DHS 88.03(5)(c)",
+     "settings": [
+      "afh"
+     ],
+     "status": "verified",
+     "required": true
+    },
+    {
+     "to": "dqa_region",
+     "clock": {
+      "type": "next_business_day"
+     },
+     "cite": "DHS 12.07(2); DQA P-02007",
+     "settings": [
+      "cbrf"
+     ],
+     "status": "verified",
+     "required": true
+    }
+   ]
+  }
+ ],
+ "changes": [
+  {
+   "id": "household",
+   "title": "Someone moves into or out of the household (AFH)",
+   "reports": [
+    {
+     "to": "licensing",
+     "clock": {
+      "type": "days",
+      "n": 7
+     },
+     "cite": "DHS 88.03(5)(b)",
+     "settings": [
+      "afh"
+     ],
+     "status": "verified",
+     "required": true
+    }
+   ]
+  },
+  {
+   "id": "services",
+   "title": "Change in the services the home provides",
+   "reports": [
+    {
+     "to": "licensing",
+     "clock": {
+      "type": "days",
+      "n": 7
+     },
+     "cite": "DHS 88.03(5)(a)",
+     "settings": [
+      "afh"
+     ],
+     "status": "verified",
+     "required": true
+    }
+   ]
+  },
+  {
+   "id": "program",
+   "title": "Change to the program statement",
+   "reports": [
+    {
+     "to": "licensing",
+     "clock": {
+      "type": "before_days",
+      "n": 30
+     },
+     "cite": "DHS 88.03(2)(b)2",
+     "settings": [
+      "afh"
+     ],
+     "status": "verified",
+     "required": true,
+     "note": "Needs approval before you start."
+    },
+    {
+     "to": "dqa_region",
+     "clock": {
+      "type": "before_days",
+      "n": 30
+     },
+     "cite": "DHS 83.06(3)",
+     "settings": [
+      "cbrf"
+     ],
+     "status": "verified",
+     "required": true
+    }
+   ]
+  },
+  {
+   "id": "client-group",
+   "title": "Change in the type of residents served (client group)",
+   "reports": [
+    {
+     "to": "licensing",
+     "clock": {
+      "type": "before_days",
+      "n": 30
+     },
+     "cite": "DHS 88.04(2)(c); DQA P-02007",
+     "settings": [
+      "afh"
+     ],
+     "status": "verified",
+     "required": true
+    },
+    {
+     "to": "dqa_region",
+     "clock": {
+      "type": "before_days",
+      "n": 30
+     },
+     "cite": "DHS 83.14(2)(b); DQA P-02007",
+     "settings": [
+      "cbrf"
+     ],
+     "status": "verified",
+     "required": true,
+     "note": "Needs written approval first."
+    }
+   ]
+  },
+  {
+   "id": "capacity",
+   "title": "Change in capacity or CBRF class",
+   "reports": [
+    {
+     "to": "dqa_region",
+     "clock": {
+      "type": "none"
+     },
+     "cite": "DHS 83.14(2)(c); DQA P-02007",
+     "settings": [
+      "cbrf"
+     ],
+     "status": "verified",
+     "required": true,
+     "note": "Needs DQA written approval before the change."
+    }
+   ]
+  },
+  {
+   "id": "administrator",
+   "title": "New administrator",
+   "reports": [
+    {
+     "to": "dqa_region",
+     "clock": {
+      "type": "days",
+      "n": 7
+     },
+     "cite": "DHS 83.14(2)(e); DQA P-02007",
+     "settings": [
+      "cbrf"
+     ],
+     "status": "verified",
+     "required": true
+    }
+   ]
+  },
+  {
+   "id": "ownership",
+   "title": "Change of owner or location",
+   "reports": [
+    {
+     "to": "dqa_region",
+     "clock": {
+      "type": "before_days",
+      "n": 30
+     },
+     "cite": "DHS 83.10; DQA P-02007",
+     "settings": [
+      "cbrf"
+     ],
+     "status": "verified",
+     "required": true,
+     "note": "Tell residents at least 7 days ahead."
+    },
+    {
+     "to": "licensing",
+     "clock": {
+      "type": "before_days",
+      "n": 30
+     },
+     "cite": "DQA P-02007",
+     "settings": [
+      "afh"
+     ],
+     "status": "verified",
+     "required": true
+    }
+   ]
+  },
+  {
+   "id": "closing",
+   "title": "Closing the home",
+   "reports": [
+    {
+     "to": "dqa_region",
+     "clock": {
+      "type": "before_days",
+      "n": 30
+     },
+     "cite": "DHS 83.11; Wis. Stat. 50.03(14); DQA P-02007",
+     "settings": [
+      "cbrf"
+     ],
+     "status": "verified",
+     "required": true,
+     "note": "Longer if 5 or more residents must move."
+    },
+    {
+     "to": "licensing",
+     "clock": {
+      "type": "before_days",
+      "n": 7
+     },
+     "cite": "DQA P-02007",
+     "settings": [
+      "afh"
+     ],
+     "status": "verified",
+     "required": true
+    }
+   ]
+  },
+  {
+   "id": "discharge",
+   "title": "Discharging a resident (not an emergency)",
+   "reports": [
+    {
+     "to": "guardian",
+     "clock": {
+      "type": "before_days",
+      "n": 30
+     },
+     "cite": "DHS 88.08",
+     "settings": [
+      "afh"
+     ],
+     "status": "verified",
+     "required": true,
+     "note": "Written notice to the resident, guardian, service coordinator, placing agency and representative."
+    },
+    {
+     "to": "guardian",
+     "clock": {
+      "type": "before_days",
+      "n": 30
+     },
+     "cite": "DHS 83.31(4)(a)1",
+     "settings": [
+      "cbrf"
+     ],
+     "status": "verified",
+     "required": true
+    }
+   ]
+  }
+ ],
+ "records": [
+  {
+   "id": "resident-record",
+   "title": "Resident record",
+   "afh": {
+    "cite": "DHS 88.09(1)(d)",
+    "rule": "ID and guardian, emergency contacts, placing agency, insurance, service agreement, physician exam, assessment and plan, rights statement, medication records, money records.",
+    "keep": "7 years after discharge (DHS 88.09(1)(e))",
+    "status": "verified"
+   },
+   "cbrf": {
+    "cite": "DHS 83.42(1)",
+    "rule": "Identity and admission date, contacts and legal representative, physician, health screening, admission agreement, significant incidents, assessments, service plan, evacuation evaluation, orders, medication list and administration record, discharge summary.",
+    "keep": "7 years after final discharge (DHS 83.13(2)(b))",
+    "status": "verified"
+   }
+  },
+  {
+   "id": "admission",
+   "title": "Pre-admission information and service agreement",
+   "afh": {
+    "cite": "DHS 88.06(1)(a), 88.06(2)(b)-(c)",
+    "rule": "Written info on complaints, costs and roles before admission. Signed service agreement before admission; changes 30 days ahead.",
+    "status": "verified"
+   },
+   "cbrf": {
+    "cite": "DHS 83.28",
+    "rule": "Assessment before admission (emergency admissions within 5 days) and a temporary service plan at admission.",
+    "status": "verified"
+   }
+  },
+  {
+   "id": "rights",
+   "title": "Rights and grievance notice",
+   "afh": {
+    "cite": "DHS 88.10(2)",
+    "rule": "Explain and give copies before the service agreement is signed.",
+    "status": "verified"
+   },
+   "cbrf": {
+    "cite": "DHS 83.28(6); 83.13(3)(b)",
+    "rule": "Give and explain resident rights before or at admission. Post them.",
+    "status": "verified"
+   }
+  },
+  {
+   "id": "exam",
+   "title": "Admission physical and TB screen",
+   "afh": {
+    "cite": "DHS 88.06(2)(a)",
+    "rule": "Within 90 days before or 7 days after admission.",
+    "status": "verified"
+   },
+   "cbrf": {
+    "cite": "DHS 83.28(4)(a)1",
+    "rule": "Communicable disease and TB screening by a physician, PA, NP or RN, within 90 days before to 7 days after admission.",
+    "status": "verified"
+   }
+  },
+  {
+   "id": "plan",
+   "title": "Assessment and individual service plan",
+   "afh": {
+    "cite": "DHS 88.06(3)",
+    "rule": "Within 30 days after placement; review at least every 6 months and when needs change.",
+    "status": "verified"
+   },
+   "cbrf": {
+    "cite": "DHS 83.35(3)",
+    "rule": "Individual service plan within 30 days after admission; review yearly and when needs change.",
+    "status": "unverified"
+   }
+  },
+  {
+   "id": "mar",
+   "title": "Medication records and physician orders",
+   "afh": {
+    "cite": "DHS 88.07(3)(d)-(e)",
+    "rule": "Written order on file before giving. Record name, medicine, date and time, errors and omissions, side effects.",
+    "status": "verified"
+   },
+   "cbrf": {
+    "cite": "DHS 83.42(1)(r); 83.37(1)(e)",
+    "rule": "Document every medicine given, who gave it, refusals, omissions, errors and reactions. Pharmacist or physician review near admission and every 12 months.",
+    "status": "unverified"
+   }
+  },
+  {
+   "id": "incident",
+   "title": "Incident and event reports",
+   "afh": {
+    "cite": "DHS 88.03(5); DHS 88.09(1)",
+    "rule": "A copy of each report and who was told, in the resident or home record.",
+    "status": "verified"
+   },
+   "cbrf": {
+    "cite": "DHS 83.12(6); 83.13(1)-(2)(a)",
+    "rule": "Each report lists time, date, place, people involved, details and action taken to protect residents. Keep investigations.",
+    "keep": "2 years (significant incidents also go in the resident record)",
+    "status": "verified"
+   }
+  },
+  {
+   "id": "grievance",
+   "title": "Grievance summaries",
+   "afh": {
+    "cite": "DHS 88.10(5)(d)",
+    "rule": "Written summary of the grievance, findings and action, sent to the resident and others and filed in the record.",
+    "status": "verified"
+   },
+   "cbrf": {
+    "cite": "DHS 83.33",
+    "rule": "Written procedure at admission. Written summary of findings and action to the resident, representative and case manager. Keep a copy of the investigation.",
+    "keep": "2 years (general rule, DHS 83.13(2)(a))",
+    "status": "unverified"
+   }
+  },
+  {
+   "id": "staff-record",
+   "title": "Staff personnel records",
+   "afh": {
+    "cite": "DHS 88.09(2)",
+    "rule": "Training, TB screen, background check, discipline, end date.",
+    "keep": "3 years after the job ends (DHS 88.09(2)(c))",
+    "status": "verified"
+   },
+   "cbrf": {
+    "cite": "DHS 83.18(1)",
+    "rule": "Job description, start date, administrator's education, background check, training records.",
+    "keep": "3 years after the employee leaves (DHS 83.13(2)(c))",
+    "status": "verified"
+   }
+  },
+  {
+   "id": "background",
+   "title": "Background checks",
+   "afh": {
+    "cite": "DHS 88.03(3)(b)-(c)",
+    "rule": "Before anyone gives care. Nurse aide registry where it applies. Licensing agency rechecks the licensee and adult household members every 2 years.",
+    "status": "verified"
+   },
+   "cbrf": {
+    "cite": "DHS 83.17(1); Wis. Stat. 50.065; DHS 12",
+    "rule": "At hire and every 4 years after.",
+    "status": "verified"
+   }
+  },
+  {
+   "id": "staff-tb",
+   "title": "Staff TB screen",
+   "afh": {
+    "cite": "DHS 88.04(2)(g)",
+    "rule": "Within 90 days before starting care, documented by a physician, RN or PA.",
+    "status": "verified"
+   }
+  },
+  {
+   "id": "fire-drill-log",
+   "title": "Fire drill and evacuation records",
+   "afh": {
+    "cite": "DHS 88.05(4)(d)",
+    "rule": "Date and evacuation time for each drill. Evacuation check for each resident at placement and yearly.",
+    "status": "verified"
+   },
+   "cbrf": {
+    "cite": "DHS 83.47(2)(d); 83.13(1)(g)",
+    "rule": "Date, time and total evacuation time of each drill.",
+    "keep": "2 years",
+    "status": "unverified"
+   }
+  },
+  {
+   "id": "orientation",
+   "title": "Orientation and initial training",
+   "cbrf": {
+    "cite": "DHS 83.19-83.23",
+    "rule": "Orientation before any duties. Task training before the related duties. Fire safety, first aid and choking, rights, client group and challenging behaviors within 90 days of hire.",
+    "status": "verified"
+   }
+  }
+ ],
+ "periodic": [
+  {
+   "id": "fire-drills",
+   "title": "Fire drills",
+   "afh": {
+    "every": "Every 6 months, with all household members",
+    "cite": "DHS 88.05(4)(d)2.c",
+    "status": "verified"
+   },
+   "cbrf": {
+    "every": "Every 3 months with staff and residents, and one a year that simulates sleeping hours",
+    "cite": "DHS 83.47(2)(d)",
+    "status": "unverified"
+   }
+  },
+  {
+   "id": "evac-eval",
+   "title": "Resident evacuation evaluation (2 minutes)",
+   "afh": {
+    "every": "At placement and every year",
+    "cite": "DHS 88.05(4)(d)2.a-b",
+    "status": "verified"
+   },
+   "cbrf": {
+    "every": "Within 3 days of admission, then every year",
+    "cite": "DHS 83.35(5)",
+    "status": "unverified"
+   }
+  },
+  {
+   "id": "smoke",
+   "title": "Smoke detector test",
+   "afh": {
+    "every": "Every month",
+    "cite": "DHS 88.05(4)(b)2",
+    "status": "verified"
+   },
+   "cbrf": {
+    "every": "Every other month (hard-wired detectors); whole system inspected yearly",
+    "cite": "DHS 83.48",
+    "status": "unverified"
+   }
+  },
+  {
+   "id": "extinguisher",
+   "title": "Fire extinguisher inspection",
+   "afh": {
+    "every": "Every year, with a dated tag",
+    "cite": "DHS 88.05(4)(a)",
+    "status": "verified"
+   },
+   "cbrf": {
+    "every": "Every year by a qualified person, with a dated tag",
+    "cite": "DHS 83.47(4)(a)",
+    "status": "unverified"
+   }
+  },
+  {
+   "id": "isp-review",
+   "title": "Service plan review",
+   "afh": {
+    "every": "At least every 6 months",
+    "cite": "DHS 88.06(3)(f)",
+    "status": "verified"
+   },
+   "cbrf": {
+    "every": "Every year and when needs change",
+    "cite": "DHS 83.35(3)(d)",
+    "status": "unverified"
+   }
+  },
+  {
+   "id": "physical",
+   "title": "Resident physical exam",
+   "afh": {
+    "every": "Every year",
+    "cite": "DHS 88.07(2)(e)",
+    "status": "verified"
+   }
+  },
+  {
+   "id": "training",
+   "title": "Staff training",
+   "afh": {
+    "every": "15 hours within 6 months of starting, then 8 hours a year",
+    "cite": "DHS 88.04(5)",
+    "status": "verified"
+   },
+   "cbrf": {
+    "every": "15 hours every calendar year (administrator and care staff)",
+    "cite": "DHS 83.25",
+    "status": "verified"
+   }
+  },
+  {
+   "id": "biennial",
+   "title": "Biennial license report and fee",
+   "afh": {
+    "every": "Every 24 months",
+    "cite": "DHS 88.03(4)(b)",
+    "status": "verified"
+   },
+   "cbrf": {
+    "every": "Every 24 months, on the department form, with fees",
+    "cite": "DHS 83.09",
+    "status": "verified"
+   }
+  },
+  {
+   "id": "fire-inspection",
+   "title": "Local fire authority inspection",
+   "cbrf": {
+    "every": "Every year; keep the report 2 years",
+    "cite": "DHS 83.47(3); 83.13(1)(i)",
+    "status": "unverified"
+   }
+  },
+  {
+   "id": "med-review",
+   "title": "Medication regimen review",
+   "cbrf": {
+    "every": "Within 30 days of admission, then every 12 months",
+    "cite": "DHS 83.37(1)(e)",
+    "status": "unverified"
+   }
+  },
+  {
+   "id": "background-recheck",
+   "title": "Background recheck",
+   "cbrf": {
+    "every": "Every 4 years",
+    "cite": "DHS 83.17(1)",
+    "status": "verified"
+   }
+  }
+ ],
+ "incident_fields": [
+  "Date and time",
+  "Place",
+  "People involved (roles and resident codes)",
+  "What happened (facts only)",
+  "Action taken",
+  "Who was told, and when"
+ ],
+ "open_questions": [
+  {
+   "id": "afh-accident-death",
+   "q": "Is an accidental death in an adult family home due in 24 hours (DHS 88.03(5)(e)1) or 3 days (88.03(5)(e)2)?",
+   "app": "Uses 24 hours until DQA answers."
+  },
+  {
+   "id": "afh-county-licensed",
+   "q": "P-02007 does not say whether county-licensed adult family homes send DQA reports to the county or to DQA.",
+   "app": "Uses the licensing agency chosen in Facility setup."
+  }
+ ]
+}
