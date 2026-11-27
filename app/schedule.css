@@ -118,3 +118,6 @@ svg.chart .bar:focus .hit{stroke:var(--amber);stroke-width:2}
 [hidden]{display:none!important}
 input[type=checkbox]{width:24px;height:24px;flex:none;accent-color:var(--sky)}
 body.dragging .fab{visibility:hidden}
+.share{display:inline-block;width:60px;height:8px;background:var(--sky-soft);border-radius:99px;overflow:hidden;vertical-align:middle}
+.share i{display:block;height:100%;background:var(--sky)}
+.item.rec{gap:.45rem}

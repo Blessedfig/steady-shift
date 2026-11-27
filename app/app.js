@@ -80,6 +80,7 @@
     schedule:{t:'Schedule', ic:'📅'},
     time:{t:'Time sheets', ic:'⏱️'},
     insights:{t:'Owner insights', ic:'📈'},
+    labor:{t:'Labor and pay', ic:'💵'},
     access:{t:'Services and access', ic:'🔑'},
     kiosk:{t:'House tablet', ic:'🖥️'}
   };
@@ -87,8 +88,8 @@
     caregiver:['home','schedule','time','check','askpolicy','whatif','report','night','behavior','cards','peer','mytraining','access'],
     manager:['home','setup','schedule','time','kiosk','inbox','orders','questions','check','askpolicy','whatif','report','night','behavior','team','review','survey','decide','ask','cards','peer','watch','procedures','sync','access'],
     rn:['home','delegations','orders','schedule','time','sync','check','askpolicy','whatif','cards','night','behavior','watch'],
-    owner:['home','owner','insights','setup','schedule','time','access','sync','review','peer','askpolicy','whatif','procedures','survey','questions','decide','ask','watch','cards'],
-    multi:['home','sites','owner','insights','setup','schedule','time','access','sync','review','peer','askpolicy','whatif','procedures','survey','watch','ask','cards'],
+    owner:['home','owner','insights','labor','setup','schedule','time','access','sync','review','peer','askpolicy','whatif','procedures','survey','questions','decide','ask','watch','cards'],
+    multi:['home','sites','owner','insights','labor','setup','schedule','time','access','sync','review','peer','askpolicy','whatif','procedures','survey','watch','ask','cards'],
     family:['home','check','night','behavior','handoff','cards','watch']
   };
 
