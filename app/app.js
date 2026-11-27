@@ -205,6 +205,8 @@
 
   // ---------- views ----------
   const R = {};
+  // Plug-in point for add-on modules (meals.js and others). Modules add views, nav items, home tiles and owner cards.
+  const homeHooks = [], ownerHooks = [];
 
   R.home = v => {
     const t = S.tier;
@@ -215,6 +217,7 @@
     if (t === 'manager') homeManager(v);
     if (t === 'rn') homeRN(v);
     if (t === 'family') homeFamily(v);
+    homeHooks.forEach(f => { try { f(v, t); } catch(e){ console.error(e); } });
     v.append(tourCard());
   };
 
@@ -1125,6 +1128,7 @@
 
   // Shared helpers for the scheduling, time sheet, insights and access modules (schedule.js, time.js, insights.js, access.js)
   window.SSApp = {D, h, state:()=>S, save, toast, copy, site, setting, tier, fmtDate, fmtTime, head, download, toIcs, gcalUrl, outlookUrl, csvCell, R, VIEWS, NAV, route:()=>route(), go:v=>go(v), isoDay, addDays, uid, renderNav:()=>renderNav(current), fillSwitchers:()=>fillSwitchers(), param:()=>param};
+  Object.assign(window.SSApp, {tile:(...a) => tile(...a), residents, forSite, homeHooks, ownerHooks});
   // ---------- Doctor orders: intake, RN verification, current orders (sample data only) ----------
   // One shared order store (S.orders). Other screens read verified, active orders through window.SS_ordersFor(site, res).
   const ORDER_KINDS = {med:'Medication', diet:'Diet', activity:'Activity or therapy', appointment:'Appointment or follow-up', lab:'Lab or test', monitor:'Monitoring', other:'Other'};
@@ -1192,11 +1196,12 @@
     const spNote = h('p',{class:'small',hidden:true},'Behavioral health: enter only the instruction staff need, such as a medication change or what to watch for. Do not copy therapy or visit notes. Records of substance use treatment have stricter federal rules; leave those out.');
     spSel.addEventListener('change', () => { spNote.hidden = !SENSITIVE.includes(spSel.value); });
     const presc = h('input',{type:'text',id:'oPresc',placeholder:'Example: Dr. Sample, Example Clinic'});
-    const file = h('input',{type:'file',id:'oFile',accept:'image/*,application/pdf',capture:'environment'});
+    const file = h('input',{type:'file',id:'oFile',accept:'image/*,application/pdf',capture:null});
     const prev = h('div',{class:'row'});
     file.addEventListener('change', () => { prev.textContent = ''; const f = file.files && file.files[0]; if (!f) return;
       if (/^image\//.test(f.type)) prev.append(h('img',{src:URL.createObjectURL(f),alt:'Picture of the order (not saved)',style:'max-width:220px;max-height:220px;border-radius:12px;border:1px solid var(--line)'}));
       prev.append(h('span',{class:'small muted'},f.name+' attached to this page only. The test app does not save pictures.')); });
+    const capBox = h('div'); let capCount = 0;
     const linesBox = h('div',{class:'list'});
     function addLine(pre){
       pre = pre || {};
@@ -1236,7 +1241,13 @@
     const f = h('form',{class:'card'}, h('h2',null,'A new order came in'),
       h('div',{class:'grid g2'}, h('label',{class:'f'},'Resident',resSel), h('label',{class:'f'},'Care area',spSel)), spNote,
       h('div',{class:'grid g2'}, h('label',{class:'f'},'Where it came from',srcSel), h('label',{class:'f'},'Doctor, dentist or clinic',presc)),
-      h('label',{class:'f'},'Picture or file of the order (optional)',file), prev,
+      h('div',{class:'row'}, h('button',{class:'btn ghost sm',type:'button',onclick:()=>{ if (capBox.firstChild) return;
+        if (!window.SSCapture){ file.setAttribute('capture','environment'); file.click(); return; }
+        const ctx = {id:'orders-'+uid(), docs:[]};
+        const panel = window.SSCapture.panel(ctx, doc => { if (panel._stop) panel._stop(); capBox.textContent = ''; if (doc){ capCount += doc.count; prev.textContent = ''; prev.append(h('span',{class:'chip calm'},capCount+' page'+(capCount>1?'s':'')+' photographed in the app'), h('span',{class:'small muted'},'Kept in this page\'s memory only, never in the phone\'s photos. Cleared when you leave this screen.')); } });
+        capBox.append(panel); }},'📸 Take photos in the app'), h('span',{class:'small muted'},'Photos stay inside Steady Shift, not in the phone\'s camera roll.')),
+      capBox,
+      h('label',{class:'f'},'Or upload a file (optional)',file), prev,
       h('h3',null,'What the order says'), linesBox,
       h('div',{class:'row'}, h('button',{class:'btn quiet sm',type:'button',onclick:()=>addLine()},'Add another line'),
         h('button',{class:'btn quiet sm',type:'button',onclick:()=>{ linesBox.textContent=''; srcSel.value = SAMPLE_VISIT.source; spSel.value = SAMPLE_VISIT.specialty; spNote.hidden = true; presc.value = SAMPLE_VISIT.prescriber; SAMPLE_VISIT.lines.forEach(l => addLine(Object.assign({}, l, {start: l.kind==='appointment' ? addDays(isoDay(new Date()),21) : ''}))); toast('Sample visit summary filled in'); }},'Fill in a sample visit summary')),
@@ -1246,7 +1257,7 @@
       const lines = [...linesBox.children].map(b => b._read()).filter(Boolean);
       if (!lines.length){ toast('Write at least one order line'); return; }
       const batch = uid(), at = new Date().toISOString();
-      lines.forEach(l => S.orders.push(Object.assign({id:'o-'+uid(), batch, site:S.site, res:resSel.value, specialty:spSel.value, prescriber:presc.value.trim(), source:srcSel.value, status:'pending', enteredBy:tier().name+' (you)', enteredAt:at, hadFile:!!(file.files && file.files.length)}, l)));
+      lines.forEach(l => S.orders.push(Object.assign({id:'o-'+uid(), batch, site:S.site, res:resSel.value, specialty:spSel.value, prescriber:presc.value.trim(), source:srcSel.value, status:'pending', enteredBy:tier().name+' (you)', enteredAt:at, hadFile:!!(file.files && file.files.length) || capCount > 0, photos:capCount}, l)));
       save(); toast('Sent to the nurse. '+lines.length+' line'+(lines.length>1?'s':'')+' waiting.'); route(); });
 
     // ---- nurse check ----
@@ -1355,6 +1366,7 @@
     v.append(h('div',{class:'grid g2'},
       h('div',{class:'card'}, h('h2',null,'Top 5 things your team asked'), top.length ? h('ol',null, top.map(([id,n]) => h('li',null,ruleById(id).q+' ('+n+')'))) : h('p',{class:'muted'},'Nothing yet.'), h('p',{class:'small muted'},'Use these to plan the next training. No names attached.'), h('a',{href:'#/questions'},'Full question report')),
       h('div',{class:'card'}, h('h2',null,'Funding and rate watch'), h('ul',null, h('li',null,'Wisconsin budget items for caregiver pay and training (amounts being checked).'), h('li',null,'Medicaid payment caps proposed from 2028 may affect care manager rates.'), h('li',null,'WisCaregiver Careers can offset hiring and training costs.')), h('a',{href:'#/watch'},'Regulatory Watch'))));
+    ownerHooks.forEach(f => { try { f(v); } catch(e){ console.error(e); } });
     if (isHome){ const ic = installCard(); if (ic) v.append(ic); const pc = pulseCard(); if (pc) v.append(pc); v.append(tourCard()); }
   };
 
