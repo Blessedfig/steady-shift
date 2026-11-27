@@ -474,7 +474,7 @@
     ap(v, checkCard(site, issues));
     if (mgr){
       if (ui.view === 'week') ap(v, publishCard(site, d0, issues));
-      ap(v, quickCard(site, d0), weekToolsCard(site, d0), templatesCard(), rulesCard(site));
+      ap(v, quickCard(site, d0), bulkCard(site, d0), weekToolsCard(site, d0), templatesCard(), rulesCard(site));
     }
     ap(v, exportCard(site, d0, d1));
     if (!mgr && !cg) ap(v, h('p',{class:'small muted'},'You can view the schedule. A manager or owner can give you permission to build it in Services and access.'));
@@ -628,6 +628,16 @@
     if (x.type === 'cover' && s) s.staff = x.to || null;
     if (x.type === 'giveup' && s){ s.staff = null; s.callin = true; }
   }
+  // Approve or decline one request (used by the approvals card and by the chat assistant).
+  function decideReq(x, st, replyText){
+    const sc = ensure(), site = x.site;
+    snap();
+    x.status = st; x.decidedAt = new Date().toISOString(); x.decidedBy = actor(); x.reply = String(replyText||'').trim().slice(0,200);
+    if (st === 'Approved'){ applyReq(x, sc.shifts);
+      if (x.type === 'timeoff') sc.shifts.filter(y => y.site===site && y.staff===x.by && y.date>=x.from && y.date<=x.to).forEach(y => { y.staff = null; });
+      if (x.type === 'timeoff' && x.pto === 'PTO'){ const p = prof(x.by); const days = dn(x.to)-dn(x.from)+1; p.pto = Math.max(0, (p.pto||0) - days*8); } }
+    audit(st+' a request: '+reqText(x), site); A.save();
+  }
   function requestsCard(site){
     const sc = ensure(), pend = sc.requests.filter(x => x.site === site && x.status === 'Pending').sort((a,b) => a.at.localeCompare(b.at));
     const done = sc.requests.filter(x => x.site === site && x.status !== 'Pending').sort((a,b) => (b.decidedAt||'').localeCompare(a.decidedAt||'')).slice(0,4);
@@ -640,14 +650,7 @@
       if (x.type === 'timeoff'){ iss = shiftsAt(site).filter(y => y.staff === x.by && y.date >= x.from && y.date <= x.to).map(y => ({sev:'check', text:x.by+' is scheduled '+dayFmt(dn(y.date))+' '+span(y)+'. Approving opens this shift.'})); }
       const reply = h('input',{type:'text',maxlength:'200',placeholder:'Optional reply (kind and short)'});
       const quick = ['Thanks, approved.','Already covered, thanks for offering.','This would put you into overtime.','We need someone cleared for this shift.','Let\'s talk at your next shift.'].map(q => h('button',{type:'button',class:'chip',onclick:()=>{ reply.value = q; }},q));
-      const decide = st => {
-        snap();
-        x.status = st; x.decidedAt = new Date().toISOString(); x.decidedBy = actor(); x.reply = reply.value.trim();
-        if (st === 'Approved'){ applyReq(x, sc.shifts);
-          if (x.type === 'timeoff') sc.shifts.filter(y => y.site===site && y.staff===x.by && y.date>=x.from && y.date<=x.to).forEach(y => { y.staff = null; });
-          if (x.type === 'timeoff' && x.pto === 'PTO'){ const p = prof(x.by); const days = dn(x.to)-dn(x.from)+1; p.pto = Math.max(0, (p.pto||0) - days*8); } }
-        audit(st+' a request: '+reqText(x), site); A.save(); A.route(); toast(st);
-      };
+      const decide = st => { decideReq(x, st, reply.value); A.route(); toast(st); };
       ap(card, h('div',{class:'item'},
         h('div',{class:'meta'}, h('span',{class:'chip'},TYPES[x.type]), h('span',null,'Asked '+A.fmtTime(x.at))),
         h('b',null,reqText(x)), x.note ? h('span',{class:'small'},'"'+x.note+'"') : null,
@@ -720,6 +723,83 @@
         }
         audit('Quick assign: '+added+' '+t.name+' shifts for '+(who.value||'open'), site); A.save(); A.route(); toast('Added '+added+(skipped?', skipped '+skipped+' that clashed':''));
       }},'Add shifts')));
+  }
+  // ---------- change many shifts at once (for example every Mon, Tue and Wed day shift for a month) ----------
+  function bulkCard(site, d0){
+    return h('div',{class:'card'}, h('h2',null,'Change many shifts at once'),
+      h('p',{class:'small'},'Pick days of the week and a date range, then change the times, the length (8 or 12 hours), who works them, or remove them. You see every change and any new warnings before anything is saved, and you can undo.'),
+      h('div',{class:'row'}, h('button',{class:'btn ghost sm',type:'button',onclick:()=>bulkDialog(site, d0)},'Change many shifts')));
+  }
+  function bulkDialog(site, d0){
+    const sc = ensure(), names = staffNames(site), DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'], LONG = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    dialog('Change many shifts', (box, dlg) => {
+      const on = new Set([1,2,3]);
+      const dayBox = h('fieldset',{class:'bdays'}, h('legend',{class:'small'},'Days of the week'), DAYS.map((d, i) => { const id = 'bd_'+i; return h('label',{class:'row small',for:id}, h('input',{type:'checkbox',id,checked:on.has(i),'aria-label':LONG[i],onchange:e=>{ e.target.checked ? on.add(i) : on.delete(i); reset(); }}), d); }));
+      const from = h('input',{type:'date',value:di(d0)}), to = h('input',{type:'date',value:di(d0+27)});
+      const inRange = () => shiftsAt(site).filter(x => x.kind !== 'training' && dn(x.date) >= dn(from.value) && dn(x.date) <= dn(to.value));
+      const combos = () => [...new Set(inRange().map(x => x.start+'-'+x.end))].sort();
+      const which = sel([['all','Every shift on those days']], 'all');
+      const fillWhich = () => { const v = which.value; which.textContent = ''; [['all','Every shift on those days']].concat(combos().map(c => { const [a,b] = c.split('-'); return [c, 'Only '+tLong(a)+' to '+tLong(b)+' shifts']; })).forEach(([val, lab]) => which.append(h('option',{value:val, selected:val === v}, lab))); };
+      const whoF = sel([['any','Anyone'],['open','Open shifts only']].concat(names.map(n => [n, n+' only'])), 'any');
+      const act = sel([['time','Change times or length'],['staff','Change who works them'],['both','Change times and who works them'],['remove','Remove them']], 'time');
+      const tpl = sel(sc.templates.filter(t => t.kind !== 'training').map(t => [t.id, t.name+' · '+tShort(t.start)+' to '+tShort(t.end)]).concat([['custom','Custom times']]), sc.templates[0].id);
+      const cs = h('input',{type:'time',value:'07:00',step:'900'}), ce = h('input',{type:'time',value:'15:00',step:'900'});
+      const custom = h('div',{class:'grid g2',hidden:true}, field('Start', cs), field('End', ce));
+      const timeBox = h('div',{class:'grid'}, field('New times', tpl), custom);
+      const toWho = sel([['__open','Make them open shifts']].concat(names.map(n => [n, n])), names[0] || '__open');
+      const staffBox = h('div',{hidden:true}, field('Give them to', toWho));
+      const out = h('div',{class:'grid','aria-live':'polite'});
+      let plan = null;
+      function reset(){ plan = null; out.textContent = ''; apply.disabled = true; }
+      const show = () => { const a = act.value; timeBox.hidden = !(a === 'time' || a === 'both'); staffBox.hidden = !(a === 'staff' || a === 'both'); custom.hidden = tpl.value !== 'custom'; reset(); };
+      [act, tpl].forEach(x => x.addEventListener('change', show));
+      [which, whoF, toWho, cs, ce].forEach(x => x.addEventListener('change', reset));
+      [from, to].forEach(x => x.addEventListener('change', () => { fillWhich(); reset(); }));
+      function picked(){
+        if (!from.value || !to.value || to.value < from.value){ toast('Check the dates'); return null; }
+        if (dn(to.value) - dn(from.value) > 92){ toast('Pick up to 3 months at a time'); return null; }
+        if (!on.size){ toast('Pick at least one day'); return null; }
+        return inRange().filter(x => on.has(dow(dn(x.date))) && (which.value === 'all' || x.start+'-'+x.end === which.value)
+          && (whoF.value === 'any' || (whoF.value === 'open' ? !x.staff : x.staff === whoF.value)));
+      }
+      function preview(){
+        const hit = picked(); if (!hit) return;
+        out.textContent = '';
+        if (!hit.length){ ap(out, h('p',{class:'muted'},'No shifts match. Try other days, dates or filters.')); return; }
+        const a = act.value, t = sc.templates.find(x => x.id === tpl.value);
+        if ((a === 'time' || a === 'both') && tpl.value === 'custom' && (!cs.value || !ce.value || cs.value === ce.value)){ toast('Set a start and end time'); return; }
+        const nt = (a === 'time' || a === 'both') ? (t ? {start:t.start, end:t.end, tpl:t.id} : {start:cs.value, end:ce.value, tpl:null}) : null;
+        const ns = (a === 'staff' || a === 'both') ? (toWho.value === '__open' ? '' : toWho.value) : undefined;
+        const ids = new Set(hit.map(x => x.id));
+        const after = withChange(L => { if (a === 'remove') { for (let i = L.length-1; i >= 0; i--) if (ids.has(L[i].id)) L.splice(i, 1); return; }
+          L.forEach(x => { if (!ids.has(x.id)) return; if (nt) Object.assign(x, nt); if (ns !== undefined) x.staff = ns; }); });
+        const lo = Math.min(...hit.map(x => dn(x.date))), hi = Math.max(...hit.map(x => dn(x.date)));
+        const news = diffIssues(site, lo-1, hi+7, after);
+        const byCat = {}; news.forEach(i => { byCat[i.cat] = (byCat[i.cat]||0) + 1; });
+        const desc = x => dayFmt(dn(x.date),{weekday:'short', month:'short', day:'numeric'})+' · '+tShort(x.start)+'–'+tShort(x.end)+' · '+(x.staff || 'open');
+        const rows = hit.slice().sort((p,q) => absA(p)-absA(q)).map(x => { const y = after.find(z => z.id === x.id); return h('li',null, desc(x), y ? ' → '+tShort(y.start)+'–'+tShort(y.end)+' · '+(y.staff || 'open') : ' → removed'); });
+        const hrsBefore = hit.reduce((s0, x) => s0 + (absB(x)-absA(x)), 0)/60, hrsAfter = a === 'remove' ? 0 : after.filter(x => ids.has(x.id)).reduce((s0, x) => s0 + (absB(x)-absA(x)), 0)/60;
+        ap(out, h('div',{class:'card soft'}, h('b',null, hit.length+' shift'+(hit.length === 1 ? '' : 's')+' will change'),
+            h('span',{class:'small'},'Scheduled hours: '+Math.round(hrsBefore*10)/10+' now, '+Math.round(hrsAfter*10)/10+' after.')),
+          news.length ? h('div',{class:'card alert',role:'alert'}, h('b',null, news.length+' new warning'+(news.length === 1 ? '' : 's')),
+              h('div',{class:'chips'}, Object.keys(byCat).map(c => h('span',{class:'chip amber'}, c+': '+byCat[c]))),
+              h('ul',{class:'small blist'}, news.slice(0, 8).map(i => h('li',null, i.text))), news.length > 8 ? h('span',{class:'small'},'And '+(news.length-8)+' more. You can still save and fix them in the schedule.') : null)
+            : h('div',{class:'card calm',role:'status'}, h('b',null,'No new warnings'), h('span',{class:'small'},'Coverage, awake overnight, double-booking, rest and overtime were checked.')),
+          h('details',{open:hit.length <= 12}, h('summary',{class:'small'},'See every change'), h('ul',{class:'small blist'}, rows)));
+        plan = {after, n:hit.length, a, warn:news.length};
+        apply.disabled = false;
+      }
+      const apply = h('button',{class:'btn',type:'button',disabled:true,onclick:()=>{ if (!plan) return; snap(); sc.shifts = plan.after;
+        const what = {time:'changed the times of', staff:'reassigned', both:'changed the times and staff of', remove:'removed'}[plan.a];
+        audit('Bulk change: '+what+' '+plan.n+' shifts ('+[...on].sort().map(i => DAYS[i]).join(', ')+', '+fmtDate(from.value)+' to '+fmtDate(to.value)+')'+(plan.warn ? ', '+plan.warn+' new warnings' : ''), site);
+        A.save(); dlg.close(); A.route(); toast('Changed '+plan.n+' shifts. Undo is at the top of the schedule.'); }},'Save changes');
+      fillWhich();
+      ap(box, dayBox, h('div',{class:'grid g2'}, field('From', from), field('To', to)), h('div',{class:'grid g2'}, field('Which shifts', which), field('Who is on them', whoF)),
+        field('What to change', act), timeBox, staffBox,
+        h('div',{class:'row'}, h('button',{class:'btn ghost',type:'button',onclick:preview},'Preview changes'), apply), out,
+        h('p',{class:'small muted'},'Only this home ('+siteObj(site).name+'). Training shifts are left alone. If the week is already published, staff see the changes after you publish again.'));
+      show();
+    });
   }
   function weekToolsCard(site, d0){
     const sc = ensure();
@@ -806,5 +886,6 @@
   function onCallTonight(){ const site = S().site, oc = (ensure().oncall[site]||{def:'Manager', days:{}}); return oc.days[A.isoDay(new Date())] || oc.def; }
 
   window.SSSched = {ensure, dn, di, dow, todayN, tmin, absA, absB, mins, hrs, span, tShort, tLong, dayFmt, weekStartOf, rulesFor, staffNames, prof, rec, shiftsAt, check, me, actor, audit, siteObj,
-    homeCard, myNextCard, onCallTonight, dialog, field, sel, TYPES, reqText};
+    homeCard, myNextCard, onCallTonight, dialog, field, sel, TYPES, reqText,
+    can, canEdit, canApprove, decideReq, applyReq, diffIssues, withChange, fitFor, snap, timeOffFor, mt};
 })();

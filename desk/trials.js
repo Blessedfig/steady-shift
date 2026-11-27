@@ -13,8 +13,8 @@
   const appUrl = () => location.origin + location.pathname.replace(/desk\/.*$/, '') + 'app/';
   const linkFor = c => appUrl() + '?code=' + encodeURIComponent(c);
   const day = d => d ? new Date(d).toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'}) : '';
-  const PLAN = {home:'Home', facility:'Facility', family:'Family', nurse:'Nurse Pro', agency:'Agency', group:'Group',
-                reduced:'Asked for a lower price', more_time:'Asked for more time', not_now:'Not right now'};
+  const PLAN = {home:'Home suite', facility:'Facility suite', family:'Family', nurse:'Nurse Pro', agency:'Agency', group:'Multi-site',
+                reduced:'Price help: Rules Check only ($22)', more_time:'Asked for one more free month', not_now:'Not right now'};
   const TYPE = {afh:'Adult family home', cbrf:'CBRF', agency:'Agency', multi:'Several sites', nurse:'Nurse', family:'Family caregiver', other:'Other'};
   function copy(text, b, label){
     const done = () => { b.textContent = 'Copied'; setTimeout(() => b.textContent = label, 1500); };
