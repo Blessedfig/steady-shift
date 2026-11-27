@@ -144,3 +144,13 @@ Each resident's hand-off has a "Daily care" section modeled on the CNA daily car
 ## Follow-up checks after an event (monitor.js, `#/monitor`)
 
 After a head strike or unwitnessed fall, a fall, a medication error, a new medication or a change in condition, a check schedule starts (house default 72 hours: frequent early checks, then one each shift). Head-strike checks add neuro items. Each check falls on a shift and shows as due or overdue on Home, in the shift change report ("Already in the app") and on the house tablet board. Readings outside the house limits (BP, pulse, breathing, temperature, oxygen, pain, neuro) show "Call the nurse now" with the nurse's number from the face sheet. Recent fall, head or medication incident reports prompt "Start checks?" and stay linked. Nurses and managers can apply a nurse or prescriber order that replaces the schedule for that person, or end monitoring. House defaults and limits are editable and labeled as house defaults. State lives in `S.care.monitor`. Module id `monitor`.
+
+## Medication record (mar.js, `#/mar`)
+
+A medication administration record with fictional sample medicines (never real resident data in the test).
+
+- **Med pass:** each scheduled dose by resident and label time, recorded as given, refused, held or not given, with who and when; refused, held and not given need a note. Doses past the 1-hour window are flagged as late (a house rule from common pharmacy practice, not a DHS rule). As-needed doses need the reason before they are recorded and the result within the hour. Record rule: DHS 88.07(3)(e)1-2, DHS 83.37(2)(d).
+- **Alerts:** two refusals in a row (CBRF: tell the prescriber as soon as possible, DHS 83.37(1)(k); AFH: court-ordered medicines go to the court and physician, DHS 88.07(3)(b)), missing PRN results, psychotropic reassessment past 3 months and monthly PRN psychotropic checks (DHS 83.37(1)(h)-(i)), yearly pharmacist review (DHS 83.37(1)(e)).
+- **Counts and disposal:** controlled medicine counts with a second person and a running balance (DHS 88.07(3)(e)1, DHS 83.37(3)(g)); disposal with two different witnesses (DHS 83.37(1)(g)).
+- Nurse-only routes (injections, nebulizers) are marked "Nurse or delegated". Residents who manage their own medicines are marked and skipped (DHS 88.07(3)(c), DHS 83.37(2)(a)). 7-day history grid and CSV download. Medication errors link to Report something and Follow-up checks.
+- State: `S.care.mar`. Module id `mar`. API: `window.SSMar`. Next step: build the medicine list from nurse-checked orders (`SS_ordersFor`) with pharmacy label times.
