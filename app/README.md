@@ -161,3 +161,12 @@ A progress note for each resident on each shift, written inside the shift change
 
 - **Quick search:** the 🔎 Search button at the top, Ctrl+K (Cmd+K on a Mac), or "/" opens a search box from any screen. It finds every screen and service this role can open (services switched off are left out) and resident pages for the picked home ("face sheet Ruth", "care plan Walt"), using everyday words and forgiving typos ("timeshet", "vender", "fax inbx"). The last two rows hand the words to Do it by chat or to Procedure check. Chat uses the same search for "open ...", "go to ...", "where is ..." and short screen names.
 - **Policies and procedures:** managers and owners now see "Facility setup and policy upload" and "Policies and procedures" near the top of their menu, plus a Home tile. Upload the handbook and policies (PDF or Word) in Facility setup, step 2; map procedures to situations in Policies and procedures. In chat, "add a policy" or "where do I upload our handbook" gives the same two buttons.
+
+## Fire and emergency (safety.js, `#/safety`)
+
+The fire safety records a surveyor asks for, with due dates from the rule for each setting. Fire safety was the top citation area in 2025 (60 CBRF, 81 AFH).
+
+- **CBRF:** a fire drill every quarter, one a year during sleeping hours, two severe-weather drills a year (DHS 83.47(2)(d)-(e)); smoke and heat system test every other month and a yearly NFPA 72 inspection (DHS 83.48); extinguishers tagged yearly (83.47(4)); local fire inspection yearly, reports kept 2 years (83.47(3)).
+- **AFH:** each resident's evacuation timed at placement and yearly, with a 2-minute target; anyone slower is flagged so staff are told (DHS 88.05(4)(d)); smoke alarms tested monthly (88.05(4)(b)); extinguishers tagged yearly (88.05(4)(a)).
+- **Emergency plan:** a checklist of the parts the plan must cover, when it was last reviewed, and when it was explained to each resident (CBRF within 72 hours of admission, DHS 83.47(2)(a)-(c); AFH right after move-in, DHS 88.05(4)(d)1-2).
+- Drill log with total time, who was on shift, residents over the limit and what to fix; CSV download for the surveyor; manager home tile with the count of items due. State: `S.care.safety`. Module id `safety`. API: `window.SSSafety`.

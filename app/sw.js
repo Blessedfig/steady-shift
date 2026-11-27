@@ -1,7 +1,7 @@
 // Service worker for the installed test app. Network first, so testers always get the latest version;
 // the cached copy is used only when the phone is offline. Sign-in and data calls (other sites) are never cached.
-const CACHE = 'ss-app-v30';
-const SHELL = ['./', './index.html', './app.js', './meals.js', './facesheet.js', './cleaning.js', './monitor.js', './notes.js', './academy-data.js', './academy.js', './wages-data.js', './trial.js', './data.js', './peer-data.js', './schedule.js', './access.js', './time.js', './insights.js', './isp-library.js', './isp.js', './labor.js', './station.js', './outlook.js', './reports.js', './money.js', './intake.js', './intake-samples.js', './choices.js', './assistant.js', './search.js', './hr-data.js', './hr.js', './vendors.js', './outside.js', './schedule.css', './manifest.webmanifest', './icons/icon-192.png',
+const CACHE = 'ss-app-v33';
+const SHELL = ['./', './index.html', './app.js', './meals.js', './facesheet.js', './cleaning.js', './monitor.js', './safety.js', './notes.js', './academy-data.js', './academy.js', './wages-data.js', './trial.js', './data.js', './peer-data.js', './schedule.js', './access.js', './time.js', './insights.js', './isp-library.js', './isp.js', './labor.js', './station.js', './outlook.js', './reports.js', './money.js', './intake.js', './intake-samples.js', './choices.js', './assistant.js', './search.js', './hr-data.js', './hr.js', './vendors.js', './outside.js', './schedule.css', './manifest.webmanifest', './icons/icon-192.png',
   '../desk/config.js', '../desk/pw.js', '../desk/idle.js', '../desk/vendor/supabase-js-2.118.0.js'];
 
 self.addEventListener('install', e => {
