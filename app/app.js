@@ -53,7 +53,8 @@
   const VIEWS = {
     home:{t:'Home', ic:'🏠'},
     check:{t:'Procedure check', ic:'✅'},
-    report:{t:'Write a report', ic:'📝'},
+    report:{t:'Report something', ic:'📝'},
+    required:{t:'Required reports', ic:'📋'},
     night:{t:'Night help', ic:'🌙'},
     whatif:{t:'What-if library', ic:'🧭'},
     behavior:{t:'Behavior help', ic:'🤝'},
@@ -85,10 +86,10 @@
   };
   const NAV = {
     caregiver:['home','schedule','time','check','askpolicy','whatif','report','night','behavior','cards','peer','mytraining','access'],
-    manager:['home','setup','schedule','time','kiosk','inbox','orders','questions','check','askpolicy','whatif','report','night','behavior','team','review','survey','decide','ask','cards','peer','watch','procedures','sync','access'],
+    manager:['home','setup','schedule','time','kiosk','inbox','orders','questions','check','askpolicy','whatif','report','night','behavior','team','review','survey','decide','ask','cards','peer','watch','procedures','required','sync','access'],
     rn:['home','delegations','orders','schedule','time','sync','check','askpolicy','whatif','cards','night','behavior','watch'],
-    owner:['home','owner','insights','setup','schedule','time','access','sync','review','peer','askpolicy','whatif','procedures','survey','questions','decide','ask','watch','cards'],
-    multi:['home','sites','owner','insights','setup','schedule','time','access','sync','review','peer','askpolicy','whatif','procedures','survey','watch','ask','cards'],
+    owner:['home','owner','insights','setup','schedule','time','access','sync','review','peer','askpolicy','whatif','procedures','required','survey','questions','decide','ask','watch','cards'],
+    multi:['home','sites','owner','insights','setup','schedule','time','access','sync','review','peer','askpolicy','whatif','procedures','required','survey','watch','ask','cards'],
     family:['home','check','night','behavior','handoff','cards','watch']
   };
 
@@ -225,7 +226,7 @@
     v.append(head(shift+' · '+site().name, 'What do you need right now?', 'Pick one. Everything is two taps or less.'));
     v.append(h('div',{class:'grid g2'},
       tile('check','✅','Check a procedure','"Can I…?" "How do I…?" Answers with the rule behind them.'),
-      tile('report','📝','Write a note or report','Type it the way you\'d say it. We make it professional.'),
+      tile('report','📝','Report something','Say it once, your way. We make it professional and work out who needs it by when.'),
       tile('night','🌙','Night help: who do I call?','Sorts what wakes the manager and what waits for morning.'),
       tile('behavior','🤝','Behavior help','Calm, respectful ideas for hard moments.')));
     const rs = residents();
@@ -355,7 +356,9 @@
 
   // Write a report
   R.report = v => {
-    v.append(head('Write a report', 'Say what happened. We\'ll make it professional.', 'Facts only, calm wording, no blame. Nothing here goes anywhere until you send it.'));
+    if (param.startsWith('case:') && window.SSReports) return SSReports.caseView(v, param.slice(5));
+    v.append(head('Report something', 'Say what happened, once.', 'Facts only, calm wording, no blame. We make it professional, then work out every report it needs, who gets each one and by when.'));
+    if (window.SSReports) SSReports.openCases(v);
     const rs = residents();
     const now = new Date(); now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
     const f = {
@@ -451,7 +454,7 @@
   function showRewrite(out, r, canSend){
     if (r.report) out.append(h('div',{class:'card alert',role:'alert'},
       h('h2',null,'This may be a mandatory report'),
-      h('ol',{class:'steps'}, ['Make sure every resident is safe right now.','Tell the person your home designates to report (usually the administrator) today.','Write facts only. The home reports to DQA within 7 calendar days (DHS 13.05).','You can also report directly to DQA or the county adult-at-risk line. Good-faith reporters are protected from retaliation.'].map(s=>h('li',null,h('span',null,s))))));
+      h('ol',{class:'steps'}, ['Make sure every resident is safe right now.','Tell the person your home designates to report (usually the administrator) today.',setting()==='afh' ? 'Write facts only. An adult family home reports to DQA right away (DHS 88.11(1)), and to police if it may be a crime.' : 'Write facts only. The home reports to DQA within 7 calendar days (DHS 13.05).','You can also report directly to DQA or the county adult-at-risk line. Good-faith reporters are protected from retaliation.'].map(s=>h('li',null,h('span',null,s))))));
     const pre = h('div',{class:'out'});
     // highlight flagged words
     const parts = r.text.split(new RegExp('('+r.flags.map(f=>f.w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')','gi'));
@@ -483,6 +486,7 @@
     if (r.flags.length || r.missing.length) out.append(h('div',{class:'card warn'}, h('h3',null,'Check before sending'),
       h('ul',null, r.flags.map(f => h('li',null,h('b',null,'"'+f.w+'": '),f.why)), r.missing.map(m => h('li',null,h('b',null,'Missing: '),m)))));
     if (r.changes.length) out.append(h('details',{class:'card'}, h('summary',{style:'cursor:pointer;font-weight:700'},'What we changed ('+r.changes.length+')'), h('ul',null,r.changes.map(c=>h('li',null,c)))));
+    if (window.SSReports && canSend) return SSReports.panel(out, r);
     const st = setting();
     out.append(h('div',{class:'card soft'}, h('h3',null,'Who needs to know, and by when'),
       r.routes.length ? h('div',{class:'list'}, r.routes.map(rt => h('div',{class:'item'}, h('b',null,rt.type), h('span',{class:'small'},'Tell: '+rt.to.join(', ')), (st==='cbrf' && rt.cbrf) || (st==='afh' && rt.afh) ? h('span',{class:'small'},'State deadline: '+(st==='cbrf'?rt.cbrf:rt.afh)) : st==='afh' && rt.cbrf ? h('span',{class:'small muted'},'AFH deadline: check DQA P-02007 (being verified)') : null)))
@@ -2014,17 +2018,19 @@
       area.append(h('div',{class:'card soft'}, h('b',null, done.filter(Boolean).length+' of 3 steps done'),
         h('span',{class:'small'},'Test version: use the sample documents or your own made-up files. Do not upload real resident information.')));
       // Step 1: profile
-      const county = h('input',{type:'text',value:p.county||'','aria-label':'County'}), city = h('input',{type:'text',value:p.city||'','aria-label':'City or town'});
+      const county = h('input',{type:'text',value:p.county||'','aria-label':'County',list:'wiCounties',autocomplete:'off'}), city = h('input',{type:'text',value:p.city||'','aria-label':'City or town'});
       const aps = h('input',{type:'text',value:p.aps||'','aria-label':'Adult protective services number',placeholder:'County intake number'});
+      const lic = h('select',{'aria-label':'Who licensed this home'}, h('option',{value:'dqa',selected:p.licensor!=='county'},'DQA regional office (most homes)'), h('option',{value:'county',selected:p.licensor==='county'},'A county agency'));
       const pay = ['Family Care (MCO)','IRIS','Private pay','Other county or VA'];
       const payBoxes = pay.map(x => { const cb = h('input',{type:'checkbox',checked:(p.pay||[]).includes(x)}); cb.dataset.v = x; return h('label',{class:'row small'},cb,x); });
       const s1 = h('form',{class:'card'}, h('h2',null,'1. About this home'),
         h('p',{class:'small muted'},D.SETTINGS[s.setting].name+'. County and city decide which local rules apply.'),
         h('div',{class:'grid g2'}, h('label',{class:'f'},'County',county), h('label',{class:'f'},'City or town',city)),
         h('label',{class:'f'},'County adult protective services number',aps),
+        s.setting === 'afh' ? h('label',{class:'f'},'Who licensed this home? (see your license)',lic) : null,
         h('fieldset',{style:'border:0;padding:0;margin:0'}, h('legend',{class:'small'},'Funding sources'), payBoxes),
         h('div',{class:'row'}, h('button',{class:'btn sm',type:'submit'},'Save')));
-      s1.addEventListener('submit', e => { e.preventDefault(); f.profile = {county:county.value.trim(), city:city.value.trim(), aps:aps.value.trim(), pay:payBoxes.map(l => l.querySelector('input')).filter(c => c.checked).map(c => c.dataset.v)}; save(); toast('Saved for '+s.name); route(); });
+      s1.addEventListener('submit', e => { e.preventDefault(); f.profile = {county:county.value.trim(), city:city.value.trim(), aps:aps.value.trim(), licensor:lic.value, pay:payBoxes.map(l => l.querySelector('input')).filter(c => c.checked).map(c => c.dataset.v)}; save(); toast('Saved for '+s.name); route(); });
       area.append(s1);
       // Step 2: documents
       const file = h('input',{type:'file',multiple:true,accept:'.pdf,.docx,.txt,.md','aria-label':'Choose documents'});

@@ -42,3 +42,14 @@ marked fictional member samples. Each entry has the situation, what the home doe
 - **Facility setup** (`#/setup`): each home adds its own PDFs, Word files and text files (Google Docs: download as Word or PDF). Files are read on the device (`vendor/pdf.min.js`, `vendor/mammoth.browser.min.js`, self-hosted for the CSP), private details are stripped, and the text is split into short passages with their headings and page numbers. "Build this home's procedure layer" maps the passages to the what-if library.
 - **Ask our policy** (`#/askpolicy`): shows the law first, then quotes this home's own passages with their source, then a conflict check done in code. If nothing in the home's documents matches, it says "Not covered by your policy". It searches only the selected home's documents; other homes are never searched. With the optional `facility-ask` function, Claude rewords the quoted passages, and every sentence must cite one of them.
 - Sample documents for testing are in `../data/samples/` (fictional). Test data stays in the browser. See `../supabase/functions/facility-ask/README.md` for what production needs (per-facility tables with row-level security, server-side retrieval, BAAs).
+
+## Report something and Required reports (reports.js)
+
+- **Report something** (`#/report`): staff describe what happened once. The app makes it professional, matches it to the events
+  in `../data/reports/wi-reports.json`, and lists every report it needs: who gets each one (the DQA regional office for the home's county,
+  the licensing agency, the Misconduct Reporting System, police, county adult protective services, the ombudsman, the health department,
+  the MCO and the guardian), the deadline with a timer, the form, and the rule. "Track these reports" files a copy for the home, sends it to
+  the manager's review list, and opens a tracker (`#/report/case:<id>`) with a pre-filled draft and "Mark sent" for each one.
+- **Required reports** (`#/required`): every report, planned change, record to keep and regular duty for the home's setting (AFH or CBRF),
+  plus where reports go and all four regional offices with their counties.
+- The county comes from Facility setup (with a list of all 72 counties). AFHs also say whether DQA or a county licensed them.

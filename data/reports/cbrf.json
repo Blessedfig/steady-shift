@@ -1,0 +1,26 @@
+{"records":{
+ "resident-record":{"cite":"DHS 83.42(1)","rule":"Identity and admission date, contacts and legal representative, physician, health screening, admission agreement, significant incidents, assessments, service plan, evacuation evaluation, orders, medication list and administration record, discharge summary.","keep":"7 years after final discharge (DHS 83.13(2)(b))","status":"verified"},
+ "admission":{"cite":"DHS 83.28","rule":"Assessment before admission (emergency admissions within 5 days) and a temporary service plan at admission.","status":"verified"},
+ "rights":{"cite":"DHS 83.28(6); 83.13(3)(b)","rule":"Give and explain resident rights before or at admission. Post them.","status":"verified"},
+ "exam":{"cite":"DHS 83.28(4)(a)1","rule":"Communicable disease and TB screening by a physician, PA, NP or RN, within 90 days before to 7 days after admission.","status":"verified"},
+ "plan":{"cite":"DHS 83.35(3)","rule":"Individual service plan within 30 days after admission; review yearly and when needs change.","status":"unverified"},
+ "mar":{"cite":"DHS 83.42(1)(r); 83.37(1)(e)","rule":"Document every medicine given, who gave it, refusals, omissions, errors and reactions. Pharmacist or physician review near admission and every 12 months.","status":"unverified"},
+ "incident":{"cite":"DHS 83.12(6); 83.13(1)-(2)(a)","rule":"Each report lists time, date, place, people involved, details and action taken to protect residents. Keep investigations.","keep":"2 years (significant incidents also go in the resident record)","status":"verified"},
+ "grievance":{"cite":"DHS 83.33","rule":"Written procedure at admission. Written summary of findings and action to the resident, representative and case manager. Keep a copy of the investigation.","keep":"2 years (general rule, DHS 83.13(2)(a))","status":"unverified"},
+ "staff-record":{"cite":"DHS 83.18(1)","rule":"Job description, start date, administrator's education, background check, training records.","keep":"3 years after the employee leaves (DHS 83.13(2)(c))","status":"verified"},
+ "background":{"cite":"DHS 83.17(1); Wis. Stat. 50.065; DHS 12","rule":"At hire and every 4 years after.","status":"verified"},
+ "orientation":{"title":"Orientation and initial training","cite":"DHS 83.19-83.23","rule":"Orientation before any duties. Task training before the related duties. Fire safety, first aid and choking, rights, client group and challenging behaviors within 90 days of hire.","status":"verified"},
+ "fire-drill-log":{"cite":"DHS 83.47(2)(d); 83.13(1)(g)","rule":"Date, time and total evacuation time of each drill.","keep":"2 years","status":"unverified"}
+},
+"periodic":{
+ "fire-drills":{"every":"Every 3 months with staff and residents, and one a year that simulates sleeping hours","cite":"DHS 83.47(2)(d)","status":"unverified"},
+ "evac-eval":{"every":"Within 3 days of admission, then every year","cite":"DHS 83.35(5)","status":"unverified"},
+ "smoke":{"every":"Every other month (hard-wired detectors); whole system inspected yearly","cite":"DHS 83.48","status":"unverified"},
+ "extinguisher":{"every":"Every year by a qualified person, with a dated tag","cite":"DHS 83.47(4)(a)","status":"unverified"},
+ "fire-inspection":{"title":"Local fire authority inspection","every":"Every year; keep the report 2 years","cite":"DHS 83.47(3); 83.13(1)(i)","status":"unverified"},
+ "isp-review":{"every":"Every year and when needs change","cite":"DHS 83.35(3)(d)","status":"unverified"},
+ "med-review":{"title":"Medication regimen review","every":"Within 30 days of admission, then every 12 months","cite":"DHS 83.37(1)(e)","status":"unverified"},
+ "training":{"every":"15 hours every calendar year (administrator and care staff)","cite":"DHS 83.25","status":"verified"},
+ "background-recheck":{"title":"Background recheck","every":"Every 4 years","cite":"DHS 83.17(1)","status":"verified"},
+ "biennial":{"every":"Every 24 months, on the department form, with fees","cite":"DHS 83.09","status":"verified"}
+}}
