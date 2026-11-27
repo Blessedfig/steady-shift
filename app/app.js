@@ -81,6 +81,7 @@
     schedule:{t:'Schedule', ic:'📅'},
     time:{t:'Time sheets', ic:'⏱️'},
     insights:{t:'Owner insights', ic:'📈'},
+    outlook:{t:'Owner Outlook', ic:'🔭'},
     access:{t:'Services and access', ic:'🔑'},
     kiosk:{t:'House tablet', ic:'🖥️'}
   };
@@ -88,8 +89,8 @@
     caregiver:['home','schedule','time','check','askpolicy','whatif','report','night','behavior','cards','peer','mytraining','access'],
     manager:['home','setup','schedule','time','kiosk','inbox','orders','questions','check','askpolicy','whatif','report','night','behavior','team','review','survey','decide','ask','cards','peer','watch','procedures','required','sync','access'],
     rn:['home','delegations','orders','schedule','time','sync','check','askpolicy','whatif','cards','night','behavior','watch'],
-    owner:['home','owner','insights','setup','schedule','time','access','sync','review','peer','askpolicy','whatif','procedures','required','survey','questions','decide','ask','watch','cards'],
-    multi:['home','sites','owner','insights','setup','schedule','time','access','sync','review','peer','askpolicy','whatif','procedures','required','survey','watch','ask','cards'],
+    owner:['home','owner','insights','outlook','setup','schedule','time','access','sync','review','peer','askpolicy','whatif','procedures','required','survey','questions','decide','ask','watch','cards'],
+    multi:['home','sites','owner','insights','outlook','setup','schedule','time','access','sync','review','peer','askpolicy','whatif','procedures','required','survey','watch','ask','cards'],
     family:['home','check','night','behavior','handoff','cards','watch']
   };
 
@@ -709,7 +710,8 @@
         const todo = h('ul',{class:'tourlist'}, w.todo.map((t,i) => { const id = w.id+'t'+i; const cb = h('input',{type:'checkbox',id,checked:!!S.watch[w.id][i]}); const lb = h('label',{for:id,class:S.watch[w.id][i]?'done':''},t); cb.addEventListener('change',()=>{S.watch[w.id][i]=cb.checked;save();lb.className=cb.checked?'done':'';}); return h('li',null,cb,lb); }));
         list.append(h('div',{class:'card'},
           h('div',{class:'chips'}, h('span',{class:'chip grey'},w.layer), dd!=null ? h('span',{class:'chip '+(dd<45?'amber':'')}, dd>=0 ? 'in '+dd+' days' : 'date passed') : h('span',{class:'chip grey'},'no date'), h('span',{class:'chip '+(w.check==='Verified'?'calm':'grey')},w.check)),
-          h('h3',null,w.title), h('p',{class:'small muted'},w.status), h('p',null,w.what), w.todo.length ? h('div',null,h('b',{class:'small'},'Get ready'),todo) : null));
+          h('h3',null,w.title), h('p',{class:'small muted'},w.status), h('p',null,w.what), w.todo.length ? h('div',null,h('b',{class:'small'},'Get ready'),todo) : null,
+          (window.SSOutlook ? SSOutlook.byWatch(w.id) : []).map(o => h('p',{class:'small'}, h('a',{href:'#/outlook/'+o.id},'Money impact in Owner Outlook: '+o.title)))));
       });
     }
     tg.addEventListener('click',()=>{ mineOnly = !mineOnly; tg.setAttribute('aria-pressed',String(mineOnly)); draw(); });
@@ -1365,7 +1367,7 @@
     const top = Object.entries(by).sort((a,b)=>b[1]-a[1]).slice(0,5);
     v.append(h('div',{class:'grid g2'},
       h('div',{class:'card'}, h('h2',null,'Top 5 things your team asked'), top.length ? h('ol',null, top.map(([id,n]) => h('li',null,ruleById(id).q+' ('+n+')'))) : h('p',{class:'muted'},'Nothing yet.'), h('p',{class:'small muted'},'Use these to plan the next training. No names attached.'), h('a',{href:'#/questions'},'Full question report')),
-      h('div',{class:'card'}, h('h2',null,'Funding and rate watch'), h('ul',null, h('li',null,'Wisconsin budget items for caregiver pay and training (amounts being checked).'), h('li',null,'Medicaid payment caps proposed from 2028 may affect care manager rates.'), h('li',null,'WisCaregiver Careers can offset hiring and training costs.')), h('a',{href:'#/watch'},'Regulatory Watch'))));
+      h('div',{class:'card'}, h('h2',null,'Funding and rate watch'), h('p',null,'Family Care rates, Direct Care Workforce Funding, wage pressure and federal Medicaid changes, with year-end scenarios for this home.'), h('div',{class:'row'}, h('a',{class:'btn sm',href:'#/outlook'},'Open Owner Outlook'), h('a',{href:'#/watch'},'Regulatory Watch')))));
     ownerHooks.forEach(f => { try { f(v); } catch(e){ console.error(e); } });
     if (isHome){ const ic = installCard(); if (ic) v.append(ic); const pc = pulseCard(); if (pc) v.append(pc); v.append(tourCard()); }
   };
