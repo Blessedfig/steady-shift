@@ -485,6 +485,7 @@
     (st.reports||[]).filter(r => r.site===sid && r.at >= since).forEach(r => out.push({kind:'Report', text:(r.type||'Report')+(r.resident?' · '+r.resident:'')+' · '+r.status, res:r.resident}));
     (st.triage||[]).filter(t => t.site===sid && t.at >= since).forEach(t => out.push({kind:'Night help', text:t.note}));
     mealFlags(sid).forEach(f => out.push({kind:'Meal flag', text:f.res+': '+f.text, res:f.res}));
+    try { if (window.SSClean && SSClean.openTasks) { const cl = SSClean.openTasks(sid); if (cl.length) out.push({kind:'Cleaning not done', text:cl.length+' job'+(cl.length===1?'':'s')+': '+cl.slice(0,4).map(t => t.text).join('; ')+(cl.length>4?'; and more':'')}); } } catch(e){}
     try { if (window.SSFace && SSFace.openTasks) SSFace.openTasks(sid).forEach(t => out.push({kind:'Not done yet', text:t.res+': '+t.text, res:t.res})); } catch(e){}
     try { if (window.SSSched && SSSched.ensure){ const sc = SSSched.ensure(); (sc.shifts||[]).filter(s => s.site===sid && s.callin && s.date >= since.slice(0,10)).forEach(s => out.push({kind:'Call-in', text:(s.staff||'Open shift')+' called in for '+s.date+' '+s.start})); (sc.shifts||[]).filter(s => s.site===sid && !s.staff && s.date===today()).forEach(s => out.push({kind:'Open shift', text:'Nobody yet for '+s.start+' to '+s.end+' today'})); } } catch(e){}
     return out;
