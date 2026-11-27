@@ -1262,7 +1262,7 @@
       h('h3',null,'What the order says'), linesBox,
       h('div',{class:'row'}, h('button',{class:'btn quiet sm',type:'button',onclick:()=>addLine()},'Add another line'),
         h('button',{class:'btn quiet sm',type:'button',onclick:()=>{ linesBox.textContent=''; srcSel.value = SAMPLE_VISIT.source; spSel.value = SAMPLE_VISIT.specialty; spNote.hidden = true; presc.value = SAMPLE_VISIT.prescriber; SAMPLE_VISIT.lines.forEach(l => addLine(Object.assign({}, l, {start: l.kind==='appointment' ? addDays(isoDay(new Date()),21) : ''}))); toast('Sample visit summary filled in'); }},'Fill in a sample visit summary')),
-      h('p',{class:'small muted'},'Phone orders: read the order back to the prescriber, then enter it here. Nothing changes for staff until a nurse checks it.'),
+      h('p',{class:'small muted'},'Phone orders: read the order back to the prescriber, then enter it here. A medication from a phone order stays waiting until the signed written order is in the file (DHS 88.07(3)(d), DHS 83.37(1)(a)). Nothing changes for staff until a nurse checks it.'),
       h('button',{class:'btn',type:'submit'},'Send to the nurse to check'));
     f.addEventListener('submit', e => { e.preventDefault();
       const lines = [...linesBox.children].map(b => b._read()).filter(Boolean);
@@ -1277,6 +1277,8 @@
     if (!pend.length) checkCard.append(h('p',{class:'muted'},'Nothing waiting.'));
     pend.forEach(o => {
       const steps = ['Matches the paper, fax or read-back word for word', 'Anything unclear was clarified with the prescriber', o.kind==='med' ? 'Pharmacy has it and the MAR is updated' : 'Care plan or service plan updated', 'Staff doing it are trained or delegated'];
+      // Wisconsin AFHs and CBRFs need a signed written order on file before any medication is given (DHS 88.07(3)(d), DHS 83.37(1)(a)).
+      if (o.kind === 'med' && /phone/i.test(o.source||'')) steps.unshift('Signed written order received (fax, portal or paper) and filed. Not given before then (DHS 88.07(3)(d), 83.37(1)(a))');
       const boxes = steps.map(s => h('label',{class:'row small'},h('input',{type:'checkbox'}),s));
       const note = h('input',{type:'text',placeholder:'Note for the sender (optional)'});
       const ok = h('button',{class:'btn sm',type:'button',disabled:!rn},'Checked, make it active');

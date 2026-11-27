@@ -161,3 +161,18 @@ A progress note for each resident on each shift, written inside the shift change
 
 - **Quick search:** the 🔎 Search button at the top, Ctrl+K (Cmd+K on a Mac), or "/" opens a search box from any screen. It finds every screen and service this role can open (services switched off are left out) and resident pages for the picked home ("face sheet Ruth", "care plan Walt"), using everyday words and forgiving typos ("timeshet", "vender", "fax inbx"). The last two rows hand the words to Do it by chat or to Procedure check. Chat uses the same search for "open ...", "go to ...", "where is ..." and short screen names.
 - **Policies and procedures:** managers and owners now see "Facility setup and policy upload" and "Policies and procedures" near the top of their menu, plus a Home tile. Upload the handbook and policies (PDF or Word) in Facility setup, step 2; map procedures to situations in Policies and procedures. In chat, "add a policy" or "where do I upload our handbook" gives the same two buttons.
+
+## Fire and emergency (safety.js, `#/safety`)
+
+The fire safety records a surveyor asks for, with due dates from the rule for each setting. Fire safety was the top citation area in 2025 (60 CBRF, 81 AFH).
+
+- **CBRF:** a fire drill every quarter, one a year during sleeping hours, two severe-weather drills a year (DHS 83.47(2)(d)-(e)); smoke and heat system test every other month and a yearly NFPA 72 inspection (DHS 83.48); extinguishers tagged yearly (83.47(4)); local fire inspection yearly, reports kept 2 years (83.47(3)).
+- **AFH:** each resident's evacuation timed at placement and yearly, with a 2-minute target; anyone slower is flagged so staff are told (DHS 88.05(4)(d)); smoke alarms tested monthly (88.05(4)(b)); extinguishers tagged yearly (88.05(4)(a)).
+- **Emergency plan:** a checklist of the parts the plan must cover, when it was last reviewed, and when it was explained to each resident (CBRF within 72 hours of admission, DHS 83.47(2)(a)-(c); AFH right after move-in, DHS 88.05(4)(d)1-2).
+- Drill log with total time, who was on shift, residents over the limit and what to fix; CSV download for the surveyor; manager home tile with the count of items due. State: `S.care.safety`. Module id `safety`. API: `window.SSSafety`.
+
+## Grievances (grievance.js, `#/grievance`)
+
+Resident and family complaints, in their words. Any staff member can write one down; it goes to the manager, who adds steps, writes what was found and what was done, records who got the written answer, and downloads the written summary. This is the record DHS 88.10(5)(d) asks for in adult family homes; for CBRFs DHS 83.33 (text still being checked) asks for a written summary to the resident, representative and case manager and a kept copy of the investigation. Words like abuse, neglect or theft send the person to Report something, because those are also reports with their own deadlines. The help box lists the licensing agency, the ombudsman or Disability Rights Wisconsin, and the MCO for Family Care members (who must answer within 90 days, 42 CFR 438.408(b)(1)). The 10-day answer target is a house default. State: `S.care.grievances`. Module id `grievance`.
+
+Also in this change: a medication from a phone order cannot be made active until the signed written order is filed (DHS 88.07(3)(d), DHS 83.37(1)(a)), and HR files add the hepatitis B vaccine offer (29 CFR 1910.1030(f)(2)) and CBRF dietary training within 90 days (DHS 83.22(4)).
