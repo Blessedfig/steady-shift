@@ -57,7 +57,7 @@ window.SS_INTAKE_SAMPLES = (function(){
       'MAR, November 2026 (SAMPLE)\nMetoprolol succinate ER 50 mg once daily (8 AM)\nApixaban 5 mg twice daily\nMetformin 500 mg twice daily with meals\nDonepezil 10 mg at bedtime\nLorazepam 0.5 mg as needed for anxiety'
     ]},
     {id:'mco', name:'Member-centered plan.docx', kind:'word', from:'Family Care MCO (sample)', date:'2026-10-15', types:['mcoplan'], pages:[
-      'MEMBER-CENTERED PLAN (SAMPLE)\nMember: Dot Sample. Care team: care manager (sample) and RN (sample).\nOutcomes: Stay safe from falls. Keep going to church on Sundays. Stay close to her daughter.\nAuthorized services: Residential care (AFH), home health PT, rides to appointments.\nRights restrictions (HCBS settings rule): none approved.\nBehaviors: Tried to leave once in October 2026 near sundown. What helps: walking with her, gospel music, offering a call to her daughter.'
+      'MEMBER-CENTERED PLAN (SAMPLE)\nMember: Dot Sample.\nCare manager: Care manager (sample), phone 715-555-0123, fax 715-555-0133, care.manager3@mco.example\nNurse manager: Nurse manager (sample), RN, phone 715-555-0173, fax 715-555-0133, nurse.manager3@mco.example\nOutcomes: Stay safe from falls. Keep going to church on Sundays. Stay close to her daughter.\nAuthorized services: Residential care (AFH), home health PT, rides to appointments.\nRights restrictions (HCBS settings rule): none approved.\nBehaviors: Tried to leave once in October 2026 near sundown. What helps: walking with her, gospel music, offering a call to her daughter.'
     ]},
     {id:'guard', name:'Guardianship letters (photo).jpg', kind:'photo', from:'Sample County Circuit Court', date:'2026-10-30', types:['guardian'], pages:[
       'LETTERS OF GUARDIANSHIP OF THE PERSON (SAMPLE)\nWard: Dot Sample\nGuardian: Robert Sample (son)\nOrdered 10/30/2026, Sample County Circuit Court.\nThe guardian has authority over health care and where she lives.'
@@ -127,7 +127,8 @@ window.SS_INTAKE_SAMPLES = (function(){
     F('face',1,'meds','med:donepezil','Medication','Donepezil 10 mg at bedtime','Donepezil 10 mg at bedtime'),
     F('face',1,'meds','med:lorazepam','Medication','Lorazepam 0.5 mg as needed for anxiety','Lorazepam 0.5 mg as needed for anxiety'),
 
-    F('mco',0,'team','team:mco','Family Care team','MCO care manager and RN (sample)','Care team: care manager (sample) and RN (sample).'),
+    F('mco',0,'team','team:mco','Care manager (MCO)','Care manager (sample), Family Care MCO · phone 715-555-0123 · fax 715-555-0133 · care.manager3@mco.example','Care manager: Care manager (sample)'),
+    F('mco',0,'team','team:mco-rn','Nurse manager (MCO RN)','Nurse manager (sample), RN, Family Care MCO · phone 715-555-0173 · fax 715-555-0133 · nurse.manager3@mco.example','Nurse manager: Nurse manager (sample), RN'),
     F('mco',0,'behavior','beh:goals','What matters to them','Stay safe from falls. Keep going to church on Sundays. Stay close to her daughter.','Outcomes: Stay safe from falls. Keep going to church on Sundays. Stay close to her daughter.'),
     F('mco',0,'behavior','beh:exit','Pattern','Tried to leave once in October 2026 near sundown','Tried to leave once in October 2026 near sundown.'),
     F('mco',0,'behavior','beh:helps','What helps','Walking with her, gospel music, offering a call to her daughter','What helps: walking with her, gospel music, offering a call to her daughter.'),

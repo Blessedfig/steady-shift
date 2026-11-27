@@ -358,6 +358,12 @@
         h('div',{class:'row'}, h('button',{class:'btn sm',type:'button',onclick:()=>{ pe.pref = {shifts:s1.value, contact:s2.value, max:+s3.value||null, notes:s4.value}; save(); toast('Saved'); A.route(); }},'Save')));
     })()));
     b.append(prefBox);
+    // Social Security number: masked, reason to view, logged in this file's log too, never printed
+    if (window.SSSSN && (mine || isBoss())){
+      const ssn = pe.ssn || ('000-77-'+String(1000 + Object.keys(c.people).indexOf(n)).slice(-4));
+      b.append(card('', h('h2',null,'Payroll and tax ID'), SSSSN.field({ssn, site:pe.site, label:n, kind:'staff', self:mine, onLog:what => { c.log.unshift({at:new Date().toISOString(), who:actor(), tier:tier().name, file:n, part:what, site:siteOf(n)}); save(); }}),
+        h('p',{class:'small muted'},'Needed for payroll, W-4 and I-9 forms and background checks. Sample numbers start with 000, which are never issued.')));
+    }
     // kudos
     const kb = card('', h('h2',null,'Thank-yous'), kud.length ? h('div',{class:'list'}, kud.slice(0,6).map(k => h('div',{class:'item'}, h('div',{class:'meta'}, h('span',null,fmtDate(k.at)), h('span',null,'from '+k.from)), h('span',null,k.text)))) : h('p',{class:'small muted'},'None yet.'));
     if (!mine){ const t = area('', {rows:'2','aria-label':'Say thank you'}); const pub = h('input',{type:'checkbox',id:'kpub'+uid(),checked:true});
