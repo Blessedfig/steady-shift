@@ -1,7 +1,9 @@
 // Steady Shift test app: shift cleaning and housekeeping checklist.
 // A starter checklist built from Wisconsin rules and common standards (CDC environmental infection control, FDA Food Code,
 // OSHA bloodborne pathogens, fire safety), per-home templates managers edit, tasks by shift and frequency, reminders and an
-// end-of-shift warning, photo sign-off (rooms and equipment only, kept in memory), questions to the manager, and history for surveys.
+// end-of-shift warning, questions to the manager, and history for surveys. Photos are off by default: they turn on only when a
+// manager sets time-limited photo proof for one caregiver (noted in the HR file), or when someone reports a job that wasn't done
+// and attaches a photo as evidence. Rooms and equipment only, never residents; in-app camera; kept in memory in this test version.
 // Sample data only.
 (function(){
   const A = window.SSApp, C = window.SSCare;
@@ -65,13 +67,18 @@
     if (!s.clean || s.clean.v !== 1){
       s.clean = {v:1, tpl:{}, done:{}, hist:[], questions:[], reminders:{}};
       ['maple','birch','cedar'].forEach(sid => {
-        s.clean.tpl[sid] = {v:1, at:'2026-11-27T09:00:00', by:'Steady Shift starter', items:STARTER.map((x,i) => Object.assign({id:'k'+i, on:true, who:'', photo:/Sharps container|extinguisher/.test(x.text)}, x))};
+        s.clean.tpl[sid] = {v:1, at:'2026-11-27T09:00:00', by:'Steady Shift starter', items:STARTER.map((x,i) => Object.assign({id:'k'+i, on:true, who:'', photo:false}, x))};
         s.clean.done[sid] = [];
       });
       seedHistory(s.clean);
       save();
     }
-    return s.clean;
+    const c = s.clean;
+    if (c.photoRule !== 2){   // photos are no longer a per-job default
+      Object.values(c.tpl).forEach(t => t.items.forEach(x => x.photo = false));
+      c.proof = c.proof || []; c.notDone = c.notDone || []; c.photoRule = 2; save();
+    }
+    return c;
   }
   function tpl(){ const c = st(); const sid = S().site; if (!c.tpl[sid]) { c.tpl[sid] = {v:1, at:new Date().toISOString(), by:'Steady Shift starter', items:STARTER.map((x,i) => Object.assign({id:'k'+i, on:true, who:'', photo:false}, x))}; c.done[sid] = []; save(); } return c.tpl[sid]; }
   const monday = d => { const x = new Date(d+'T12:00:00'); x.setDate(x.getDate() - ((x.getDay()+6)%7)); return x.toISOString().slice(0,10); };
@@ -110,22 +117,30 @@
   function minsLeft(){ const sh = C.shiftNow(); const [a,b] = (sh.end||'18:00').split(':').map(Number); const now = new Date(); let d = a*60+(b||0) - (now.getHours()*60+now.getMinutes()); if (d < -60) d += 1440; return d; }
   function me(){ try { if (window.SSSched && SSSched.me) return SSSched.me(); } catch(e){} return tier().name+' (you)'; }
 
+  // ---------- photo proof (manager, one caregiver, time-limited) and "wasn't done" reports ----------
+  function proofFor(name, sid){ sid = sid || S().site; return st().proof.find(p => p.site===sid && p.who===name && !p.ended && p.until >= today()); }
+  function hrNote(who, text){
+    // writes a dated, factual note into the employee's HR file (if the HR module is in use)
+    try { const hr = S().hr; if (hr && hr.notes) hr.notes.unshift({id:uid(), site:S().site, who, kind:'Follow-up', text, by:tier().name+' (you)', at:new Date().toISOString()}); } catch(e){}
+  }
+  function prevShiftKey(){ const k = C.shiftNow().key; const [d, n] = [k.slice(0,10), k.slice(11)]; return n==='Night' ? d+' Day' : addDays(d,-1)+' Night'; }
+  const shiftLabel = k => fmtDate(k.slice(0,10))+' '+k.slice(11).toLowerCase()+' shift';
+  const ND_MEM = {};  // report id -> [objectURL], memory only
+
   // ---------- photos: in-app camera, kept in memory only ----------
   const MEM = {};  // taskId -> [objectURL]
   function camera(onShot){
-    const box = h('div',{class:'card soft',role:'region','aria-label':'Take a photo of the cleaned area'});
+    const box = h('div',{class:'card soft',role:'region','aria-label':'Take a photo of the room or equipment'});
     const video = h('video',{autoplay:true, playsinline:true, muted:true, disablepictureinpicture:true, 'aria-label':'Camera preview', style:'width:100%;max-height:50vh;border-radius:12px;background:#000'});
     const status = h('p',{class:'small',role:'status'},'Starting the camera…');
     let stream = null;
     const stop = () => { if (stream) stream.getTracks().forEach(t => t.stop()); stream = null; box.remove(); };
-    const file = h('input',{type:'file',accept:'image/*',capture:'environment','aria-label':'Take or choose a photo',onchange:()=>{ const f = file.files[0]; if (f){ onShot(URL.createObjectURL(f)); stop(); } }});
     box.append(h('p',{class:'small'},h('b',null,'Photograph the room or equipment only. '),'No residents, faces or paperwork in the picture.'), video, status,
       h('div',{class:'row'}, h('button',{type:'button',class:'btn sm',onclick:()=>{ if (!video.videoWidth) return; const cv = document.createElement('canvas'); const sc = Math.min(1, 1280/video.videoWidth); cv.width = Math.round(video.videoWidth*sc); cv.height = Math.round(video.videoHeight*sc); cv.getContext('2d').drawImage(video,0,0,cv.width,cv.height); cv.toBlob(b => { onShot(URL.createObjectURL(b)); stop(); }, 'image/jpeg', .8); }},'Take photo'),
-        h('button',{type:'button',class:'btn quiet sm',onclick:stop},'Cancel')),
-      h('details',null,h('summary',{class:'small'},'Camera not working? Use the phone camera instead'),file));
+        h('button',{type:'button',class:'btn quiet sm',onclick:stop},'Cancel')));
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia){
-      navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}}, audio:false}).then(s => { stream = s; video.srcObject = s; status.textContent = 'Point at the cleaned area and tap Take photo.'; }).catch(() => { status.textContent = 'The camera is blocked or not available. Use the phone camera option below.'; video.hidden = true; });
-    } else { status.textContent = 'This browser has no in-app camera. Use the phone camera option below.'; video.hidden = true; }
+      navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}}, audio:false}).then(s => { stream = s; video.srcObject = s; status.textContent = 'Point at the room or equipment and tap Take photo.'; }).catch(() => { status.textContent = 'The camera is blocked or not available. Allow the camera for this app, or tell your manager. Photos from the camera roll are not accepted, so the time stays trustworthy.'; video.hidden = true; });
+    } else { status.textContent = 'This browser has no in-app camera. Use the house tablet or tell your manager.'; video.hidden = true; }
     return box;
   }
   window.addEventListener('hashchange', () => { if (!/^#\/clean/.test(location.hash)) Object.keys(MEM).forEach(k => { MEM[k].forEach(u => URL.revokeObjectURL(u)); delete MEM[k]; }); });
@@ -153,6 +168,8 @@
         h('div',{class:'bar calm'},h('i',{style:'width:'+(counted.length?Math.round(doneN/counted.length*100):0)+'%'})),
         left <= 60 && left >= -60 && open.length ? h('p',null,h('b',null,'Shift ends '+(left>0?'in '+left+' minutes':'now')+'. '+open.length+' cleaning job'+(open.length===1?' is':'s are')+' not done. '),'Finish them, or they go on the ',h('a',{href:'#/shift/give'},'shift change report'),' for the next shift. No one is blamed.') : null));
       const mine = me();
+      const proof = proofFor(mine);
+      if (proof) body.append(card('warn', h('p',null,h('b',null,'Photo proof is on for you until '+fmtDate(proof.until)+'. '),'Take a photo of the room or equipment before you check off each job. Your manager set this up and it is noted in your employee file. Ask your manager if you have questions.')));
       const groups = {};
       items.forEach(x => { const g = x.freq==='weekly' ? 'This week' : x.freq==='monthly' ? 'This month' : x.area; (groups[g] = groups[g] || []).push(x); });
       const order = Object.keys(groups).sort((a,b) => (/^This /.test(a)?1:0) - (/^This /.test(b)?1:0));
@@ -163,16 +180,16 @@
           const id = 'cl-'+x.id;
           const cb = h('input',{type:'checkbox',id,checked:!!d});
           const lab = h('label',{for:id,class:d?'done':''}, x.text);
-          const meta = h('span',{class:'small muted'}, ' · '+(x.always?'As needed':FREQ[x.freq])+(x.who?' · '+x.who+(x.who===mine?' (you)':''):'')+(d?' · done by '+d.by+' '+fmtTime(d.at)+(d.photos?' · '+d.photos+' photo'+(d.photos===1?'':'s'):''):'')+(x.photo&&!d?' · photo needed':''));
+          const meta = h('span',{class:'small muted'}, ' · '+(x.always?'As needed':FREQ[x.freq])+(x.who?' · '+x.who+(x.who===mine?' (you)':''):'')+(d?' · done by '+d.by+' '+fmtTime(d.at)+(d.photos?' · '+d.photos+' photo'+(d.photos===1?'':'s'):''):'')+(proof&&!d?' · photo needed':''));
           const li = h('li',null, cb, h('div',{class:'grid',style:'gap:.2rem;flex:1'}, h('div',null,lab, meta), x.why ? h('details',{class:'small'},h('summary',null,'Why'),h('p',null,x.why+(x.cite?' ('+x.cite+')':'')), SRC[x.src] ? h('a',{href:SRC[x.src].u,target:'_blank',rel:'noopener'},SRC[x.src].t) : null) : null));
           const thumbs = h('div',{class:'row'});
           (MEM[x.id]||[]).forEach(u => thumbs.append(h('img',{src:u,alt:'Photo of the cleaned area',style:'width:72px;height:72px;object-fit:cover;border-radius:10px'})));
           const camBtn = h('button',{type:'button',class:'btn quiet sm',onclick:()=>{ li.append(camera(url => { (MEM[x.id] = MEM[x.id] || []).push(url); const dd = doneFor(x); if (dd){ dd.photos = (dd.photos||0)+1; save(); } toast('Photo added. It stays on this device until you leave this screen.'); draw(); })); }},'📷 Photo');
-          if (!d || x.photo || (MEM[x.id]||[]).length) li.lastChild.append(h('div',{class:'row'}, d && !(MEM[x.id]||[]).length ? null : camBtn, thumbs));
+          if (proof && (!d || (MEM[x.id]||[]).length)) li.lastChild.append(h('div',{class:'row'}, d ? null : camBtn, thumbs));
           cb.addEventListener('change', () => {
             const c = st();
             if (cb.checked){
-              if (x.photo && !(MEM[x.id]||[]).length){ cb.checked = false; toast('This job needs a photo first. Tap 📷 Photo.'); return; }
+              if (proof && !(MEM[x.id]||[]).length){ cb.checked = false; toast('Photo proof is on. Tap 📷 Photo first.'); return; }
               c.done[S().site].push({task:x.id, period:periodKey(x.freq), at:new Date().toISOString(), by:mine, photos:(MEM[x.id]||[]).length});
             } else c.done[S().site] = c.done[S().site].filter(z => !(z.task===x.id && z.period===periodKey(x.freq)));
             save(); draw();
@@ -181,7 +198,30 @@
         });
         body.append(card('', h('h2',null,g), list));
       });
-      body.append(helpBox('About photos', h('p',{class:'small'},'Photos are optional unless the checklist asks for one. Take them of rooms and equipment only. In this test version a photo stays only on this device and only until you leave this screen. The record keeps that a photo was taken, not the picture.')));
+      body.append(notDoneCard(items));
+      body.append(helpBox('About photos', h('p',{class:'small'},'Photos are off for everyday checking. They are used only in two cases: your manager turns on photo proof for one person for a set time, or you report a job that was left undone and take a photo so it is a record, not hearsay. Photograph rooms and equipment only, never residents, faces or paperwork. In this test version a photo stays only on this device and only until you leave this screen. The record keeps that a photo was taken, when, and on which shift.')));
+    }
+
+    function notDoneCard(items){
+      // any staff member: a job left undone by the shift before, with a photo as evidence
+      const sel = h('select',{'aria-label':'Which job was not done'}, h('option',{value:''},'Pick the job'), items.filter(x => !x.always).map(x => h('option',{value:x.id},x.area+': '+x.text)), h('option',{value:'other'},'Something else'));
+      const other = h('input',{type:'text',maxlength:'200',placeholder:'What was left undone (the room or task, not the person)','aria-label':'What was left undone',hidden:true});
+      sel.addEventListener('change',()=>{ other.hidden = sel.value!=='other'; });
+      const note = h('textarea',{maxlength:'500',placeholder:'What you found, e.g. "Sink full of dishes at 6:05 AM." Facts only.','aria-label':'What you found'});
+      const shots = []; const thumbs = h('div',{class:'row'});
+      const box = card('', h('h2',null,'Something wasn\'t done?'), h('p',{class:'small muted'},'Report a job the last shift left undone. A photo is required so the record is evidence, not hearsay. It is tied to the shift that handed over ('+shiftLabel(prevShiftKey())+') and to your shift. Describe the room or task, not the person.'),
+        h('label',{class:'f'},'Job',sel), other, h('label',{class:'f'},'What you found',note), thumbs);
+      const camBtn = h('button',{type:'button',class:'btn quiet sm',onclick:()=>{ box.append(camera(url => { shots.push(url); thumbs.append(h('img',{src:url,alt:'Photo of the area that was not done',style:'width:72px;height:72px;object-fit:cover;border-radius:10px'})); })); }},'📷 Take photo');
+      const send = h('button',{type:'button',class:'btn sm',onclick:()=>{
+        if (!sel.value) return toast('Pick the job');
+        if (sel.value==='other' && !other.value.trim()) return toast('Say what was left undone');
+        if (!shots.length) return toast('Take a photo first. It is the evidence.');
+        const x = items.find(i => i.id===sel.value);
+        const r = {id:uid(), site:S().site, task:x?x.id:'', text:x?x.text:other.value.trim(), note:note.value.trim(), at:new Date().toISOString(), by:me(), prevShift:prevShiftKey(), curShift:C.shiftNow().key, photos:shots.length, status:'new'};
+        st().notDone.push(r); ND_MEM[r.id] = shots.slice(); save(); toast('Sent to the manager with the photo and time'); draw();
+      }},'Send to manager');
+      box.append(h('div',{class:'row'}, camBtn, send));
+      return box;
     }
 
     function history(){
@@ -199,6 +239,13 @@
       body.append(card('', h('h2',null,'Last 14 days'), h('p',{class:'small muted'},'Share of each day\'s every-shift and daily jobs checked off. Weekly and monthly jobs are listed below.'),
         h('div',{class:'stat '+(avg>=90?'good':'warnc')},h('b',null,avg+'%'),h('span',null,'average completion')),
         h('div',{class:'list'}, rows.slice().reverse().map(r => h('div',{class:'item'}, h('div',{class:'meta'},h('span',null,fmtDate(r.d)),h('span',null,r.got+' of '+r.need)), h('div',{class:'bar '+(r.pct>=90?'calm':'amber')},h('i',{style:'width:'+r.pct+'%'})))))));
+      const reps = c.notDone.filter(r => r.site===sid && (isMgr() || r.by===me())).slice().reverse();
+      body.append(card('', h('h2',null,'Jobs reported not done'), h('p',{class:'small muted'},'Each report has a photo, a time, the shift that handed over and the shift that found it. Use it to coach, not to blame: talk privately with the shift first.'),
+        reps.length ? h('div',{class:'list'}, reps.map(r => h('div',{class:'item'},
+          h('div',{class:'meta'}, chip(r.status==='new'?'New':'Reviewed', r.status==='new'?'amber':'calm'), h('span',null,fmtDate(r.at)+' '+fmtTime(r.at)), chip('Left by the '+shiftLabel(r.prevShift),'grey'), chip(r.photos+' photo'+(r.photos===1?'':'s'),'grey')),
+          h('b',null,r.text), r.note ? h('span',{class:'small'},r.note) : null, h('span',{class:'small muted'},'Reported by '+r.by+' on the '+shiftLabel(r.curShift)),
+          (ND_MEM[r.id]||[]).length ? h('div',{class:'row'}, ND_MEM[r.id].map(u => h('img',{src:u,alt:'Evidence photo of the area',style:'width:72px;height:72px;object-fit:cover;border-radius:10px'}))) : null,
+          isMgr() && r.status==='new' ? h('div',{class:'row'}, h('button',{type:'button',class:'btn ghost sm',onclick:()=>{ r.status='reviewed'; r.reviewedBy = tier().name+' (you)'; r.reviewedAt = new Date().toISOString(); save(); draw(); }},'Mark reviewed')) : null))) : h('p',{class:'small muted'},'None reported.')));
       const longer = items.filter(x => x.freq==='weekly' || x.freq==='monthly');
       body.append(card('', h('h2',null,'Weekly and monthly jobs'), h('div',{class:'list'}, longer.map(x => { const last = c.done[sid].filter(z => z.task===x.id).sort((a,b)=>a.at<b.at?1:-1)[0];
         return h('div',{class:'item'}, h('div',{class:'meta'},chip(FREQ[x.freq],'grey'), last ? chip('Last done '+fmtDate(last.at),'calm') : chip('Not done yet','amber')), h('span',null,x.text)); }))));
@@ -231,7 +278,7 @@
     function edit(){
       const t = tpl(); const work = JSON.parse(JSON.stringify(t.items));
       const names = C.staffNames(S().site);
-      body.append(card('soft', h('p',{class:'small'},'This is your home\'s checklist (version '+t.v+', saved '+fmtDate(t.at)+' by '+t.by+'). It started from the Steady Shift starter list. Change the wording, how often, which shift, who owns it, and whether a photo is needed. Turn off what doesn\'t fit your home. Saving makes a new version and keeps the history.')));
+      body.append(card('soft', h('p',{class:'small'},'This is your home\'s checklist (version '+t.v+', saved '+fmtDate(t.at)+' by '+t.by+'). It started from the Steady Shift starter list. Change the wording, how often, which shift and who owns it. Turn off what doesn\'t fit your home. Saving makes a new version and keeps the history.')));
       const list = h('div',{class:'list'});
       function drawList(){
         list.textContent = '';
@@ -241,10 +288,9 @@
           const sf = h('select',{'aria-label':'Which shift'}, ['Any','Day','Night'].map(s => h('option',{selected:x.shift===s},s))); sf.addEventListener('change',()=>x.shift = sf.value);
           const who = h('select',{'aria-label':'Who owns it'}, h('option',{value:''},'Whoever is on'), names.map(n => h('option',{selected:x.who===n},n))); who.addEventListener('change',()=>x.who = who.value);
           const on = h('input',{type:'checkbox',id:'con'+i,checked:x.on}); on.addEventListener('change',()=>x.on = on.checked);
-          const ph = h('input',{type:'checkbox',id:'cph'+i,checked:!!x.photo}); ph.addEventListener('change',()=>x.photo = ph.checked);
           list.append(h('div',{class:'item'}, h('div',{class:'meta'},chip(x.area,'grey'), x.custom ? chip('Added by your home','calm') : null), txt,
             h('div',{class:'grid g3'}, h('label',{class:'f'},'How often',fq), h('label',{class:'f'},'Shift',sf), h('label',{class:'f'},'Owner',who)),
-            h('div',{class:'row'}, h('label',{class:'checkrow',for:'con'+i},on,'Use'), h('label',{class:'checkrow',for:'cph'+i},ph,'Photo needed'),
+            h('div',{class:'row'}, h('label',{class:'checkrow',for:'con'+i},on,'Use'),
               x.custom ? h('button',{type:'button',class:'btn quiet sm',onclick:()=>{ work.splice(i,1); drawList(); }},'Remove') : null)));
         });
       }
@@ -254,12 +300,34 @@
         h('div',{class:'row'}, h('button',{type:'button',class:'btn ghost sm',onclick:()=>{ if (!nt.value.trim()) return toast('Type the job'); work.push({id:'c'+uid(), area:na.value.trim()||'Other', text:nt.value.trim(), freq:'daily', shift:'Any', on:true, who:'', photo:false, custom:true, why:'', src:''}); nt.value=''; drawList(); }},'Add job'),
           h('button',{type:'button',class:'btn sm',onclick:()=>{ const c = st(); c.hist.push({site:S().site, v:t.v, at:t.at, by:t.by, items:t.items}); c.tpl[S().site] = {v:t.v+1, at:new Date().toISOString(), by:tier().name+' (you)', items:work}; save(); toast('Saved as version '+(t.v+1)); draw(); }},'Save as version '+(t.v+1)),
           h('button',{type:'button',class:'btn quiet sm',onclick:()=>{ STARTER.forEach((s,i) => { if (!work.some(x => x.text===s.text)) work.push(Object.assign({id:'k'+i+'r'+uid(), on:true, who:'', photo:false}, s)); }); drawList(); toast('Added back any starter jobs you had removed'); }},'Restore starter jobs'))));
+      body.append(proofCard(names));
       const hist = st().hist.filter(x => x.site===S().site);
       if (hist.length) body.append(h('details',{class:'card'}, h('summary',null,'Earlier versions ('+hist.length+')'), h('ul',{class:'small'}, hist.slice().reverse().map(x => h('li',null,'v'+x.v+' · '+fmtDate(x.at)+' · '+x.by+' · '+x.items.filter(i=>i.on).length+' jobs')))));
       body.append(helpBox('New manager? How this starter list was built',
         h('p',{class:'small'},'It pulls from: the Wisconsin rules for a clean, safe, sanitary home and kitchen (DHS 88 for adult family homes, DHS 83 for CBRFs); CDC environmental infection-control guidance (daily cleaning of bathrooms and high-touch surfaces, cleaning shared equipment between residents, careful handling of soiled laundry); the FDA Food Code (cold food at 41°F or below, leftovers dated and used within 7 days, sanitized food surfaces); OSHA bloodborne pathogen practices for sharps and spills; and common fire-safety checks (clear exits, monthly extinguisher and alarm checks).'),
         h('p',{class:'small'},'Use a disinfectant with an EPA registration number and follow its label, especially how long the surface must stay wet. Your licensing specialist or local health department can tell you anything your home needs beyond this list.'),
         h('p',{class:'foot'},'Wisconsin section numbers for housekeeping details are being verified. Checked '+fmtDate(CHECKED)+'. Not legal advice.')));
+    }
+    function proofCard(names){
+      // time-limited photo proof for one caregiver who isn't getting jobs done; noted in their HR file
+      const c = st(); const sid = S().site;
+      const who = h('select',{'aria-label':'Caregiver'}, h('option',{value:''},'Pick a caregiver'), names.map(n => h('option',null,n)));
+      const days = h('select',{'aria-label':'For how long'}, [7,14,30].map(n => h('option',{value:String(n),selected:n===14},n+' days')));
+      const why = h('textarea',{maxlength:'300',placeholder:'Facts and dates, e.g. "Kitchen jobs left undone on Nov 20, 22 and 24 (3 photo reports)."','aria-label':'Reason, facts only'});
+      const active = c.proof.filter(p => p.site===sid && !p.ended && p.until >= today());
+      const nd = n => c.notDone.filter(r => r.site===sid).length;
+      return card('', h('h2',null,'Photo proof for one caregiver'), h('p',{class:'small muted'},'Off by default. Turn it on only when someone isn\'t getting jobs done, for a set time. They see why and until when, and it is noted in their employee file. Talk with them first. '+nd()+' "not done" report'+(nd()===1?'':'s')+' on file for this home.'),
+        active.length ? h('div',{class:'list'}, active.map(p => h('div',{class:'item'}, h('div',{class:'meta'}, chip('On until '+fmtDate(p.until),'amber'), h('span',null,p.who)), h('span',{class:'small'},p.reason),
+          h('div',{class:'row'}, h('button',{type:'button',class:'btn quiet sm',onclick:()=>{ p.ended = new Date().toISOString(); hrNote(p.who, 'Photo proof for the cleaning checklist ended early on '+today()+'.'); save(); toast('Photo proof turned off'); draw(); }},'End early'))))) : h('p',{class:'small muted'},'No one has photo proof on.'),
+        h('div',{class:'grid g2'}, h('label',{class:'f'},'Caregiver',who), h('label',{class:'f'},'For',days)), h('label',{class:'f'},'Reason (facts only)',why),
+        h('div',{class:'row'}, h('button',{type:'button',class:'btn sm',onclick:()=>{
+          if (!who.value) return toast('Pick a caregiver'); if (why.value.trim().length < 10) return toast('Write the reason with facts and dates');
+          if (proofFor(who.value)) return toast(who.value+' already has photo proof on');
+          const until = addDays(today(), +days.value);
+          c.proof.push({id:uid(), site:sid, who:who.value, from:today(), until, reason:why.value.trim(), by:tier().name+' (you)', at:new Date().toISOString()});
+          hrNote(who.value, 'Photo proof turned on for the cleaning checklist from '+today()+' to '+until+'. Reason: '+why.value.trim());
+          save(); toast('Photo proof on for '+who.value+' until '+fmtDate(until)+'. Noted in their file.'); draw();
+        }},'Turn on photo proof')));
     }
     draw();
   };
@@ -268,7 +336,7 @@
   VIEWS.clean = {t:'Cleaning checklist', ic:'🧽'};
   const addNav = (t, after) => { const n = NAV[t]; if (!n || n.includes('clean')) return; const at = n.indexOf(after) >= 0 ? n.indexOf(after)+1 : n.length; n.splice(at, 0, 'clean'); };
   addNav('caregiver','face'); addNav('manager','face'); addNav('owner','forms');
-  if (window.SSAccess && SSAccess.register) try { SSAccess.register({id:'clean', name:'Cleaning checklist', ic:'🧽', what:'Shift and weekly housekeeping jobs from a standards-based starter list, with reminders, photo sign-off and history.', views:['clean'], tiers:['caregiver','manager','owner','multi']}); } catch(e){}
+  if (window.SSAccess && SSAccess.register) try { SSAccess.register({id:'clean', name:'Cleaning checklist', ic:'🧽', what:'Shift and weekly housekeeping jobs from a standards-based starter list, with reminders, history, and photo evidence only when needed.', views:['clean'], tiers:['caregiver','manager','owner','multi']}); } catch(e){}
   const viewOn = () => { try { return !window.SSAccess || !SSAccess.viewOn || SSAccess.viewOn('clean'); } catch(e){ return true; } };
   (A.homeHooks = A.homeHooks || []).push((v, t) => {
     if (S().site === 'family' || !viewOn() || !['caregiver','manager'].includes(t)) return;
