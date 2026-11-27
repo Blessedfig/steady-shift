@@ -628,6 +628,16 @@
     if (x.type === 'cover' && s) s.staff = x.to || null;
     if (x.type === 'giveup' && s){ s.staff = null; s.callin = true; }
   }
+  // Approve or decline one request (used by the approvals card and by the chat assistant).
+  function decideReq(x, st, replyText){
+    const sc = ensure(), site = x.site;
+    snap();
+    x.status = st; x.decidedAt = new Date().toISOString(); x.decidedBy = actor(); x.reply = String(replyText||'').trim().slice(0,200);
+    if (st === 'Approved'){ applyReq(x, sc.shifts);
+      if (x.type === 'timeoff') sc.shifts.filter(y => y.site===site && y.staff===x.by && y.date>=x.from && y.date<=x.to).forEach(y => { y.staff = null; });
+      if (x.type === 'timeoff' && x.pto === 'PTO'){ const p = prof(x.by); const days = dn(x.to)-dn(x.from)+1; p.pto = Math.max(0, (p.pto||0) - days*8); } }
+    audit(st+' a request: '+reqText(x), site); A.save();
+  }
   function requestsCard(site){
     const sc = ensure(), pend = sc.requests.filter(x => x.site === site && x.status === 'Pending').sort((a,b) => a.at.localeCompare(b.at));
     const done = sc.requests.filter(x => x.site === site && x.status !== 'Pending').sort((a,b) => (b.decidedAt||'').localeCompare(a.decidedAt||'')).slice(0,4);
@@ -640,14 +650,7 @@
       if (x.type === 'timeoff'){ iss = shiftsAt(site).filter(y => y.staff === x.by && y.date >= x.from && y.date <= x.to).map(y => ({sev:'check', text:x.by+' is scheduled '+dayFmt(dn(y.date))+' '+span(y)+'. Approving opens this shift.'})); }
       const reply = h('input',{type:'text',maxlength:'200',placeholder:'Optional reply (kind and short)'});
       const quick = ['Thanks, approved.','Already covered, thanks for offering.','This would put you into overtime.','We need someone cleared for this shift.','Let\'s talk at your next shift.'].map(q => h('button',{type:'button',class:'chip',onclick:()=>{ reply.value = q; }},q));
-      const decide = st => {
-        snap();
-        x.status = st; x.decidedAt = new Date().toISOString(); x.decidedBy = actor(); x.reply = reply.value.trim();
-        if (st === 'Approved'){ applyReq(x, sc.shifts);
-          if (x.type === 'timeoff') sc.shifts.filter(y => y.site===site && y.staff===x.by && y.date>=x.from && y.date<=x.to).forEach(y => { y.staff = null; });
-          if (x.type === 'timeoff' && x.pto === 'PTO'){ const p = prof(x.by); const days = dn(x.to)-dn(x.from)+1; p.pto = Math.max(0, (p.pto||0) - days*8); } }
-        audit(st+' a request: '+reqText(x), site); A.save(); A.route(); toast(st);
-      };
+      const decide = st => { decideReq(x, st, reply.value); A.route(); toast(st); };
       ap(card, h('div',{class:'item'},
         h('div',{class:'meta'}, h('span',{class:'chip'},TYPES[x.type]), h('span',null,'Asked '+A.fmtTime(x.at))),
         h('b',null,reqText(x)), x.note ? h('span',{class:'small'},'"'+x.note+'"') : null,
@@ -806,5 +809,6 @@
   function onCallTonight(){ const site = S().site, oc = (ensure().oncall[site]||{def:'Manager', days:{}}); return oc.days[A.isoDay(new Date())] || oc.def; }
 
   window.SSSched = {ensure, dn, di, dow, todayN, tmin, absA, absB, mins, hrs, span, tShort, tLong, dayFmt, weekStartOf, rulesFor, staffNames, prof, rec, shiftsAt, check, me, actor, audit, siteObj,
-    homeCard, myNextCard, onCallTonight, dialog, field, sel, TYPES, reqText};
+    homeCard, myNextCard, onCallTonight, dialog, field, sel, TYPES, reqText,
+    can, canEdit, canApprove, decideReq, applyReq, diffIssues, withChange, fitFor, snap, timeOffFor, mt};
 })();

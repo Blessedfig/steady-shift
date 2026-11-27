@@ -1136,7 +1136,7 @@
 
   // Shared helpers for the scheduling, time sheet, insights and access modules (schedule.js, time.js, insights.js, access.js)
   window.SSApp = {D, h, state:()=>S, save, toast, copy, site, setting, tier, fmtDate, fmtTime, head, download, toIcs, gcalUrl, outlookUrl, csvCell, R, VIEWS, NAV, route:()=>route(), go:v=>go(v), isoDay, addDays, uid, renderNav:()=>renderNav(current), fillSwitchers:()=>fillSwitchers(), param:()=>param};
-  Object.assign(window.SSApp, {tile:(...a) => tile(...a), residents, forSite, homeHooks, ownerHooks});
+  Object.assign(window.SSApp, {tile:(...a) => tile(...a), residents, forSite, homeHooks, ownerHooks, rewrite:x => rewrite(x), searchRules:q => searchRules(q), ruleById, dueItems:() => syncEvents(), shiftName:() => shiftName(), labelChip:l => labelChip(l), sb:() => sb, user:() => user});
   // ---------- Doctor orders: intake, RN verification, current orders (sample data only) ----------
   // One shared order store (S.orders). Other screens read verified, active orders through window.SS_ordersFor(site, res).
   const ORDER_KINDS = {med:'Medication', diet:'Diet', activity:'Activity or therapy', appointment:'Appointment or follow-up', lab:'Lab or test', monitor:'Monitoring', other:'Other'};

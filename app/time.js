@@ -255,5 +255,5 @@
 
   // The house tablet (shift station) lives in station.js.
 
-  window.SSTime = {ensure, weekTotals, weekRows, worked, flags, toM, clockCard, current};
+  window.SSTime = {ensure, weekTotals, weekRows, worked, flags, toM, clockCard, current, punch, shiftNow};
 })();
