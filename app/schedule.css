@@ -124,3 +124,7 @@ body.dragging .fab{visibility:hidden}
 .ksum{margin:.2rem 0;padding-left:1.2rem;display:grid;gap:.15rem}
 .kcheck{flex-wrap:nowrap;align-items:flex-start;gap:.6rem;min-height:44px;cursor:pointer}
 ol.steps{display:grid;gap:.35rem;padding-left:1.3rem;margin:.3rem 0 .6rem}
+.bdays{border:0;padding:0;margin:0;display:flex;flex-wrap:wrap;gap:.35rem .9rem}
+.bdays legend{font-weight:600;color:var(--muted);margin-bottom:.3rem;padding:0}
+.bdays label{min-height:44px;gap:.4rem}
+ul.blist{margin:.3rem 0 0;padding-left:1.2rem;display:grid;gap:.2rem}
