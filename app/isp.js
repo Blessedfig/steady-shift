@@ -94,6 +94,7 @@
       pp.helps && pp.helps.length ? 'What helps me: '+pp.helps.join('; ')+'.' : '',
       pp.comm ? 'How to talk with me: '+pp.comm : '',
       pp.faith ? 'Faith and culture: '+pp.faith : '',
+      (() => { try { const cl = window.SSChoices ? SSChoices.planLines(sid, code) : []; return cl.length ? 'From the choices log:\n'+cl.map(l => '- '+l).join('\n') : ''; } catch(e){ return ''; } })(),
       'Ask '+r.nick+': "What should staff always know about you?" and add it here in their words.'
     ].filter(Boolean).join('\n');
     const needs = ms.filter(m => m.item.need && !m.item.always).map(m => m.item.need);
