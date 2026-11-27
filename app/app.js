@@ -264,12 +264,13 @@
   // ---------- Simple view for caregivers (Christian, 2026-11-27): big buttons, few choices ----------
   // On by default for the caregiver plan. "Show all options" switches to the full view, and it can be switched back.
   const SIMPLE = [
-    ['face','🪪','Start of shift'],
+    ['face','✅','Shift checklist'],
     ['mar','💊','Medications'],
     ['notes','📝','Care notes'],
     ['report','⚠️','Report something'],
     ['shift','🔁','Shift report'],
     ['meals','🍽️','Meals'],
+    ['clean','🧽','Cleaning'],
     ['night','📞','Who do I call?'],
     ['check','❓','Ask a question']
   ];

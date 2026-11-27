@@ -104,7 +104,7 @@
     const tab = (A.param && A.param()) || 'pass';
     v.append(head('Medication record · '+site().name, 'Every dose, refusal and as-needed result',
       'Sample medicines only. Give only from a signed written order on file ('+cite('order')+') and only if you have finished medication training.'));
-    v.append(h('div',{class:'row',role:'tablist'}, [['pass','Med pass'],['history','History'],['counts','Counts and disposal']].map(([k,l]) =>
+    v.append(h('div',{class:'row',role:'tablist'}, [['pass','Med pass'],['history','History'],['counts','Counts and disposal'],['times','Times and alarms']].map(([k,l]) =>
       h('a',{class:'btn '+(k === tab ? '' : 'quiet ')+'sm', href:'#/mar/'+k, role:'tab','aria-selected':String(k === tab)}, l))));
 
     const al = alerts(sid);
@@ -113,6 +113,7 @@
 
     if (tab === 'history') return history(v, sid);
     if (tab === 'counts') return counts(v, sid);
+    if (tab === 'times') return timesTab(v, sid);
 
     const d = today(), n = toMin(hhmm(now()));
     residents().forEach(r => {
@@ -246,5 +247,136 @@
     if (!due.length && !al.length) return;
     v.append(h('div',{class:'grid g2'}, A.tile('mar','💊', due.length ? 'Medications: '+due.length+' dose'+(due.length>1?'s':'')+' to record' : 'Medications: '+al.length+' alert'+(al.length>1?'s':''), due.some(x => x.late) || al.length ? 'Some are late or need the prescriber.' : 'Due within the hour.', due.some(x => x.late) || al.length ? 'urgent' : '')));
   });
-  window.SSMar = {dueNow, alerts:sid => alerts(sid).map(a => a.t)};
+  // ---------- medication times and the pop-up alarm ----------
+  // Only managers, nurses and owners change dose times and alarm settings (Christian, 2026-11-27). Caregivers see them.
+  const ALARM_DEF = {lead:0, every:10};
+  const alarmCfg = sid => Object.assign({}, ALARM_DEF, (st().alarm||{})[sid||S().site]||{});
+  function timesTab(v, sid){
+    const s = st(), may = isNurse(), cfg = alarmCfg(sid);
+    v.append(card('soft', h('h2',null,'How the medication alarm works'),
+      h('p',{class:'small'},'When a dose time comes up, everyone on shift gets a pop-up with a sound and vibration. It repeats every '+cfg.every+' minutes until the dose is recorded as given, refused, held or not given.'),
+      h('p',{class:'small'},'Phone lock screens show only "Medication time", the home and the resident codes, never the medicine.'),
+      soundOn() ? h('p',{class:'small'},'🔔 Sound is on for this device.') : h('button',{class:'btn ghost sm',type:'button',onclick:enableAlarmSound},'🔔 Turn on sound and notifications on this device')));
+    if (may){
+      const lead = h('select',{'aria-label':'Alarm when'}, [[0,'At the dose time'],[5,'5 minutes before'],[10,'10 minutes before'],[15,'15 minutes before']].map(([n,l]) => h('option',{value:n,selected:n===cfg.lead},l)));
+      const every = h('select',{'aria-label':'Repeat every'}, [5,10,15].map(n => h('option',{value:n,selected:n===cfg.every},'Every '+n+' minutes')));
+      v.append(card('', h('h2',null,'Alarm settings for '+site().name),
+        h('div',{class:'grid g2'}, h('label',{class:'f'},'Alarm goes off', lead), h('label',{class:'f'},'Until recorded, repeat', every)),
+        h('div',{class:'row'}, h('button',{class:'btn sm',type:'button',onclick:()=>{ s.alarm = s.alarm || {}; s.alarm[sid] = {lead:+lead.value, every:+every.value}; save(); toast('Alarm settings saved'); A.route(); }},'Save alarm settings'))));
+    }
+    v.append(card(may ? '' : 'soft', h('h2',null,'Dose times'), may ? h('p',{class:'small muted'},'Change a time only to match a signed order or the pharmacy label. Each change is logged with your name.') : h('p',{class:'small'},'Only a manager or nurse can change these times. Ask them if a time looks wrong.')));
+    residents().forEach(r => {
+      if (s.selfRes[sid+':'+r.code]) return;
+      const ms = medsFor(sid, r.code).filter(m => !m.prn); if (!ms.length) return;
+      const c = card('', h('h3',null,'Resident '+r.code+' '+r.nick));
+      ms.forEach(m => {
+        const row = h('div',{class:'item'}, h('b',null,m.name+' · '+m.dose));
+        const chips = h('div',{class:'row',style:'gap:.4rem'}, m.times.slice().sort().map(tm => may
+          ? h('span',{class:'chip'}, tm, h('button',{type:'button',class:'linkbtn','aria-label':'Remove '+tm+' for '+m.name,onclick:()=>{ if (m.times.length === 1 && !confirm('Remove the only time? The dose will no longer be scheduled.')) return; setTimes(m, m.times.filter(x => x !== tm)); }},' ✕'))
+          : h('span',{class:'chip'}, tm)));
+        row.append(chips);
+        if (may){
+          const add = h('input',{type:'time','aria-label':'New time for '+m.name,style:'max-width:9rem'});
+          row.append(h('div',{class:'row'}, add, h('button',{class:'btn quiet sm',type:'button',onclick:()=>{ if (!add.value) return toast('Pick a time'); if (m.times.includes(add.value)) return toast('That time is already there'); setTimes(m, m.times.concat([add.value]).sort()); }},'Add time')));
+        }
+        const last = (s.timeLog||[]).filter(x => x.med === m.id).slice(-1)[0];
+        if (last) row.append(h('span',{class:'small muted'},'Changed '+fmtDate(last.at)+' by '+last.by+': '+(last.from.join(', ')||'none')+' → '+(last.to.join(', ')||'none')));
+        c.append(row);
+      });
+      v.append(c);
+    });
+  }
+  function setTimes(m, to){
+    if (!isNurse()) return toast('Only a manager or nurse can change dose times');
+    const s = st(); s.timeLog = s.timeLog || [];
+    s.timeLog.push({at:new Date().toISOString(), by:me(), med:m.id, from:m.times.slice(), to:to.slice()});
+    m.times = to; save(); toast('Dose times saved'); A.route();
+  }
+
+  // The alarm itself: checks every 20 seconds while the app is open.
+  const clock12 = t => { const [a,b] = t.split(':').map(Number); return ((a+11)%12+1)+(b ? ':'+String(b).padStart(2,'0') : '')+(a < 12 ? ' AM' : ' PM'); };
+  const soundOn = () => { try { return !!(window.SSAlerts && SSAlerts.st().sound); } catch(e){ return false; } };
+  async function enableAlarmSound(){
+    try { if (window.SSAlerts) { SSAlerts.st().sound = true; save(); } } catch(e){}
+    chime();
+    try { if ('Notification' in window && Notification.permission === 'default') await Notification.requestPermission(); } catch(e){}
+    toast('Alarms will sound on this device'); A.route();
+  }
+  let actx = null;
+  function chime(){
+    try { actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      [0, 0.3, 0.6].forEach((t, i) => { const g = actx.createGain(), os = actx.createOscillator(); os.frequency.value = i === 1 ? 660 : 880; g.gain.value = 0.15; os.connect(g); g.connect(actx.destination); os.start(actx.currentTime + t); os.stop(actx.currentTime + t + 0.18); });
+    } catch(e){}
+  }
+  const snoozeGet = () => { try { return JSON.parse(sessionStorage.getItem('ss-medalarm')||'{}'); } catch(e){ return {}; } };
+  const snoozeSet = o => { try { sessionStorage.setItem('ss-medalarm', JSON.stringify(o)); } catch(e){} };
+  function alarmDue(){
+    const t = S().tier, sid = S().site;
+    if (!['caregiver','manager','rn'].includes(t) || sid === 'family' || !RULES.record[setting()]) return [];
+    try { if (window.SSAccess && SSAccess.viewOn && !SSAccess.viewOn('mar')) return []; } catch(e){}
+    const cfg = alarmCfg(sid), n = now();
+    return shiftDoses(sid).filter(d => ['due','late','later'].includes(d.state)).filter(d => {
+      const at = new Date(d.sort.replace(' ', 'T')+':00'), mins = (n - at) / 60000;
+      return mins >= -cfg.lead && mins <= 120;
+    });
+  }
+  function alarmTick(){
+    const due = alarmDue(); const box = document.getElementById('ssMedAlarm');
+    if (!due.length){ if (box) box.remove(); return; }
+    const groups = {}; due.forEach(d => (groups[d.sort] = groups[d.sort] || []).push(d));
+    const sn = snoozeGet(), sid = S().site, cfg = alarmCfg(sid), nowMs = Date.now();
+    const keys = Object.keys(groups).filter(k => !(sn[sid+'|'+k] > nowMs));
+    if (!keys.length || box) return;
+    const k = keys[0], list = groups[k], tm = clock12(list[0].tm);
+    const late = list.some(d => d.state === 'late');
+    const codes = [...new Set(list.map(d => d.res))];
+    const close = mins => { const o = snoozeGet(); o[sid+'|'+k] = Date.now() + mins*60000; snoozeSet(o); el.remove(); };
+    const el = h('div',{id:'ssMedAlarm',class:'medalarm',role:'alertdialog','aria-modal':'true','aria-labelledby':'ssMedAlarmT'},
+      h('div',{class:'medalarm-card'+(late ? ' late' : '')},
+        h('div',{class:'ic','aria-hidden':'true'},'💊'),
+        h('h2',{id:'ssMedAlarmT'}, (late ? 'Late: ' : '')+'Medication time '+tm),
+        h('p',null, list.length+' dose'+(list.length===1?'':'s')+' to give and record'),
+        h('ul',null, list.map(d => h('li',null, h('b',null,d.res+' '+d.nick), ': '+d.med+' '+d.dose+(d.nurse ? ' (nurse or delegated staff only)' : '')))),
+        h('div',{class:'medalarm-btns'},
+          h('a',{class:'btn',href:'#/mar',onclick:()=>close(cfg.every)},'Open med pass'),
+          h('button',{class:'btn quiet',type:'button',onclick:()=>close(5)},'Remind me in 5 minutes')),
+        soundOn() ? null : h('button',{class:'linkbtn small',type:'button',onclick:()=>{ enableAlarmSound(); }},'Turn on sound for these alarms')));
+    document.body.append(el);
+    const first = el.querySelector('.btn'); if (first) first.focus();
+    if (soundOn()){
+      chime(); try { navigator.vibrate && navigator.vibrate([300, 150, 300, 150, 300]); } catch(e){}
+      if (document.visibilityState !== 'visible') try {
+        if ('Notification' in window && Notification.permission === 'granted'){
+          const title = 'Medication time '+tm, opt = {body:site().name+' · Resident'+(codes.length>1?'s ':' ')+codes.join(', ')+'. Open Steady Shift.', tag:'ss-med-'+k, renotify:true, requireInteraction:true, icon:'icons/icon-192.png'};
+          if (navigator.serviceWorker && navigator.serviceWorker.ready) navigator.serviceWorker.ready.then(r => r.showNotification(title, opt)).catch(() => new Notification(title, opt));
+          else new Notification(title, opt);
+        }
+      } catch(e){}
+    }
+  }
+  setInterval(alarmTick, 20000);
+  setTimeout(alarmTick, 1500);
+  window.addEventListener('hashchange', () => setTimeout(alarmTick, 300));
+
+  // Every scheduled dose time in the current shift, with what happened, for the shift checklist.
+  function shiftDoses(sid){
+    sid = sid || S().site;
+    const sh = C.shiftNow(), m0 = String(sh.label||'').match(/^(\d{1,2}:\d{2}) to/);
+    const start = m0 ? toMin(m0[1]) : sh.name === 'Night' ? 18*60 : 6*60, end = toMin(sh.end || '18:00');
+    const wrap = end <= start, keyDay = String(sh.key||today()).slice(0,10), n = now();
+    const inShift = t => wrap ? (t >= start || t < end) : (t >= start && t < end);
+    const out = [];
+    residents().forEach(r => { if (st().selfRes[sid+':'+r.code]) return;
+      medsFor(sid, r.code).filter(m => !m.prn).forEach(m => m.times.forEach(tm => {
+        const t = toMin(tm); if (!inShift(t)) return;
+        const day = wrap && t < start ? addDays(keyDay, 1) : keyDay;
+        const e = entry(m, day, tm);
+        const when = new Date(day+'T'+tm+':00');
+        const mins = (n - when) / 60000;
+        const state = e ? e.status : mins > WINDOW_MIN ? 'late' : mins >= -WINDOW_MIN ? 'due' : 'later';
+        out.push({res:r.code, nick:r.nick, med:m.name, dose:m.dose, tm, sort:(day+' '+tm), state, by:e ? e.by : '', nurse:!!m.nurse});
+      })); });
+    return out.sort((a, b) => a.sort.localeCompare(b.sort) || a.res.localeCompare(b.res));
+  }
+  window.SSMar = {dueNow, shiftDoses, alarmTick, alarmDue, alerts:sid => alerts(sid).map(a => a.t)};
 })();
