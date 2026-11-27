@@ -144,3 +144,12 @@ Each resident's hand-off has a "Daily care" section modeled on the CNA daily car
 ## Follow-up checks after an event (monitor.js, `#/monitor`)
 
 After a head strike or unwitnessed fall, a fall, a medication error, a new medication or a change in condition, a check schedule starts (house default 72 hours: frequent early checks, then one each shift). Head-strike checks add neuro items. Each check falls on a shift and shows as due or overdue on Home, in the shift change report ("Already in the app") and on the house tablet board. Readings outside the house limits (BP, pulse, breathing, temperature, oxygen, pain, neuro) show "Call the nurse now" with the nurse's number from the face sheet. Recent fall, head or medication incident reports prompt "Start checks?" and stay linked. Nurses and managers can apply a nurse or prescriber order that replaces the schedule for that person, or end monitoring. House defaults and limits are editable and labeled as house defaults. State lives in `S.care.monitor`. Module id `monitor`.
+
+## Fire and emergency (safety.js, `#/safety`)
+
+The fire safety records a surveyor asks for, with due dates from the rule for each setting. Fire safety was the top citation area in 2025 (60 CBRF, 81 AFH).
+
+- **CBRF:** a fire drill every quarter, one a year during sleeping hours, two severe-weather drills a year (DHS 83.47(2)(d)-(e)); smoke and heat system test every other month and a yearly NFPA 72 inspection (DHS 83.48); extinguishers tagged yearly (83.47(4)); local fire inspection yearly, reports kept 2 years (83.47(3)).
+- **AFH:** each resident's evacuation timed at placement and yearly, with a 2-minute target; anyone slower is flagged so staff are told (DHS 88.05(4)(d)); smoke alarms tested monthly (88.05(4)(b)); extinguishers tagged yearly (88.05(4)(a)).
+- **Emergency plan:** a checklist of the parts the plan must cover, when it was last reviewed, and when it was explained to each resident (CBRF within 72 hours of admission, DHS 83.47(2)(a)-(c); AFH right after move-in, DHS 88.05(4)(d)1-2).
+- Drill log with total time, who was on shift, residents over the limit and what to fix; CSV download for the surveyor; manager home tile with the count of items due. State: `S.care.safety`. Module id `safety`. API: `window.SSSafety`.
