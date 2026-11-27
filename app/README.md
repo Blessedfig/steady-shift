@@ -88,7 +88,7 @@ A start-of-shift face sheet for each sample resident, laid out like a standard l
 
 ## Getting started academy (academy.js, `#/academy`)
 
-For new homes, new owners and people getting into care. Content is in `academy-data.js`; the free public preview of Track 1 is `../academy.html`.
+For owners and people starting a home. Only the owner and multi-site roles can open it (menu, route and Services and access all enforce this); staff see the role modules on their own screen, Staff training (`#/training`), with their certificates. Content is in `academy-data.js`; the free public preview of Track 1 is `../academy.html`.
 
 - **Track 1, start a home in Wisconsin:** AFH vs CBRF, DQA licensing steps, forms and fees, policies, staffing and required training, Family Care, IRIS and private-pay contracts, insurance and budgeting, and the most-cited rules (from the Survey-Ready data, the peer library and Regulatory Watch). Every unit says whether it rests on an official rule (linked) or is Steady Shift guidance.
 - **Track 2, set up Steady Shift:** a checklist per area that ticks itself where the app can tell (profile, documents, procedure layer, shifts, training blocks, admissions, reports).
