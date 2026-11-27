@@ -89,7 +89,7 @@
         how:'Each last-minute call-off takes about 25 minutes of manager time and often becomes overtime. Planning ahead could remove about 40% of that cost.'});
     }
     // 4. agency or overtime vs hiring a part-timer
-    const gaps = sites.reduce((t,site) => t + X.check(site, W[0], W[3]+6).filter(i => (i.cat === 'Coverage' || i.cat === 'Awake overnight') && i.b).reduce((u,i) => u+(i.b-i.a)*(i.short||1), 0), 0)/60/4;
+    const gaps = sites.reduce((t,site) => t + X.check(site, W[0], W[3]+6).filter(i => i.cat === 'Coverage' && i.b).reduce((u,i) => u+(i.b-i.a)*(i.short||1), 0), 0)/60/4;
     const need = otHrsWk + gaps;
     if (need >= 8){
       const avg = hourly.filter(p => p.role === 'Caregiver').reduce((t,p,_,a) => t+p.rate/a.length, 0) || 18;

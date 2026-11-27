@@ -110,7 +110,7 @@
     [/^(behaviou?rs?|triggers?|what helps|likes|notes?)$/,'behavior','beh','Behavior or preference'], [/^(code status|dnr|polst|advance directive)$/,'directives','code','Code status'],
     [/^(guardian|poa|power of attorney|health care poa|decision maker)$/,'decision','decision','Who makes health decisions'],
     [/^(physician|pcp|doctor|primary care)$/,'team','team:primary','Primary care'], [/^(psychiatr(y|ist)|behavioral health)$/,'team','team:psych','Psychiatry'],
-    [/^(dentist|dental)$/,'team','team:dental','Dental'], [/^(pharmacy)$/,'team','team:pharmacy','Pharmacy'], [/^(hospice|home health)$/,'team','team:hh','Hospice or home health'],
+    [/^(dentist|dental)$/,'team','team:dental','Dental'], [/^(pharmacy)$/,'team','team:pharmacy','Pharmacy'], [/^(hospice|home health)$/,'team','team:hh','Hospice or home health'], [/^(care manager|case manager)$/,'team','team:mco','Care manager (MCO)'], [/^(nurse manager|mco nurse|iris nurse)$/,'team','team:mco-rn','Nurse manager (MCO RN)'],
     [/^(appointments?|follow[- ]?up|next visit)$/,'appts','appt','Appointment'], [/^(monitoring|checks?)$/,'monitor','mon','Check']
   ];
   function parseText(text, doc, pageLabel){
@@ -298,7 +298,7 @@
       {id:'orders', t:'Written orders from the prescriber for every medication before staff give it', when:'at', cite:'DHS 88.07(3)(d)', have:['orders'], meds:true},
       {id:'psychotropic', t:'Written informed consent before a psychotropic medicine for a resident with dementia', when:'at', cite:'Wis. Stat. 50.08 (which settings it covers is being checked)', verify:true, ifPsych:true, home:true},
       {id:'evac', t:'Evacuation evaluation on the department form', when:'at', cite:'DHS 88.05(4) (subsection being checked)', verify:true, home:true},
-      {id:'record', t:'Record set up: name and birth date; guardian contact; emergency contacts including the physician; placing agency and care manager; Medicaid or Medicare number and pharmacy', when:'at', cite:'DHS 88.09(1)(d)', verify:true, have:['facesheet','guardian','contacts']},
+      {id:'record', t:'Record set up: name and birth date; guardian contact; emergency contacts including the physician; placing agency, care manager and nurse manager (with phone, fax and email); Medicaid or Medicare number and pharmacy', when:'at', cite:'DHS 88.09(1)(d)', verify:true, have:['facesheet','guardian','contacts']},
       {id:'guardian', t:'Copy of guardianship letters or activated health care POA, and who decides what', when:'at', cite:'DHS 88.09(1)(d); Wis. Stat. ch. 54 and 155', have:['guardian']},
       {id:'mco', t:'Family Care member-centered plan and any approved rights restrictions (HCBS settings rule, form P-03794)', when:'at', cite:'Family Care contract; 42 CFR 441.301(c)(4)', have:['mcoplan']},
       {id:'isp', t:'Written assessment and individual service plan (ADLs, meds, health, supervision, social, transport), developed with the resident, guardian and placing agency, signed and dated by all', when:30, cite:'DHS 88.06(3)(a)-(e)', home:true},
