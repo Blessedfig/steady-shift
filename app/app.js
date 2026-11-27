@@ -214,6 +214,8 @@
 
   R.home = v => {
     const t = S.tier;
+    // manager and owner reminders (ISP reviews, staff training, their own) go first, above everything else
+    if (['manager','owner','multi'].includes(t) && window.SSReminders){ const rb = SSReminders.banner(); if (rb) v.append(rb); }
     if (t === 'owner') return R.owner(v, true);
     if (t === 'multi') return R.sites(v, true);
     const ic = installCard(); if (ic) v.append(ic); const pc = pulseCard(); if (pc) v.append(pc);
