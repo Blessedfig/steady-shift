@@ -94,7 +94,7 @@
       if (ho.triggers && ho.triggers.length) f.triggers = [...new Set([...(f.triggers||[]), ...ho.triggers])];
       if (ho.summary) f.history = ho.summary; } } catch(e){}
     f.ssn = f.ssn || '000-'+String(40+code.charCodeAt(0)%50)+'-'+code.replace(/\D/g,'').padStart(4,'0');   // 000 numbers are never issued
-    const ed = ((S().faceEdits||{})[S().site]||{})[code]; if (ed && Array.isArray(ed.emergency)) f.emergency = ed.emergency;
+    const ed = ((S().faceEdits||{})[S().site]||{})[code]; if (ed) ['emergency','family','team','mco'].forEach(k => { if (Array.isArray(ed[k])) f[k] = ed[k]; });
     if (f.mco && !Array.isArray(f.mco)) f.mco = [f.mco];
     f.mco = f.mco || [];
     f.nick = r.nick; f.code0 = code; f.note = r.note;
@@ -149,7 +149,9 @@
     const body = h('div',{class:'grid'});
     const T = [['','Everyone']].concat(rs.map(r => [r.code, r.code+' '+r.nick]));
     T.forEach(([id,lab]) => tabs.append(h('button',{role:'tab',type:'button','aria-selected':String(cur===id),onclick:()=>{ cur = id; tabs.querySelectorAll('button').forEach((b,i)=>b.setAttribute('aria-selected',String(T[i][0]===id))); draw(); }},lab)));
-    v.append(tabs, body);
+    v.append(tabs);
+    if (canEditEC() && VIEWS.intake) v.append(h('div',{class:'row noprint'}, h('a',{class:'btn ghost sm',href:'#/intake/new'},'+ Add a resident'), h('span',{class:'small muted'},'Starts a new admission. Upload their papers, or just type the basics.')));
+    v.append(body);
     function draw(){
       body.textContent = '';
       if (!cur){
@@ -212,7 +214,7 @@
 
   function person(x, allowCall){
     return h('div',{class:'item'}, h('div',{class:'meta'}, h('b',{style:'color:var(--ink)'},x.role), x.specialty ? chip(x.specialty,'grey') : null),
-      h('span',null,x.name), x.note ? h('span',{class:'small muted'},x.note) : null,
+      h('span',null,x.name+(x.agency ? ' · '+x.agency : '')), x.note ? h('span',{class:'small muted'},x.note) : null, x.fax && allowCall ? h('span',{class:'small'},'Fax: '+x.fax) : null,
       x.phone ? (allowCall ? h('a',{class:'btn ghost sm callbtn',href:tel(x.phone)},'📞 Call '+x.phone) : h('span',{class:'small muted'},'Manager or nurse calls this contact')) : null);
   }
   // Emergency contacts: everyone on shift sees them and can tap to call; managers, nurses and owners edit them.
@@ -226,7 +228,7 @@
   function emergencyBlock(f, code, brief){
     const box = h('section',{class:'ec','aria-label':'Emergency contacts'});
     const list = f.emergency || [];
-    box.append(h('div',{class:'row',style:'justify-content:space-between'}, h('h3',null,'🚨 Emergency contacts'), !brief && canEditEC() ? h('button',{class:'btn quiet sm noprint',type:'button',onclick:()=>box.replaceWith(ecEditor(f, code))},'Edit') : null));
+    box.append(h('div',{class:'row',style:'justify-content:space-between'}, h('h3',null,'🚨 Emergency contacts'), !brief ? addEdit(f, code, 'emergency', () => box) : null));
     box.append(h('p',{class:'small'},'Call 911 first for a medical emergency. Then call in this order.'));
     if (!list.length) box.append(h('p',{class:'small',style:'color:var(--amber)'},'No emergency contact on file. Tell the manager today.'));
     const ol = h('ol',{class:'eclist'});
@@ -239,37 +241,57 @@
     if (brief && list.length > 1) box.append(h('span',{class:'small muted'},list.length-1+' more on the full face sheet'));
     return box;
   }
-  function ecEditor(f, code){
-    const rows = (f.emergency||[]).map(x => Object.assign({}, x));
-    const box = h('section',{class:'ec'});
+  // One editor for every list of people on a face sheet. Managers, nurses and owners add, reorder, change and remove; each save is logged.
+  const SPECS = [['primary','Primary care'],['specialist','Specialist'],['psych','Behavioral health'],['dental','Dental'],['therapy','Therapy'],['nurse','Nurse'],['hospice','Hospice'],['homehealth','Home health'],['pharmacy','Pharmacy'],['other','Other']];
+  const LISTS = {
+    emergency:{t:'emergency contacts', one:'contact', hint:'In the order staff should call.', staffCall:true, fields:[['name','Name'],['role','Relationship','Daughter, guardian, friend…'],['phone','Phone','715-555-0100','tel'],['alt','Other phone','','tel'],['when','When to call','Any emergency, day or night']]},
+    family:{t:'family and friends', one:'person', hint:'People who visit or call. Emergency contacts are listed above.', fields:[['name','Name'],['role','Relationship','Niece, friend, neighbor…'],['phone','Phone','','tel'],['note','Good to know','Visits Sundays']], callable:true},
+    team:{t:'doctors and specialists', one:'provider', hint:'Primary doctor, specialists, dentist, therapists, hospice and home health.', fields:[['role','What they do','Primary doctor, heart doctor, dentist…'],['name','Name or clinic'],['specialty','Type','','spec'],['phone','Phone','','tel'],['fax','Fax','','tel'],['note','Good to know','Refills, visit days…']], callable:true},
+    mco:{t:'Family Care or IRIS team', one:'team member', hint:'Care manager (case manager), nurse manager (RN), IRIS consultant.', fields:[['role','Role','Care manager, nurse manager (RN)…'],['name','Name'],['agency','Agency'],['phone','Phone','','tel'],['fax','Fax','','tel'],['email','Email','','email']]}
+  };
+  function listEditor(f, code, key, startAdding){
+    const L = LISTS[key];
+    const rows = (f[key]||[]).map(x => Object.assign({}, x));
+    if (startAdding) rows.push({call: L.staffCall ? 'all' : 'manager'});
+    const box = h('section',{class:'card soft editbox','aria-label':'Edit '+L.t});
     const draw = () => {
       box.textContent = '';
-      box.append(h('h3',null,'Edit emergency contacts'), h('p',{class:'small muted'},'In the order staff should call. Changes are logged. Sample contacts only.'));
+      box.append(h('h3',null,'Edit '+L.t), h('p',{class:'small muted'},L.hint+' Changes are logged. Sample people only.'));
       rows.forEach((x, i) => {
-        const f1 = (lab, k, ph) => h('label',{class:'f'},lab, h('input',{type:k==='phone'||k==='alt'?'tel':'text',value:x[k]||'',placeholder:ph||'',oninput:e=>{ x[k] = e.target.value; }}));
-        box.append(h('div',{class:'item'}, h('b',null,'Contact '+(i+1)),
-          h('div',{class:'grid g2'}, f1('Name','name'), f1('Relationship','role','Daughter, guardian, friend…'), f1('Phone','phone','715-555-0100'), f1('Other phone','alt'), f1('When to call','when','Any emergency, day or night')),
+        const input = ([k, lab, ph, type]) => type === 'spec'
+          ? h('label',{class:'f'},lab, h('select',{onchange:e=>{ x[k] = e.target.value; }}, SPECS.map(([v,t]) => h('option',{value:v,selected:(x[k]||'other')===v},t))))
+          : h('label',{class:'f'},lab, h('input',{type:type||'text',value:x[k]||'',placeholder:ph||'',oninput:e=>{ x[k] = e.target.value; }}));
+        const callBox = L.callable ? (() => { const id = 'call-'+key+i; const cb = h('input',{type:'checkbox',id,checked:x.call==='all',onchange:e=>{ x.call = e.target.checked ? 'all' : 'manager'; }}); return h('label',{class:'row small',for:id}, cb, 'Caregivers may call this person directly'); })() : null;
+        box.append(h('div',{class:'item'}, h('b',null,(L.one[0].toUpperCase()+L.one.slice(1))+' '+(i+1)),
+          h('div',{class:'grid g2'}, L.fields.map(input)), callBox,
           h('div',{class:'row'}, i ? h('button',{class:'btn quiet sm',type:'button',onclick:()=>{ [rows[i-1], rows[i]] = [rows[i], rows[i-1]]; draw(); }},'Move up') : null,
             h('button',{class:'btn quiet sm',type:'button',onclick:()=>{ rows.splice(i,1); draw(); }},'Remove'))));
       });
       box.append(h('div',{class:'row'},
-        h('button',{class:'btn ghost sm',type:'button',onclick:()=>{ rows.push({role:'', name:'', phone:'', call:'all'}); draw(); }},'Add a contact'),
+        h('button',{class:'btn ghost sm',type:'button',onclick:()=>{ rows.push({call: L.staffCall ? 'all' : 'manager'}); draw(); const ins = box.querySelectorAll('.item input'); const last = box.querySelectorAll('.item'); const li = last[last.length-1]; if (li) li.querySelector('input,select').focus(); }},'+ Add a '+L.one),
         h('button',{class:'btn sm',type:'button',onclick:()=>{
-          const clean = rows.filter(x => (x.name||'').trim() && (x.phone||'').trim()).map(x => Object.assign(x, {call:'all'}));
-          if (!clean.length){ toast('Add at least one contact with a name and phone'); return; }
+          const clean = rows.filter(x => (x.name||'').trim() && (key === 'team' || key === 'mco' || (x.phone||'').trim())).map(x => { if (L.staffCall) x.call = 'all'; if (key==='mco' && /nurse|rn\b/i.test(x.role||'')) x.key = 'rn'; return x; });
+          if (key === 'emergency' && !clean.length){ toast('Add at least one contact with a name and phone'); return; }
           const st = S(); st.faceEdits = st.faceEdits || {}; st.faceEdits[st.site] = st.faceEdits[st.site] || {};
-          st.faceEdits[st.site][code] = Object.assign(st.faceEdits[st.site][code]||{}, {emergency:clean, by:tier().name+' (you)', at:new Date().toISOString()});
-          save(); logView('Updated emergency contacts for '+code); toast('Saved'); A.route(); }},'Save'),
+          st.faceEdits[st.site][code] = Object.assign(st.faceEdits[st.site][code]||{}, {[key]:clean, by:tier().name+' (you)', at:new Date().toISOString()});
+          save(); logView('Updated '+L.t+' for '+code+' ('+clean.length+')'); toast('Saved'); A.route(); }},'Save'),
         h('button',{class:'btn quiet sm',type:'button',onclick:()=>A.route()},'Cancel')));
     };
     draw(); return box;
   }
+  // "+ Add" and "Edit" buttons shown to managers, nurses and owners next to each list
+  function addEdit(f, code, key, host){
+    if (!canEditEC()) return null;
+    const open = adding => { const ed = listEditor(f, code, key, adding); host().replaceWith(ed); const first = ed.querySelector('.item:last-of-type input, .item:last-of-type select'); if (first) first.focus(); };
+    return h('div',{class:'row noprint'}, h('button',{class:'btn ghost sm',type:'button',onclick:()=>open(true)},'+ Add a '+LISTS[key].one), (f[key]||[]).length ? h('button',{class:'btn quiet sm',type:'button',onclick:()=>open(false)},'Edit') : null);
+  }
 
   // Care team from the MCO or IRIS: care manager and nurse manager, with phone, fax and email.
-  function teamBlock(f, may){
+  function teamBlock(f, may, code){
     const prog = /IRIS/i.test((f.ins||{}).program||'') ? 'IRIS team' : 'Family Care (MCO) team';
     const missingRN = !f.mco.some(x => x.key === 'rn');
-    return h('div',{class:'grid',style:'gap:.5rem'}, h('h3',null,prog),
+    let wrap; const add = addEdit(f, code, 'mco', () => wrap);
+    return wrap = h('div',{class:'grid',style:'gap:.5rem'}, h('div',{class:'row',style:'justify-content:space-between'}, h('h3',null,prog), add),
       h('div',{class:'grid g2'}, f.mco.map(x => h('div',{class:'item'}, h('div',{class:'meta'}, h('b',{style:'color:var(--ink)'},x.role), x.key==='rn' ? chip('RN','grey') : null),
         h('span',null,x.name+(x.agency ? ' · '+x.agency : '')), x.note ? h('span',{class:'small muted'},x.note) : null,
         may(x) ? h('div',{class:'grid',style:'gap:.3rem'},
@@ -287,12 +309,15 @@
       h('span',{class:'small'},'Decides: '+f.guardian.scope), h('span',{class:'small muted'},'Papers: '+f.guardian.letters), h('a',{class:'btn ghost sm callbtn',href:tel(f.guardian.phone)},'📞 Call '+f.guardian.phone)));
     if (f.poa) list.append(h('div',{class:'item'}, h('div',{class:'meta'},h('b',{style:'color:var(--ink)'},'Power of attorney'),chip(f.poa.type,'grey'),chip(f.poa.activated?'Activated':'Not activated (resident decides)',f.poa.activated?'amber':'calm')), h('span',null,f.poa.name), h('span',{class:'small muted'},'Papers: '+f.poa.papers), h('a',{class:'btn ghost sm callbtn',href:tel(f.poa.phone)},'📞 Call '+f.poa.phone)));
     if (!f.guardian && !f.poa) list.append(h('div',{class:'item'}, h('b',null,'Decision maker'), h('span',{class:'small'},'The resident makes their own decisions.')));
-    f.family.filter(x => !f.emergency.some(e => e.phone===x.phone)).forEach(x => list.append(person(x, may(x))));
-    f.team.forEach(x => list.append(person(Object.assign({}, x, {specialty:x.specialty==='psych' && S().tier==='caregiver' ? null : x.specialty}), may(x))));
-    list.append(person(f.pharmacy, may(f.pharmacy)));
-    list.append(h('div',{class:'item'}, h('b',null,'Preferred hospital'), h('span',null,f.hospital), h('span',{class:'small muted'},'In an emergency, call 911 first. Paramedics choose the closest safe hospital.')));
     box.append(list);
-    box.append(teamBlock(f, may));
+    const section = (key, title, items, extra) => { let wrap; const add = addEdit(f, code, key, () => wrap);
+      const g = h('div',{class:'grid g2'}, items.map(x => person(x, may(x))), extra || []);
+      return wrap = h('div',{class:'grid',style:'gap:.5rem'}, h('div',{class:'row',style:'justify-content:space-between'}, h('h3',null,title), add),
+        items.length || (extra||[]).length ? g : h('p',{class:'small muted'},'None on file yet.')); };
+    box.append(section('family','Family and friends', f.family.filter(x => !f.emergency.some(e => e.phone===x.phone))));
+    box.append(section('team','Doctors and specialists', f.team.map(x => Object.assign({}, x, {specialty:x.specialty==='psych' && S().tier==='caregiver' ? null : x.specialty})),
+      [person(f.pharmacy, may(f.pharmacy)), h('div',{class:'item'}, h('b',null,'Preferred hospital'), h('span',null,f.hospital), h('span',{class:'small muted'},'In an emergency, call 911 first. Paramedics choose the closest safe hospital.'))]));
+    box.append(teamBlock(f, may, code));
     if (f.payee){
       if (canSeeIds()){
         const det = h('details',{class:'item'}, h('summary',null,'Representative payee (restricted)'));
