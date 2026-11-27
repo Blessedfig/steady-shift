@@ -1437,12 +1437,28 @@
   }
   function signal(o){
     if (S.optin !== true) return false;
-    S.signals.push(Object.assign({id:uid(), at:new Date().toISOString(), site:S.site, tier:S.tier, status:'New', mine:true}, o)); save(); return true;
+    const x = Object.assign({id:uid(), at:new Date().toISOString(), site:S.site, tier:S.tier, status:'New', mine:true}, o);
+    S.signals.push(x); save();
+    // Test version: a copy also goes to the Owner Desk (with the tester's email) so nothing a tester shares is lost.
+    // Text is already scrubbed of names, dates and numbers; drop-offs stay local to keep the desk readable.
+    if (x.type !== 'dropoff') queueDesk('sig-'+x.id, {kind:'Feedback', biz:'Test app feedback: '+(AREA[x.area]||x.area), when:'Whenever', text:signalText(x), status:'New', reply:'', source:'test-app-feedback', tier:x.tier, area:x.area, type:x.type});
+    return true;
+  }
+  function signalText(x){
+    const T = {rating:'Rating', edit:'Edited a generated report', pulse:'Monthly pulse', search:'Search with no results'};
+    const l = [(T[x.type]||x.type)+': '+(x.label||x.ref||'')];
+    if (x.type === 'rating') l.push('Helpful? '+(x.val === 'up' ? '👍 Yes' : '👎 Not really')+(x.team ? '. How our team handles it? '+x.team : ''));
+    if (x.type === 'pulse') l.push('Score: '+x.val+' of 5');
+    if (x.type === 'edit'){ if (x.added) l.push('Added: '+x.added); if (x.removed) l.push('Removed: '+x.removed); }
+    if (x.q) l.push('Searched for: '+x.q);
+    if (x.note) l.push('Note: "'+x.note+'"');
+    l.push('', '(From the test app. Viewing as '+(D.TIERS.find(t=>t.id===x.tier)||{name:x.tier}).name+'. Test data only.)');
+    return l.join('\n');
   }
   function consentBox(onYes){
     return h('div',{class:'card soft',style:'gap:.5rem'},
       h('b',null,'Help improve the guidance?'),
-      h('span',{class:'small'},'Your ratings and notes go to a review queue your owner sees, without your name. A person reviews them before any guidance changes. Please never type resident names or health details.'),
+      h('span',{class:'small'},'Your ratings and notes go to a review queue your owner sees, without your name. In this test version, a copy also goes to Christian on the Owner Desk with your email, so he can follow up. A person reviews them before any guidance changes. Please never type resident names or health details.'),
       h('div',{class:'row'}, h('button',{class:'btn sm',type:'button',onclick:()=>{S.optin=true;save();onYes();}},'Yes, share anonymously'), h('button',{class:'btn quiet sm',type:'button',onclick:e=>{S.optin=false;save();e.target.closest('.card').replaceWith(h('p',{class:'small muted'},'OK, nothing is shared. You can change this on the Feedback review screen.'));}},'No thanks')));
   }
   // Thumbs up/down plus "Is this how your team handles it?" and an optional note.
@@ -2095,6 +2111,67 @@
   // Uses the AI helper (Supabase Edge Function "app-chat") when it is set up; otherwise a scripted helper
   // asks short follow-ups and saves the conversation as one request.
   let sb = null, user = null;
+  // ---- Outbox: everything meant for the desk is saved on this device first, then sent, and retried until the
+  // desk has it. Nothing is shown as "sent" until the desk confirms it. Each item has a client id (cid), so a
+  // note that grows (the chat's follow-up answers) updates its one row instead of adding new ones.
+  const OBX = 'ss-outbox-v1';
+  let obx = (() => { try { return JSON.parse(localStorage.getItem(OBX)) || {items:[], ids:{}}; } catch(e){ return {items:[], ids:{}}; } })();
+  const obxWatch = {};
+  let obxRun = null, obxErr = '';
+  function obxSave(){ try { localStorage.setItem(OBX, JSON.stringify(obx)); } catch(e){} }
+  function obxState(cid){ return obx.items.some(x => x.cid === cid) ? (obxErr ? 'error' : 'waiting') : (obx.ids[cid] ? 'sent' : 'none'); }
+  function obxNotify(){
+    Object.keys(obxWatch).forEach(cid => obxWatch[cid].forEach(f => f(obxState(cid))));
+    const bar = $('outboxBar'), co = $('chatOutbox'); if (!bar) return;
+    const n = obx.items.length; bar.hidden = !n; if (co) co.hidden = !n || !obxErr;
+    if (n && co) co.textContent = '⚠ Not on the desk yet ('+obxErr+'). Your words are kept on this device and keep retrying.';
+    if (n) $('outboxText').textContent = n+(n===1?' note is':' notes are')+' saved on this device and waiting to reach the Owner Desk.'+(obxErr ? ' Last try: '+obxErr+'.' : '')+' It retries on its own.';
+  }
+  function obxOn(cid, f){ (obxWatch[cid] = obxWatch[cid] || []).push(f); f(obxState(cid)); }
+  function queueDesk(cid, data){
+    const i = obx.items.findIndex(x => x.cid === cid);
+    const item = {cid, data, at:new Date().toISOString()};
+    if (i >= 0) obx.items[i] = item; else obx.items.push(item);
+    obxSave(); obxNotify(); return flushDesk();
+  }
+  // one run at a time; a call during a run waits for it and then sends anything added meanwhile
+  function flushDesk(){
+    if (obxRun) return obxRun.then(() => (obx.items.length && !obxErr) ? flushDesk() : null);
+    if (!obx.items.length) return Promise.resolve();
+    obxRun = obxSend().finally(() => { obxRun = null; });
+    return obxRun;
+  }
+  async function obxSend(){
+    if (!sb || !user){ obxErr = 'not signed in'; obxNotify(); return; }
+    obxErr = '';
+    try {
+      for (let pass = 0; pass < 3 && obx.items.length && !obxErr; pass++) for (const item of obx.items.slice()){
+        const data = Object.assign({}, item.data, {by:item.data.by || user.email || '', cid:item.cid});
+        let error, id = obx.ids[item.cid];
+        if (id){
+          // keep whatever the desk changed (status, reply) and update only what the person wrote
+          const cur = await sb.from('desk_items').select('data').eq('id', id).maybeSingle();
+          error = cur.error;
+          if (!error && cur.data){ const d = cur.data.data || {}; ({error} = await sb.from('desk_items').update({data:Object.assign({}, data, {status:d.status || data.status, reply:d.reply || ''})}).eq('id', id)); }
+          else if (!error) id = null; // the desk deleted it: send it again as new
+        }
+        if (!id && !error){
+          const r = await sb.from('desk_items').insert({kind:'request', data}).select('id').single();
+          error = r.error; if (!error) obx.ids[item.cid] = r.data.id;
+        }
+        if (error){ obxErr = error.code || error.message || 'no connection'; break; }
+        const now = obx.items.find(x => x.cid === item.cid);
+        if (now && now.at === item.at) obx.items = obx.items.filter(x => x !== now); // changed while sending: send again
+        obxSave(); obxNotify();
+      }
+    } catch(e){ obxErr = navigator.onLine === false ? 'no connection' : String(e.message || e); }
+    obxSave(); obxNotify();
+  }
+  window.addEventListener('online', () => flushDesk());
+  $('outboxRetry').addEventListener('click', () => { obxErr = ''; flushDesk().then(() => { if (!obx.items.length) toast('Sent to the Owner Desk'); }); });
+  obxNotify();
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') flushDesk(); });
+  setInterval(() => { if (obx.items.length) flushDesk(); }, 30000);
   const chat = $('chat'), log = $('chatLog'), chips = $('chatChips'), txt = $('chatText');
   const TOPICS = [
     {k:'wording', label:'Change some wording', kind:'Update'},
@@ -2104,6 +2181,20 @@
     {k:'question',label:'Ask a question', kind:'Question'}
   ];
   let step = 'start', draft = {}, opened = false;
+  // Saves the note to the desk right away and again after each answer, so closing the chat early loses nothing.
+  function saveDraft(final){
+    if (!draft.what) return;
+    const fresh = !draft.cid;
+    if (fresh) draft.cid = 'chat-'+uid()+uid();
+    if (final) draft.final = true;
+    const text = summary()+(draft.final ? '' : '\n\n(Still answering the follow-up questions. This updates as they answer.)')+'\n\n(From the test app chat. Screen open: '+screenName()+', viewing as '+tier().name+', '+site().name+')';
+    const data = {kind:draft.topic.kind, biz:draft.where==='Public website'?'Website (from test app chat)':'Test app: '+(draft.where||screenName()), when:draft.when||'Whenever', text, status:'New', reply:'', by:(user && user.email)||'', source:'test-app-chat', tier:S.tier, screen:current};
+    if (fresh){
+      const st = h('div',{class:'bub sum',role:'status'},'Saving…'); log.append(st); log.scrollTop = log.scrollHeight;
+      obxOn(draft.cid, s => { st.textContent = s === 'sent' ? '✓ Saved on the Owner Desk. Any answers below are added to the same note, and you can stop at any time.' : s === 'error' ? '⚠ Not on the desk yet ('+obxErr+'). It\'s kept on this device and retries on its own.' : 'Saving to the Owner Desk…'; st.className = 'bub sum'+(s === 'error' ? ' warn' : ''); });
+    }
+    return queueDesk(draft.cid, data);
+  }
   function bub(cls, text){ const b = h('div',{class:'bub '+cls}, text); log.append(b); log.scrollTop = log.scrollHeight; return b; }
   function say(text){ bub('bot', text); }
   function setChips(list){
@@ -2126,7 +2217,7 @@
       setChips([]); txt.focus(); }})));
   }
   function askWhere(){
-    step = 'where';
+    step = 'where'; saveDraft();
     if (draft.topic.k === 'website'){ draft.where = 'Public website'; return askWhy(); }
     say('Is this about the "'+screenName()+'" screen you were on, or somewhere else?');
     setChips([
@@ -2137,13 +2228,13 @@
     ]);
   }
   function askWhy(){
-    step = 'why';
+    step = 'why'; saveDraft();
     say(draft.topic.k === 'question' ? 'Anything that would help us answer, like where this comes up on a shift? (Or skip.)' : 'Why does it matter? Who would it help on a real shift, or what goes wrong without it? (Or skip.)');
     setChips([{label:'Skip', run:askWhen}]);
     txt.focus();
   }
   function askWhen(){
-    step = 'when';
+    step = 'when'; saveDraft();
     say('How soon would you like it?');
     setChips(['Whenever','This week','Urgent'].map(w => ({label:w, run:()=>{ draft.when = w; confirm(); }})));
   }
@@ -2151,24 +2242,23 @@
     return 'Type: '+draft.topic.label+'\nWhere: '+(draft.where||'not said')+'\nWhat: '+draft.what+(draft.why?'\nWhy: '+draft.why:'')+((draft.more||[]).length?'\nMore: '+draft.more.join(' / '):'')+'\nHow soon: '+(draft.when||'Whenever');
   }
   function confirm(){
-    step = 'confirm';
-    say('Here\'s what I\'ll send. Anything to add?');
+    step = 'confirm'; saveDraft();
+    say('Here\'s your note. Anything to add?');
     bub('sum', summary());
     setChips([
-      {label:'Send it', go:true, run:send},
+      {label:'That\'s everything', go:true, run:send},
       {label:'Add more detail', run:()=>{ step = 'more'; say('Go ahead, type what to add.'); setChips([]); txt.focus(); }},
-      {label:'Start over', run:()=>{ log.textContent = ''; start(); }, silent:true}
+      {label:'Start a new note', run:()=>{ log.textContent = ''; start(); }, silent:true}
     ]);
   }
   async function send(){
     setChips([]);
-    if (!sb || !user){ say('You\'re signed out, so I couldn\'t send it. Sign in and try again.'); return; }
-    const text = summary()+'\n\n(From the test app chat. Screen open: '+screenName()+', viewing as '+tier().name+', '+site().name+')';
-    const data = {kind:draft.topic.kind, biz:draft.where==='Public website'?'Website (from test app chat)':'Test app: '+(draft.where||screenName()), when:draft.when||'Whenever', text, status:'New', reply:'', by:user.email||'', source:'test-app-chat', tier:S.tier, screen:current};
-    const {error} = await sb.from('desk_items').insert({kind:'request', data});
-    if (error){ say('That didn\'t go through ('+(error.code||error.message)+'). Try "Send it" again in a moment.'); setChips([{label:'Send it', go:true, run:send}]); return; }
-    say('Sent! It\'s on the Owner Desk under Requests for Claude. When someone replies, you\'ll see it under "Your notes and replies".');
+    const cid = draft.cid;
+    await saveDraft(true);
     step = 'done';
+    const st = obxState(cid);
+    if (st === 'sent') say('Done! It\'s on the Owner Desk under Requests for Claude. When someone replies, you\'ll see it under "Your notes and replies".');
+    else say('It\'s saved on this device'+(!user ? ' (you\'re signed out)' : '')+' and will reach the Owner Desk on its own as soon as it can. You can close the app; it keeps trying next time you open it.');
     setChips([{label:'Something else', run:()=>start(), silent:false}]);
   }
   // ---- AI mode: used when the app-chat server function is set up with an API key ----
@@ -2226,7 +2316,10 @@
     box.textContent = '';
     if (error){ box.append(h('p',{class:'small'},'Couldn\'t load your notes ('+(error.code||error.message)+').')); return; }
     const mine = (data||[]).filter(r => String(r.data.by||'').toLowerCase() === String(user.email||'').toLowerCase());
-    if (!mine.length){ box.append(h('p',{class:'small muted'},'Nothing sent yet. Your notes and any replies show up here.')); return; }
+    obx.items.filter(x => !obx.ids[x.cid]).forEach(x => box.append(h('div',{class:'item'},
+      h('div',{class:'meta'}, h('span',{class:'chip amber'},'Waiting to send'), h('span',null,fmtDate(x.at))),
+      h('span',{class:'small',style:'white-space:pre-wrap'}, String(x.data.text||'').split('\n\n(')[0].slice(0,400)))));
+    if (!mine.length && !obx.items.length){ box.append(h('p',{class:'small muted'},'Nothing sent yet. Your notes and any replies show up here.')); return; }
     mine.forEach(r => {
       const d = r.data, st = d.status || 'New';
       box.append(h('div',{class:'item'},
@@ -2336,7 +2429,7 @@
     $('whoEmail').textContent = user.email || '';
     $('gate').hidden = true; $('app').hidden = false;
     if (window.SSStation){ const sv = await SSStation.verify(); if (sv && sv.gone) toast('This tablet is no longer a shift station. A manager can set it up again in Services and access.'); }
-    fillSwitchers(); route();
+    fillSwitchers(); route(); flushDesk();
     if (window.SSPw) SSPw.afterSignIn(sb, user, how);
     if (trial){
       const openPlans = () => SSTrial.plans(sb, user, trial, {onSignOut:signOut, onBack:() => SSTrial.bar(trial, openPlans)});
