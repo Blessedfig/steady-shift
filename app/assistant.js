@@ -120,7 +120,13 @@
       return {text:'Staff at '+site().name+': '+staffNames().join(', ')+'. You are '+me()+'.', lines:staffNames()};
     }},
     open_screen:{kind:'read', tiers:ALL, label:'Open a screen', run(inp){
-      const v = String(inp.screen||'');
+      const v = String(inp.screen||'').trim();
+      if ((!VIEWS[v] || v === 'assistant') && window.SSSearch){
+        // words, not a screen id: use quick search ("fax inbox", "face sheet Ruth", "add a policy")
+        const hits = SSSearch.find(v, 3).filter(x => x.href !== '#/assistant');
+        if (!hits.length) return {text:'No screen matches "'+clip(v,40)+'".', error:true};
+        return {text:'Showed links to: '+hits.map(x => x.title).join('; ')+'.', head:'Go to', lines:[], links:hits.map(x => ({href:x.href, label:x.title}))};
+      }
       if (!VIEWS[v] || v === 'assistant') return {text:'There is no screen called "'+clip(v,40)+'".', error:true};
       if (!viewOn(v)) return {text:VIEWS[v].t+' is switched off for this home.', error:true};
       return {text:'Showed a link to '+VIEWS[v].t+'.', lines:[], links:['#/'+v]};
@@ -270,9 +276,10 @@
   const bot = text => push(h('div',{class:'bub bot'}, text));
   const mine = text => push(h('div',{class:'bub me'}, text));
   function linkRow(links){
-    const ls = (links||[]).filter(l => { const v = l.replace(/^#\//,'').split('/')[0]; return VIEWS[v] && viewOn(v); });
+    // a link is '#/view' or {href, label}
+    const ls = (links||[]).map(l => typeof l === 'string' ? {href:l} : l).filter(l => { const v = l.href.replace(/^#\//,'').split('/')[0]; return VIEWS[v] && viewOn(v); });
     if (!ls.length) return null;
-    return h('div',{class:'row'}, ls.map(l => { const v = l.replace(/^#\//,'').split('/')[0]; return h('a',{class:'btn ghost sm',href:l}, VIEWS[v].ic+' Open '+VIEWS[v].t); }));
+    return h('div',{class:'row'}, ls.map(l => { const v = l.href.replace(/^#\//,'').split('/')[0]; return h('a',{class:'btn ghost sm',href:l.href}, VIEWS[v].ic+' Open '+(l.label || VIEWS[v].t)); }));
   }
   function resultCard(name, res){
     const t = TOOLS[name];
@@ -454,8 +461,9 @@
       const open = /\bopen shift\b/.test(low) && !personIn(t.replace(/open shift/i,''));
       return [{name:'add_shift', input:{person:open ? null : personIn(t), date:d0, start:tr.start, end:tr.end}}];
     }
-    const scr = low.match(/^(?:open|go to|take me to)()\s+(?:the\s+)?(.+?)(?:\s+screen|\s+page)?$/);
-    if (scr){ const q = scr[2]; const v = Object.keys(VIEWS).find(k => VIEWS[k].t.toLowerCase() === q || VIEWS[k].t.toLowerCase().includes(q) || k === q); if (v) return [{name:'open_screen', input:{screen:v}}]; }
+    if (/\b(add|upload|enter|input|put in|update|where (do|can) i (add|put|upload))\b.*\b(polic|procedure|handbook)/.test(low)) return [{name:'open_screen', input:{screen:'add policy procedures'}}];
+    const scr = low.match(/^(?:open|go to|take me to|jump to|find|show me|where(?:'s| is| are| do i find| can i find)?)\s+(?:the\s+)?(.+?)(?:\s+screen|\s+page)?\??$/);
+    if (scr && window.SSSearch && SSSearch.find(scr[1], 1).length) return [{name:'open_screen', input:{screen:scr[1]}}];
     if (/\b(due|to-?do|coming up|what'?s (up|next|on)|deadlines?|this week)\b/.test(low) && !/\bwho\b/.test(low)) return [{name:'whats_due', input:{days:/month/.test(low) ? 30 : /today/.test(low) ? 1 : 7}}];
     if (/\bopen shifts?\b/.test(low)) return [{name:'get_schedule', input:{from:d0 || today(), to:dates[1] ? dates[1].iso : addDays(d0 || today(), 6), only_open:true}}];
     if (/\bmy (next )?shifts?\b|when do i work|my schedule/.test(low)) return [{name:'get_schedule', input:{from:d0 || today(), to:addDays(d0 || today(), 6), person:'me'}}];
@@ -467,6 +475,8 @@
     if (/\breports?\b/.test(low) && /\b(waiting|review|inbox|new|open)\b/.test(low)) return [{name:'reports_waiting', input:{}}];
     if (/\b(residents?|who lives)\b/.test(low) && /\b(list|who|show|codes?)\b/.test(low)) return [{name:'list_residents', input:{}}];
     if (/\b(staff list|list (the )?staff|who works here)\b/.test(low)) return [{name:'list_staff', input:{}}];
+    // short words that name a screen ("vendors", "fax inbox", "face sheet Ruth") open it
+    if (window.SSSearch && low.split(/\s+/).length <= 4){ const top = SSSearch.find(t, 1)[0]; if (top && top.score >= 3) return [{name:'open_screen', input:{screen:t}}]; }
     return [{name:'find_procedure', input:{question:t}}];
   }
   function helpText(){
@@ -551,6 +561,7 @@
     else bot('Hi! What do you need? '+(examples()[0] ? 'For example: "'+examples()[0]+'"' : ''));
     setStatus(); setBusy();
     probe().then(setStatus);
+    if (askNext){ const q = askNext; askNext = null; setTimeout(() => send(q), 0); }
     setTimeout(() => { logEl.scrollTop = logEl.scrollHeight; }, 0);
   };
   // the conversation belongs to one role and home; start fresh when either changes
@@ -562,5 +573,6 @@
   });
 
   // for tests and for the server's tool list
-  window.SSAssistant = {TOOLS, allowed, allowedNames, parse, timeRange, datesIn, runTool, send, context, reset:() => { convo = []; shown = []; mode = null; probing = null; }, setMode:m => { mode = m; probing = Promise.resolve(); }};
+  let askNext = null; // a question handed over from quick search, sent when the chat screen opens
+  window.SSAssistant = {ask:q => { askNext = String(q||'').slice(0,2000); },TOOLS, allowed, allowedNames, parse, timeRange, datesIn, runTool, send, context, reset:() => { convo = []; shown = []; mode = null; probing = null; }, setMode:m => { mode = m; probing = Promise.resolve(); }};
 })();
