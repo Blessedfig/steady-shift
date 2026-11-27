@@ -97,6 +97,7 @@
     ap(tb, body);
     ap(v, h('details',{class:'card'}, h('summary',null,h('h2',{style:'display:inline'},'By person, week of '+lbl(ws))), h('p',{class:'small muted'},'For spreading hours fairly and catching burnout early. Not a ranking.'), h('div',{class:'tablewrap'}, tb),
       h('div',{class:'row'}, h('button',{class:'btn quiet sm',type:'button',onclick:()=>download('insights-'+di(ws)+'.csv','text/csv',csv.map(r => r.map(csvCell).join(',')).join('\r\n'))},'Download (.csv)'))));
+    if (['owner','multi'].includes(S().tier)) ap(v, h('a',{class:'tile',href:'#/labor'}, h('span',{class:'ic','aria-hidden':'true'},'💵'), h('b',null,'Labor and pay (owner only)'), h('span',null,'Pay by role, overtime cost, manager time on schedules, and ideas with estimated savings.')));
     ap(v, h('div',{class:'card soft'}, h('h3',null,'What to look for'), h('ul',{class:'small'},
       h('li',null,'Overtime that keeps landing on the same people is a burnout and turnover warning before it is a cost.'),
       h('li',null,'Coverage short on the same weekday each week usually means the template needs a change, not more phone calls.'),
