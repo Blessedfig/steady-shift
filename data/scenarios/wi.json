@@ -3188,7 +3188,7 @@
     {
      "layer": "state",
      "cite": "DHS 83 staffing",
-     "says": "CBRF: enough awake or asleep staff per class and residents' needs.",
+     "says": "CBRF: enough staff on duty for the license class and residents' needs.",
      "status": "unverified",
      "settings": [
       "cbrf"
@@ -3208,7 +3208,7 @@
     {
      "layer": "federal",
      "cite": "FLSA",
-     "says": "Overtime and sleep-time pay rules apply to whoever covers.",
+     "says": "Overtime pay rules apply to whoever covers.",
      "status": "unverified",
      "settings": [
       "afh",
