@@ -45,7 +45,7 @@
       h('div',{class:'row'}, h('a',{class:'btn ghost',href:'#/access'},'Services and access')));
   }
   const ALPH = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
-  function code(){ const a = new Uint32Array(8); crypto.getRandomValues(a); return 'SS-'+[...a].map((n,i) => (i===4?'-':'')+ALPH[n % ALPH.length]).join(''); }
+  function code(){ const a = new Uint32Array(8); crypto.getRandomValues(a); return 'AC-'+[...a].map((n,i) => (i===4?'-':'')+ALPH[n % ALPH.length]).join(''); }
   const DUR = [['1','1 day'],['7','1 week'],['30','30 days'],['90','90 days'],['0','Until removed']];
   const until = days => +days ? new Date(Date.now() + days*864e5).toISOString() : null;
   const permName = id => (SD.perms.find(p => p.id === id)||{}).name || id;
@@ -134,7 +134,7 @@
     // my access (caregiver) and code entry
     if (S().tier === 'caregiver'){
       const mine = s.grants.filter(g => g.site === site && g.staff === meName() && active(g));
-      const inp = h('input',{type:'text',autocomplete:'off',placeholder:'SS-XXXX-XXXX',style:'text-transform:uppercase'});
+      const inp = h('input',{type:'text',autocomplete:'off',placeholder:'AC-XXXX-XXXX',style:'text-transform:uppercase'});
       ap(v, h('div',{class:'card'}, h('h2',null,'Your extra access ('+meName()+')'),
         mine.length ? h('div',{class:'list'}, mine.map(g => h('div',{class:'item'}, h('span',null,g.perms.map(permName).join(' · ')), h('span',{class:'small muted'},'Shared by '+g.by+(g.expires ? ' · ends '+A.fmtTime(g.expires) : ''))))) : h('p',{class:'muted'},'None right now.'),
         h('form',{class:'row',onsubmit:e=>{ e.preventDefault(); const err = redeem(inp.value); if (err) toast(err); else { toast('Access added. New options are in your menu.'); A.renderNav(); A.route(); } }}, field('Have a code?', inp), h('button',{class:'btn sm',type:'submit'},'Use code'))));
