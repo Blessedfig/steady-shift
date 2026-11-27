@@ -72,6 +72,7 @@
     procedures:{t:'Company procedures', ic:'🗂️'},
     review:{t:'Feedback review', ic:'👍'},
     sync:{t:'Sync and calendar', ic:'🔗'},
+    orders:{t:'Doctor orders', ic:'📄'},
     peer:{t:'What\'s worked for others', ic:'🤲'},
     schedule:{t:'Schedule', ic:'📅'},
     time:{t:'Time sheets', ic:'⏱️'},
@@ -81,8 +82,8 @@
   };
   const NAV = {
     caregiver:['home','schedule','time','check','whatif','report','night','behavior','cards','peer','mytraining','access'],
-    manager:['home','schedule','time','kiosk','inbox','questions','check','whatif','report','night','behavior','team','review','survey','decide','ask','cards','peer','watch','procedures','sync','access'],
-    rn:['home','delegations','schedule','time','sync','check','whatif','cards','night','behavior','watch'],
+    manager:['home','schedule','time','kiosk','inbox','orders','questions','check','whatif','report','night','behavior','team','review','survey','decide','ask','cards','peer','watch','procedures','sync','access'],
+    rn:['home','delegations','orders','schedule','time','sync','check','whatif','cards','night','behavior','watch'],
     owner:['home','owner','insights','schedule','time','access','sync','review','peer','whatif','procedures','survey','questions','decide','ask','watch','cards'],
     multi:['home','sites','owner','insights','schedule','time','access','sync','review','peer','whatif','procedures','survey','watch','ask','cards'],
     family:['home','check','night','behavior','handoff','cards','watch']
@@ -989,6 +990,10 @@
     if (S.oncall && S.oncall.callin) ev.push({id:'oncall', kind:'Staffing', who:'House manager', site:sites[0].id,
       title:'On-call coverage check for tonight ('+nm(sites[0].id)+')', date:today, time:'17:30', dur:15,
       note:'Confirm who answers call-ins tonight so the manager can sleep. Set in Night help.', link:'#/night'});
+    (S.orders||[]).filter(o => ids.includes(o.site) && o.status === 'verified' && o.kind === 'appointment' && o.start && o.start >= today).forEach(o => ev.push({id:'ord-'+o.id, kind:'Appointment', who:'House manager', site:o.site,
+      title:(SENSITIVE.includes(o.specialty)?'Resident':(SPECIALTIES[o.specialty]||'Resident'))+' appointment ('+nm(o.site)+')', date:o.start, time:null, dur:60, note:'From a nurse-checked order. Arrange a ride and send the visit form. Details are in Steady Shift.', link:'#/orders'}));
+    (S.orders||[]).filter(o => ids.includes(o.site) && o.status === 'pending').slice(0,1).forEach(() => ev.push({id:'ord-pending', kind:'Order check', who:'RN', site:sites[0].id,
+      title:'New doctor orders waiting for a nurse check', date:today, time:'16:00', dur:15, note:'Open Doctor orders in Steady Shift to check them.', link:'#/orders'}));
     return ev.sort((a,b) => (a.date+(a.time||'')).localeCompare(b.date+(b.time||'')));
   }
   const appUrl = e => location.origin + location.pathname + e.link;
@@ -1112,6 +1117,185 @@
 
   // Shared helpers for the scheduling, time sheet, insights and access modules (schedule.js, time.js, insights.js, access.js)
   window.SSApp = {D, h, state:()=>S, save, toast, copy, site, setting, tier, fmtDate, fmtTime, head, download, toIcs, gcalUrl, outlookUrl, csvCell, R, VIEWS, NAV, route:()=>route(), go:v=>go(v), isoDay, addDays, uid, renderNav:()=>renderNav(current), fillSwitchers:()=>fillSwitchers(), param:()=>param};
+  // ---------- Doctor orders: intake, RN verification, current orders (sample data only) ----------
+  // One shared order store (S.orders). Other screens read verified, active orders through window.SS_ordersFor(site, res).
+  const ORDER_KINDS = {med:'Medication', diet:'Diet', activity:'Activity or therapy', appointment:'Appointment or follow-up', lab:'Lab or test', monitor:'Monitoring', other:'Other'};
+  const ORDER_SOURCES = ['Visit summary (paper)','Fax','Phone order (read back)','Hospital discharge','Pharmacy','Patient portal printout'];
+  const SPECIALTIES = {primary:'Primary care', psych:'Psychiatry and behavioral health', dental:'Dental', therapy:'Therapy (PT, OT, speech)', pharmacy:'Pharmacy', hospice:'Hospice', homehealth:'Home health', specialist:'Other specialist', hospital:'Hospital or ER'};
+  const SENSITIVE = ['psych'];
+  const TRACK_TYPES = {check:'Checkbox', yesno:'Yes or no', number:'Number', ml:'Fluid (ml)', lb:'Weight (lb)', text:'Short note'};
+  const TRACK_FREQ = ['each meal','every shift','daily','weekly'];
+  function seedOrders(){
+    const t = isoDay(new Date());
+    return [
+      {id:'o-m3-ins', batch:'b1', site:'maple', res:'M-3', kind:'med', specialty:'primary', text:'Insulin glargine 10 units under the skin at bedtime (sample).', start:'2026-11-01', end:'', prescriber:'Dr. Sample, Example Clinic', source:'Visit summary (paper)', status:'verified', enteredBy:'House manager (sample)', enteredAt:'2026-11-01T15:00:00', verifiedBy:'RN (sample)', verifiedAt:'2026-11-01T18:20:00',
+        track:{label:'Blood sugar before supper', type:'number', freq:'daily', where:['meal','handoff']}},
+      {id:'o-m2-diet', batch:'b2', site:'maple', res:'M-2', kind:'diet', specialty:'therapy', text:'Soft and bite-sized foods, mildly thick liquids, no peanuts (sample).', start:'2026-11-20', end:'', prescriber:'Speech therapy, Example Clinic', source:'Fax', status:'verified', enteredBy:'House manager (sample)', enteredAt:'2026-11-20T10:00:00', verifiedBy:'RN (sample)', verifiedAt:'2026-11-20T13:05:00',
+        diet:{name:'Regular', texture:'IDDSI 6 Soft & bite-sized', liquids:'IDDSI 2 Mildly thick', allergies:['peanut'], notes:'Sit upright for meals and 30 minutes after.'},
+        track:{label:'Fluid intake', type:'ml', freq:'every shift', where:['meal','handoff']}},
+      {id:'o-b9-wt', batch:'b3', site:'birch', res:'B-9', kind:'monitor', specialty:'hospital', text:'Weigh weekly, same scale, before breakfast. Call if up 3 lb in a week (sample).', start:'2026-11-15', end:'', prescriber:'Dr. Sample, Example Clinic', source:'Hospital discharge', status:'verified', enteredBy:'House manager (sample)', enteredAt:'2026-11-15T09:00:00', verifiedBy:'RN (sample)', verifiedAt:'2026-11-15T11:30:00',
+        track:{label:'Weight', type:'lb', freq:'weekly', where:['handoff']}},
+      {id:'o-b9-fu', batch:'b3', site:'birch', res:'B-9', kind:'appointment', specialty:'primary', text:'Follow-up with primary care in 2 weeks (sample).', start:addDays(t,10), end:'', prescriber:'Dr. Sample, Example Clinic', source:'Hospital discharge', status:'verified', enteredBy:'House manager (sample)', enteredAt:'2026-11-15T09:00:00', verifiedBy:'RN (sample)', verifiedAt:'2026-11-15T11:30:00'},
+      {id:'o-m4-skin', batch:'b4', site:'maple', res:'M-4', kind:'monitor', specialty:'homehealth', text:'Check skin on heels and tailbone each evening; report redness that does not fade (sample).', start:t, end:'', prescriber:'Wound nurse, Example Clinic', source:'Fax', status:'pending', enteredBy:'Caregiver (sample)', enteredAt:new Date().toISOString(),
+        track:{label:'Skin check, heels and tailbone', type:'yesno', freq:'every shift', where:['handoff']}},
+      {id:'o-m2-psy', batch:'b5', site:'maple', res:'M-2', kind:'med', specialty:'psych', text:'Medication change from the psychiatry visit: follow the new pharmacy label; watch for more sleepiness in the evening (sample).', start:'2026-11-18', end:'', prescriber:'Psychiatric nurse practitioner, Example Behavioral Health', source:'Visit summary (paper)', status:'verified', enteredBy:'House manager (sample)', enteredAt:'2026-11-18T14:00:00', verifiedBy:'RN (sample)', verifiedAt:'2026-11-18T16:40:00',
+        track:{label:'Evening sleepiness', type:'yesno', freq:'daily', where:['handoff']}},
+      {id:'o-m2-psyfu', batch:'b5', site:'maple', res:'M-2', kind:'appointment', specialty:'psych', text:'Psychiatry follow-up in 4 weeks (sample).', start:addDays(t,20), end:'', prescriber:'Psychiatric nurse practitioner, Example Behavioral Health', source:'Visit summary (paper)', status:'verified', enteredBy:'House manager (sample)', enteredAt:'2026-11-18T14:00:00', verifiedBy:'RN (sample)', verifiedAt:'2026-11-18T16:40:00'},
+      {id:'o-m1-dent', batch:'b6', site:'maple', res:'M-1', kind:'appointment', specialty:'dental', text:'Dental cleaning and denture fit check (sample).', start:addDays(t,6), end:'', prescriber:'Example Family Dental', source:'Phone order (read back)', status:'verified', enteredBy:'House manager (sample)', enteredAt:'2026-11-20T09:00:00', verifiedBy:'RN (sample)', verifiedAt:'2026-11-20T09:30:00'},
+      {id:'o-m1-dent2', batch:'b6', site:'maple', res:'M-1', kind:'other', specialty:'dental', text:'Soak dentures overnight; brush gums twice a day (sample).', start:'2026-11-20', end:'', prescriber:'Example Family Dental', source:'Phone order (read back)', status:'verified', enteredBy:'House manager (sample)', enteredAt:'2026-11-20T09:00:00', verifiedBy:'RN (sample)', verifiedAt:'2026-11-20T09:30:00',
+        track:{label:'Dentures soaked', type:'check', freq:'daily', where:['handoff']}}
+    ];
+  }
+  if (!Array.isArray(S.orders) || S.ordersSeed !== 2) { const mineOnly = (S.orders||[]).filter(o => !/^o-(m|b)\d/.test(o.id)); S.orders = seedOrders().concat(mineOnly); S.ordersSeed = 2; save(); }
+  const orderActive = (o, day) => o.status === 'verified' && (!o.start || o.start <= day || o.kind === 'appointment') && (!o.end || o.end >= day);
+  window.SS_ordersFor = (siteId, res) => { const d = isoDay(new Date()); return (S.orders||[]).filter(o => o.site === siteId && (!res || o.res === res) && orderActive(o, d)).map(o => JSON.parse(JSON.stringify(o))); };
+  window.SS_allOrders = () => JSON.parse(JSON.stringify(S.orders||[]));
+  const KIND_CHIP = {med:'', diet:'calm', activity:'grey', appointment:'amber', lab:'grey', monitor:'grey', other:'grey'};
+  function orderMeta(o){
+    return h('div',{class:'meta'}, o.specialty ? h('span',{class:'chip grey'},SPECIALTIES[o.specialty]||o.specialty) : null, h('span',{class:'chip '+(KIND_CHIP[o.kind]||'')},ORDER_KINDS[o.kind]||o.kind), h('span',null,'Resident '+o.res), o.start ? h('span',null,(o.kind==='appointment'?'On or by ':'From ')+fmtDate(o.start)) : null, o.end ? h('span',null,'until '+fmtDate(o.end)) : null);
+  }
+  function orderDetail(o){
+    const bits = [];
+    if (o.diet) bits.push(h('span',{class:'small'},'Diet: '+[o.diet.name, o.diet.texture, o.diet.liquids].filter(Boolean).join(' · ')+(o.diet.allergies && o.diet.allergies.length ? ' · Allergies: '+o.diet.allergies.join(', ') : '')+(o.diet.notes ? ' · '+o.diet.notes : '')));
+    if (o.track) bits.push(h('span',{class:'small'},'Record: '+o.track.label+' ('+(TRACK_TYPES[o.track.type]||o.track.type)+', '+o.track.freq+', in '+o.track.where.map(w=>w==='meal'?'meal log':'shift handoff').join(' and ')+')'));
+    if (SENSITIVE.includes(o.specialty)) bits.push(h('span',{class:'small'},'Behavioral health: only the instruction staff need is entered. No therapy or visit notes are kept here.'));
+    if (SENSITIVE.includes(o.specialty) && S.tier === 'caregiver') return bits;
+    bits.push(h('span',{class:'small muted'},'From '+(o.prescriber||'prescriber not given')+' · '+o.source+' · entered by '+o.enteredBy+' '+fmtTime(o.enteredAt)+(o.verifiedAt ? ' · checked by '+o.verifiedBy+' '+fmtTime(o.verifiedAt) : '')));
+    return bits;
+  }
+  const SAMPLE_VISIT = {source:'Visit summary (paper)', specialty:'primary', prescriber:'Dr. Sample, Example Clinic', lines:[
+    {kind:'med', text:'Stop the evening dose of the sample water pill. Keep the morning dose.', start:'', end:''},
+    {kind:'monitor', text:'Check ankles for swelling each evening.', track:{label:'Ankle swelling', type:'yesno', freq:'daily', where:['handoff']}},
+    {kind:'appointment', text:'Return visit in 3 weeks.', start:''}]};
+
+  R.orders = v => {
+    const rn = ['rn','manager','owner','multi'].includes(S.tier);
+    v.append(head('Orders', 'Doctor orders', 'Get new orders from visits, faxes and discharges into the plan, checked by a nurse before staff act on them. Test version: sample data only, never a real order or a real picture.'));
+    const pend = S.orders.filter(o => o.status === 'pending' && (o.site === S.site || ['owner','multi'].includes(S.tier)));
+    const back = S.orders.filter(o => o.status === 'returned' && o.site === S.site);
+    v.append(h('div',{class:'grid g2'},
+      h('div',{class:'stat'+(pend.length?'':' good')},h('b',null,String(pend.length)),h('span',null,'waiting for a nurse check')),
+      h('div',{class:'stat'},h('b',null,String(S.orders.filter(o => o.site === S.site && orderActive(o, isoDay(new Date()))).length)),h('span',null,'current orders at '+site().name))));
+
+    // ---- intake form ----
+    const resSel = h('select',{id:'oRes'}, residents().map(r => h('option',{value:r.code},r.code+' (sample)')));
+    const srcSel = h('select',{id:'oSrc'}, ORDER_SOURCES.map(s => h('option',null,s)));
+    const spSel = h('select',{id:'oSpec'}, Object.keys(SPECIALTIES).map(k => h('option',{value:k},SPECIALTIES[k])));
+    const spNote = h('p',{class:'small',hidden:true},'Behavioral health: enter only the instruction staff need, such as a medication change or what to watch for. Do not copy therapy or visit notes. Records of substance use treatment have stricter federal rules; leave those out.');
+    spSel.addEventListener('change', () => { spNote.hidden = !SENSITIVE.includes(spSel.value); });
+    const presc = h('input',{type:'text',id:'oPresc',placeholder:'Example: Dr. Sample, Example Clinic'});
+    const file = h('input',{type:'file',id:'oFile',accept:'image/*,application/pdf',capture:'environment'});
+    const prev = h('div',{class:'row'});
+    file.addEventListener('change', () => { prev.textContent = ''; const f = file.files && file.files[0]; if (!f) return;
+      if (/^image\//.test(f.type)) prev.append(h('img',{src:URL.createObjectURL(f),alt:'Picture of the order (not saved)',style:'max-width:220px;max-height:220px;border-radius:12px;border:1px solid var(--line)'}));
+      prev.append(h('span',{class:'small muted'},f.name+' attached to this page only. The test app does not save pictures.')); });
+    const linesBox = h('div',{class:'list'});
+    function addLine(pre){
+      pre = pre || {};
+      const kind = h('select',null, Object.keys(ORDER_KINDS).map(k => h('option',{value:k,selected:k===pre.kind},ORDER_KINDS[k])));
+      const text = h('textarea',{style:'min-height:4rem',placeholder:'Write the order as it reads on the paper'}); text.value = pre.text||'';
+      const start = h('input',{type:'date'}); start.value = pre.start||isoDay(new Date());
+      const end = h('input',{type:'date'}); end.value = pre.end||'';
+      const dietBox = h('div',{class:'grid g2'});
+      const dName = h('input',{type:'text',placeholder:'Example: Consistent carb'}), dTex = h('input',{type:'text',placeholder:'Example: IDDSI 6 Soft & bite-sized'}), dLiq = h('input',{type:'text',placeholder:'Example: IDDSI 2 Mildly thick'}), dAll = h('input',{type:'text',placeholder:'Example: peanut, shellfish'});
+      dietBox.append(h('label',{class:'f'},'Diet name',dName), h('label',{class:'f'},'Food texture',dTex), h('label',{class:'f'},'Liquids',dLiq), h('label',{class:'f'},'Allergies (commas)',dAll));
+      const tOn = h('input',{type:'checkbox'}); tOn.checked = !!pre.track;
+      const tLabel = h('input',{type:'text',placeholder:'Example: Fluid intake'}); tLabel.value = pre.track ? pre.track.label : '';
+      const tType = h('select',null, Object.keys(TRACK_TYPES).map(k => h('option',{value:k,selected:pre.track && pre.track.type===k},TRACK_TYPES[k])));
+      const tFreq = h('select',null, TRACK_FREQ.map(f => h('option',{selected:pre.track && pre.track.freq===f},f)));
+      const wMeal = h('input',{type:'checkbox'}), wHand = h('input',{type:'checkbox'});
+      wMeal.checked = pre.track ? pre.track.where.includes('meal') : false; wHand.checked = pre.track ? pre.track.where.includes('handoff') : true;
+      const trackBox = h('div',{class:'grid g2'}, h('label',{class:'f'},'What to record',tLabel), h('label',{class:'f'},'Type',tType), h('label',{class:'f'},'How often',tFreq),
+        h('div',{class:'f'}, h('span',{class:'small'},'Show it in'), h('label',{class:'row small'},wMeal,'Meal log'), h('label',{class:'row small'},wHand,'Shift handoff')));
+      const sync = () => { dietBox.style.display = kind.value === 'diet' ? '' : 'none'; trackBox.style.display = tOn.checked ? '' : 'none'; };
+      kind.addEventListener('change', sync); tOn.addEventListener('change', sync);
+      const rm = h('button',{class:'btn quiet sm',type:'button'},'Remove line');
+      const box = h('div',{class:'item'}, h('div',{class:'grid g2'}, h('label',{class:'f'},'Type of order',kind), h('div')), h('label',{class:'f'},'Order',text),
+        h('div',{class:'grid g2'}, h('label',{class:'f'},'Start (or appointment date)',start), h('label',{class:'f'},'Stop date, if any',end)),
+        dietBox, h('label',{class:'row small'},tOn,'Staff need to record something for this order'), trackBox, rm);
+      rm.addEventListener('click', () => { if (linesBox.children.length > 1) box.remove(); });
+      box._read = () => {
+        if (!text.value.trim()) return null;
+        const o = {kind:kind.value, text:text.value.trim(), start:start.value, end:end.value};
+        if (o.kind === 'diet') o.diet = {name:dName.value.trim(), texture:dTex.value.trim(), liquids:dLiq.value.trim(), allergies:dAll.value.split(',').map(x=>x.trim().toLowerCase()).filter(Boolean), notes:''};
+        if (tOn.checked && tLabel.value.trim()) o.track = {label:tLabel.value.trim(), type:tType.value, freq:tFreq.value, where:[wMeal.checked?'meal':null, wHand.checked?'handoff':null].filter(Boolean)};
+        if (o.track && !o.track.where.length) o.track.where = ['handoff'];
+        return o;
+      };
+      sync(); linesBox.append(box);
+    }
+    addLine();
+    const f = h('form',{class:'card'}, h('h2',null,'A new order came in'),
+      h('div',{class:'grid g2'}, h('label',{class:'f'},'Resident',resSel), h('label',{class:'f'},'Care area',spSel)), spNote,
+      h('div',{class:'grid g2'}, h('label',{class:'f'},'Where it came from',srcSel), h('label',{class:'f'},'Doctor, dentist or clinic',presc)),
+      h('label',{class:'f'},'Picture or file of the order (optional)',file), prev,
+      h('h3',null,'What the order says'), linesBox,
+      h('div',{class:'row'}, h('button',{class:'btn quiet sm',type:'button',onclick:()=>addLine()},'Add another line'),
+        h('button',{class:'btn quiet sm',type:'button',onclick:()=>{ linesBox.textContent=''; srcSel.value = SAMPLE_VISIT.source; spSel.value = SAMPLE_VISIT.specialty; spNote.hidden = true; presc.value = SAMPLE_VISIT.prescriber; SAMPLE_VISIT.lines.forEach(l => addLine(Object.assign({}, l, {start: l.kind==='appointment' ? addDays(isoDay(new Date()),21) : ''}))); toast('Sample visit summary filled in'); }},'Fill in a sample visit summary')),
+      h('p',{class:'small muted'},'Phone orders: read the order back to the prescriber, then enter it here. Nothing changes for staff until a nurse checks it.'),
+      h('button',{class:'btn',type:'submit'},'Send to the nurse to check'));
+    f.addEventListener('submit', e => { e.preventDefault();
+      const lines = [...linesBox.children].map(b => b._read()).filter(Boolean);
+      if (!lines.length){ toast('Write at least one order line'); return; }
+      const batch = uid(), at = new Date().toISOString();
+      lines.forEach(l => S.orders.push(Object.assign({id:'o-'+uid(), batch, site:S.site, res:resSel.value, specialty:spSel.value, prescriber:presc.value.trim(), source:srcSel.value, status:'pending', enteredBy:tier().name+' (you)', enteredAt:at, hadFile:!!(file.files && file.files.length)}, l)));
+      save(); toast('Sent to the nurse. '+lines.length+' line'+(lines.length>1?'s':'')+' waiting.'); route(); });
+
+    // ---- nurse check ----
+    const checkCard = h('div',{class:'card'+(pend.length?' warn':'')}, h('h2',null,'Waiting for a nurse check ('+pend.length+')'),
+      h('p',{class:'small muted'},'Homes without an RN: the manager does this check and calls the prescriber with any question. Follow your home\'s medication and delegation rules.'));
+    if (!pend.length) checkCard.append(h('p',{class:'muted'},'Nothing waiting.'));
+    pend.forEach(o => {
+      const steps = ['Matches the paper, fax or read-back word for word', 'Anything unclear was clarified with the prescriber', o.kind==='med' ? 'Pharmacy has it and the MAR is updated' : 'Care plan or service plan updated', 'Staff doing it are trained or delegated'];
+      const boxes = steps.map(s => h('label',{class:'row small'},h('input',{type:'checkbox'}),s));
+      const note = h('input',{type:'text',placeholder:'Note for the sender (optional)'});
+      const ok = h('button',{class:'btn sm',type:'button',disabled:!rn},'Checked, make it active');
+      const no = h('button',{class:'btn quiet sm',type:'button',disabled:!rn},'Send back with a question');
+      ok.addEventListener('click', () => { if (boxes.some(b => !b.querySelector('input').checked)){ toast('Tick every check first'); return; } o.status = 'verified'; o.verifiedBy = tier().name+' (you)'; o.verifiedAt = new Date().toISOString(); if (note.value.trim()) o.rnNote = note.value.trim(); save(); toast('Active. Staff will see it on their screens.'); route(); });
+      no.addEventListener('click', () => { o.status = 'returned'; o.rnNote = note.value.trim() || 'Please clarify with the prescriber.'; o.verifiedBy = tier().name+' (you)'; o.verifiedAt = new Date().toISOString(); save(); toast('Sent back.'); route(); });
+      checkCard.append(h('div',{class:'item'}, orderMeta(o), h('b',null,o.text), orderDetail(o), o.hadFile ? h('span',{class:'small'},'A picture was attached when it was entered.') : null, boxes, note, h('div',{class:'row'},ok,no), !rn ? h('span',{class:'small muted'},'View as RN or house manager to check orders.') : null));
+    });
+    if (back.length) checkCard.append(h('h3',null,'Sent back'), back.map(o => h('div',{class:'item'}, orderMeta(o), h('b',null,o.text), h('span',{class:'small'},'Question: '+o.rnNote),
+      h('button',{class:'btn quiet sm',type:'button',onclick:()=>{ o.status = 'pending'; save(); route(); }},'Clarified, send again'))));
+
+    // ---- current orders ----
+    const today = isoDay(new Date());
+    const cur = h('div',{class:'card'}, h('h2',null,'Current orders at '+site().name),
+      h('p',{class:'small muted'},'Only nurse-checked orders show here. Meal and shift handoff screens read these, so anything to record appears on them automatically.'));
+    residents().forEach(r => {
+      const mine = S.orders.filter(o => o.site === S.site && o.res === r.code && orderActive(o, today));
+      if (!mine.length) return;
+      cur.append(h('h3',null,'Resident '+r.code), h('div',{class:'list'}, mine.map(o => h('div',{class:'item'}, orderMeta(o), h('b',null,o.text), orderDetail(o),
+        h('div',{class:'row'},
+          o.kind==='appointment' && o.start ? h('a',{class:'btn ghost sm',target:'_blank',rel:'noopener',href:gcalUrl({title:(SENSITIVE.includes(o.specialty)?'Resident':(SPECIALTIES[o.specialty]||'Resident'))+' appointment ('+site().name+')', date:o.start, time:null, dur:60, note:'Details are in Steady Shift. Arrange a ride and send the visit form.', link:'#/orders'})},'Add to Google Calendar') : null,
+          rn ? h('button',{class:'btn quiet sm',type:'button',onclick:()=>{ o.end = addDays(today,-1); o.stoppedBy = tier().name+' (you)'; save(); toast('Stopped. It no longer shows for staff.'); route(); }},'Stop this order') : null)))));
+    });
+    if (cur.children.length === 2) cur.append(h('p',{class:'muted'},'No current orders for this home.'));
+
+    // ---- care team hub: one view across specialties ----
+    const hub = h('div',{class:'card'}, h('h2',null,'Care team at a glance'),
+      h('p',{class:'small muted'},'Every care area in one place, built from nurse-checked orders: who is involved, what is active, and the next visit.'));
+    const tb = h('table',{class:'t'}, h('thead',null,h('tr',null,['Resident','Care area','Active orders','Next visit'].map(x=>h('th',null,x)))));
+    const body = h('tbody');
+    residents().forEach(r => {
+      const mine = S.orders.filter(o => o.site === S.site && o.res === r.code && orderActive(o, today));
+      const areas = [...new Set(mine.map(o => o.specialty||'other'))];
+      areas.forEach((a,i) => { const ao = mine.filter(o => (o.specialty||'other') === a); const nxt = ao.filter(o => o.kind === 'appointment' && o.start >= today).sort((x,y)=>x.start.localeCompare(y.start))[0];
+        body.append(h('tr',null, h('td',null,i===0?r.code:''), h('td',null,SPECIALTIES[a]||'Other'), h('td',null,String(ao.filter(o=>o.kind!=='appointment').length)), h('td',null,nxt?fmtDate(nxt.start):'–'))); });
+    });
+    tb.append(body);
+    hub.append(body.children.length ? h('div',{class:'tablewrap'},tb) : h('p',{class:'muted'},'No checked orders yet.'),
+      h('p',{class:'small muted'},'Guardians and activated powers of attorney: record who consented to sharing with each provider. That consent record comes with the privacy foundation.'));
+
+    v.append(f, checkCard, hub, cur);
+    v.append(h('div',{class:'card soft'}, h('h2',null,'Later: orders that arrive on their own'),
+      h('ul',{class:'small'},
+        h('li',null,'A secure fax number for each home, so faxed orders land in this list instead of on paper.'),
+        h('li',null,'Secure messages from clinics and the Wisconsin health information exchange.'),
+        h('li',null,'Visit summaries pulled from the clinic\'s patient portal, with the resident\'s or guardian\'s permission.'),
+        h('li',null,'Pharmacy updates to the medication list.')),
+      h('p',{class:'small muted'},'All of these carry real health information, so they wait until the privacy and security foundation and signed agreements are in place.')));
+  };
 
   // Owner view
   function siteStats(id){
