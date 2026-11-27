@@ -200,14 +200,14 @@
   function rolesTrack(v){
     const mine = S().tier === 'caregiver' ? ['caregiver'] : S().tier === 'manager' ? ['manager','caregiver'] : ['owner','manager','caregiver'];
     v.append(h('p',{class:'small muted'},'Each module takes 10 to 20 minutes and ends with a short quiz. Pass to get a certificate. Suggested hours go to the manager to confirm before they count toward yearly training.'));
-    mine.concat(Object.keys(AC.ROLES).filter(r => !mine.includes(r))).forEach(r => {
+    (OWNER_TIERS.includes(S().tier) ? mine.concat(Object.keys(AC.ROLES).filter(r => !mine.includes(r))) : mine).forEach(r => {
       const mods = AC.MODULES.filter(m => m.role === r);
-      v.append(h('div',{class:'card'}, h('h2',null,AC.ROLES[r].ic+' '+AC.ROLES[r].name), h('div',{class:'list'}, mods.map(m => { const c = certFor(m.id); return h('a',{class:'item',href:'#/academy/m/'+m.id,style:'text-decoration:none;color:inherit'}, h('div',{class:'meta'}, h('span',null,m.hours+' hr'), h('span',null,m.quiz.length+' questions'), c ? h('span',{class:'chip calm'},'Certificate: '+c.who) : null), h('b',null,m.title)); }))));
+      v.append(h('div',{class:'card'}, h('h2',null,AC.ROLES[r].ic+' '+AC.ROLES[r].name), h('div',{class:'list'}, mods.map(m => { const c = certFor(m.id); return h('a',{class:'item',href:'#/'+BASE+'/m/'+m.id,style:'text-decoration:none;color:inherit'}, h('div',{class:'meta'}, h('span',null,m.hours+' hr'), h('span',null,m.quiz.length+' questions'), c ? h('span',{class:'chip calm'},'Certificate: '+c.who) : null), h('b',null,m.title)); }))));
     });
   }
   function modulePage(v, id){
     const m = modById(id); if (!m){ overview(v); return; }
-    v.append(h('a',{href:'#/academy/roles',class:'small'},'← Role-based staff training'), head(AC.ROLES[m.role].name+' · '+m.hours+' hour', m.title, null));
+    v.append(h('a',{href:'#/'+(BASE==='training'?'training':'academy/roles'),class:'small'},'← '+(BASE==='training'?'Staff training':'Role-based staff training')), head(AC.ROLES[m.role].name+' · '+m.hours+' hour', m.title, null));
     v.append(h('div',{class:'row'}, kindChip('guide')));
     v.append(h('div',{class:'card'}, h('h2',null,'The short version'), h('ol',null, m.lessons.map(l => h('li',null,l))), m.try ? h('a',{class:'btn ghost sm',href:'#/'+m.try.link,style:'justify-self:start'},m.try.label+' to practice') : null));
     const names = learners(); const def = defaultLearner();
@@ -221,18 +221,18 @@
       const c = {id:uid(), mod:m.id, title:m.title, role:m.role, who, site:S().site, at:new Date().toISOString(), score, of:m.quiz.length, hours:m.hours, counted:false};
       st().certs.push(c); save();
       out.textContent = '';
-      out.append(h('div',{class:'card calm'}, h('b',null,'Certificate earned'), h('p',{class:'small'}, who+' passed "'+m.title+'". '+m.hours+' suggested hour'+(m.hours===1?'':'s')+' sent to the manager to confirm.'), h('a',{class:'btn sm',href:'#/academy/cert/'+c.id,style:'justify-self:start'},'View and print the certificate')));
+      out.append(h('div',{class:'card calm'}, h('b',null,'Certificate earned'), h('p',{class:'small'}, who+' passed "'+m.title+'". '+m.hours+' suggested hour'+(m.hours===1?'':'s')+' sent to the manager to confirm.'), h('a',{class:'btn sm',href:'#/'+BASE+'/cert/'+c.id,style:'justify-self:start'},'View and print the certificate')));
       toast('Certificate earned');
     }), out, notOfficial());
   }
 
   function certList(certs, title){
-    return h('div',{class:'card'}, h('h2',null,title), h('div',{class:'list'}, certs.map(c => h('div',{class:'item'}, h('div',{class:'meta'}, h('span',null,fmtDate(c.at)), h('span',null,c.hours+' hr'), c.counted ? h('span',{class:'chip calm'},'Counted') : h('span',{class:'chip amber'},'Waiting for manager')), h('b',null,c.who+': '+c.title), h('a',{class:'small',href:'#/academy/cert/'+c.id},'Certificate')))));
+    return h('div',{class:'card'}, h('h2',null,title), h('div',{class:'list'}, certs.map(c => h('div',{class:'item'}, h('div',{class:'meta'}, h('span',null,fmtDate(c.at)), h('span',null,c.hours+' hr'), c.counted ? h('span',{class:'chip calm'},'Counted') : h('span',{class:'chip amber'},'Waiting for manager')), h('b',null,c.who+': '+c.title), h('a',{class:'small',href:'#/'+BASE+'/cert/'+c.id},'Certificate')))));
   }
   function certPage(v, id){
     const c = st().certs.find(x => x.id === id); if (!c){ overview(v); return; }
     const home = (D.SITES.find(x => x.id === c.site) || site()).name;
-    v.append(h('a',{href:'#/academy',class:'small noprint'},'← Academy'));
+    v.append(h('a',{href:'#/'+BASE,class:'small noprint'},'← '+(BASE==='training'?'Staff training':'Academy')));
     v.append(h('div',{class:'card',style:'text-align:center;padding:2.2rem 1.4rem;border-width:3px;border-color:var(--sky-deep)'},
       h('span',{class:'eyebrow'},'Certificate of completion'), h('h1',null,c.who), h('p',null,'completed the Steady Shift in-house training module'), h('h2',null,c.title),
       h('p',{class:'small'}, 'Score '+c.score+' of '+c.of+' · '+c.hours+' suggested training hour'+(c.hours===1?'':'s')+' · '+fmtDate(c.at)+' · '+home+' (sample)'),
@@ -405,8 +405,19 @@
   }
 
   // ---------- router ----------
+  // The academy (business, licensing, app setup and toolkit) is for owners and people starting a home, not staff.
+  // Staff get the role modules on their own screen, Staff training (#/training).
+  const OWNER_TIERS = ['owner','multi'];
+  const isOwner = () => OWNER_TIERS.includes(S().tier);
+  let BASE = 'academy';
   R.academy = v => {
     st();
+    if (!isOwner()){
+      v.append(head('Owners only', 'The Getting started academy is for owners', 'It covers starting and running the business. Your role modules and certificates are in Staff training.'),
+        h('div',{class:'row'}, h('a',{class:'btn',href:'#/training'},'Open Staff training')));
+      return;
+    }
+    BASE = 'academy';
     const p = (location.hash.match(/^#\/academy\/?(.*)$/)||[])[1] || '';
     const [a, b] = p.split('/');
     if (!a) return overview(v);
@@ -417,9 +428,32 @@
     if (a === 'tool') return toolPage(v, b);
     overview(v);
   };
+  R.training = v => {
+    st(); BASE = 'training';
+    const p = (location.hash.match(/^#\/training\/?(.*)$/)||[])[1] || '';
+    const [a, b] = p.split('/');
+    if (a === 'm') return modulePage(v, b);
+    if (a === 'cert') return certPage(v, b);
+    v.append(head('Staff training', 'Short trainings for your role', 'Ten to twenty minutes each, with a quiz and a certificate. Your manager confirms the hours before they count toward your yearly training.'));
+    const mine = st().certs.filter(c => c.who === defaultLearner());
+    rolesTrack(v);
+    if (mine.length) v.append(certList(mine.slice().reverse(), 'My certificates'));
+    v.append(notOfficial());
+  };
   VIEWS.academy = {t:'Getting started academy', ic:'🎒'};
-  ['caregiver','manager','rn','owner','multi'].forEach(t => { const n = NAV[t]; if (n && !n.includes('academy')) n.splice(Math.min(1, n.length), 0, 'academy'); });
-  if (window.SSAccess && SSAccess.register) try { SSAccess.register({id:'academy', name:'Getting started academy', ic:'🎒', what:'Business setup, app setup and role training with quizzes, certificates, training hours and business tools.', views:['academy'], tiers:['caregiver','manager','rn','owner','multi']}); } catch(e){}
+  VIEWS.training = {t:'Staff training', ic:'🎓'};
+  const addNav = (t, view, at) => { const n = NAV[t]; if (n && !n.includes(view)) n.splice(Math.min(at, n.length), 0, view); };
+  // Undo the earlier placement for staff menus, then add each screen to its own roles.
+  ['caregiver','manager','rn'].forEach(t => { const n = NAV[t]; if (n && n.includes('academy')) n.splice(n.indexOf('academy'), 1); addNav(t, 'training', 1); });
+  OWNER_TIERS.forEach(t => addNav(t, 'academy', 1));
+  if (window.SSAccess && SSAccess.register) try {
+    SSAccess.register({id:'academy', name:'Getting started academy', ic:'🎒', what:'For owners: starting a home, setting up the app, running the business, and business tools.', views:['academy'], tiers:OWNER_TIERS.slice()});
+    SSAccess.register({id:'training', name:'Staff training', ic:'🎓', what:'Short role modules with quizzes, certificates and training hours a manager confirms.', views:['training'], tiers:['caregiver','manager','rn','owner','multi']});
+    // Never show the academy to staff, even if older saved settings or a shared permission would.
+    const viewOn0 = SSAccess.viewOn;
+    SSAccess.viewOn = view => view === 'academy' ? isOwner() && viewOn0(view) : viewOn0(view);
+    const mods = S().mods; if (mods) Object.keys(mods).forEach(sid => { const x = mods[sid] && mods[sid].academy; if (x && x.tiers) x.tiers = x.tiers.filter(t => OWNER_TIERS.includes(t)); });
+  } catch(e){}
 
   // ---------- hooks into other screens ----------
   // Team training: confirm academy hours so they count. The scheduler's training-hours check reads the same staff record.
@@ -434,14 +468,14 @@
         h('div',{class:'row'},
           recOf(c.who) ? h('button',{class:'btn sm',type:'button',onclick:()=>{ const r = recOf(c.who); r.hours = Math.round((r.hours + c.hours)*10)/10; c.counted = true; c.countedBy = tier().name+' (you)'; save(); toast(c.hours+' hours added for '+c.who); A.route(); }},'Count '+c.hours+' hr') : h('span',{class:'small muted'},'Not on this home\'s staff list.'),
           h('button',{class:'btn quiet sm',type:'button',onclick:()=>{ c.counted = true; c.hours = 0; c.countedBy = 'Not counted'; save(); A.route(); }},'Don\'t count'),
-          h('a',{class:'small',href:'#/academy/cert/'+c.id},'Certificate'))))) : h('p',{class:'muted'},'Nothing waiting. ', h('a',{href:'#/academy/roles'},'Assign a module')),
+          h('a',{class:'small',href:'#/training/cert/'+c.id},'Certificate'))))) : h('p',{class:'muted'},'Nothing waiting. ', h('a',{href:'#/training'},'Run a module with a staff member')),
       h('p',{class:'small'},'Counted hours update the schedule\'s training check right away.')));
   };
   const oldMy = R.mytraining;
   R.mytraining = v => {
     oldMy(v);
     const me = defaultLearner(), mine = st().certs.filter(c => c.who === me);
-    v.append(mine.length ? certList(mine.slice().reverse(), 'My academy certificates') : h('div',{class:'card soft'}, h('b',null,'Short trainings for you'), h('p',{class:'small'},'New caregiver modules take 10 minutes each and end with a certificate.'), h('a',{class:'btn ghost sm',href:'#/academy/roles',style:'justify-self:start'},'Start one')));
+    v.append(mine.length ? certList(mine.slice().reverse(), 'My training certificates') : h('div',{class:'card soft'}, h('b',null,'Short trainings for you'), h('p',{class:'small'},'New caregiver modules take 10 minutes each and end with a certificate.'), h('a',{class:'btn ghost sm',href:'#/training',style:'justify-self:start'},'Start one')));
   };
   // Owner view: supplies and expenses from the tracker.
   (A.ownerHooks = A.ownerHooks || []).push(v => {
@@ -451,12 +485,12 @@
       h('p',{class:'small'}, Object.keys(t).sort((x,y) => t[y]-t[x]).slice(0,4).map(k => k+' '+money(t[k])).join(' · ')),
       h('div',{class:'row'}, h('a',{class:'btn ghost sm',href:'#/academy/tool/inventory'},'Inventory and expenses'), h('a',{class:'btn ghost sm',href:'#/academy/tool/startup'},'Startup and expansion model'), h('a',{class:'btn ghost sm',href:'#/academy/tool/hire'},'Hiring planner'), h('a',{class:'btn ghost sm',href:'#/academy'},'Getting started academy'))));
   });
-  // Home: a nudge for new homes and new staff.
+  // Home: staff get a nudge to Staff training. Owners see the academy on the Owner view card.
   (A.homeHooks = A.homeHooks || []).push((v, t) => {
-    if (S().site === 'family') return;
-    const p = trackProgress(t === 'caregiver' ? 'roles' : 'setup');
-    if (p >= 100) return;
-    v.append(A.tile('academy'+(t==='caregiver'?'/roles':''),'🎒', t==='caregiver' ? 'New here? Short trainings' : 'Getting started academy', t==='caregiver' ? '10-minute modules with a certificate.' : 'Start a home, set up the app, train your team. '+p+'% of setup done.'));
+    if (S().site === 'family' || !['caregiver','manager'].includes(t)) return;
+    const me = defaultLearner(), mods = AC.MODULES.filter(m => m.role === t);
+    if (mods.every(m => certFor(m.id, me))) return;
+    v.append(A.tile('training','🎓', t==='caregiver' ? 'New here? Short trainings' : 'Trainings for new managers', '10 to 20 minute modules with a certificate.'));
   });
   window.SSAcademy = {state:st, trackProgress, catTotals, monthSpend};
 })();
