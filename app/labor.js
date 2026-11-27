@@ -101,15 +101,27 @@
         what:'Hire one part-time caregiver for about '+Math.round(need)+' hours a week. Hiring and training cost about '+$(I.hireCost)+' once (change it below), so it pays for itself in about '+(monthly > 0 ? Math.max(1, Math.ceil(I.hireCost/monthly)) : '–')+' month'+(monthly > 0 && Math.ceil(I.hireCost/monthly) === 1 ? '' : 's')+'.',
         how:'Today: '+$(agencyCost)+' a month (agency at '+$2(I.agency)+' an hour, overtime at 1.5 times). With a part-timer at '+$2(avg)+' an hour: '+$(hireCost)+' a month.'});
     }
-    // 5. wages vs benchmarks (retention)
+    // 5. wages vs benchmarks (retention). Uses the shared pay table (wages-data.js) when present.
     const cg = hourly.filter(p => p.role === 'Caregiver' || p.role === 'Lead caregiver');
     if (cg.length){
-      const avg = cg.reduce((t,p) => t+p.rate, 0)/cg.length, low = cg.filter(p => p.rate < 18.91);
+      const WG = window.SS_WAGES, fs = (S().facility||{}), cty = (sites.map(id => (fs[id]&&fs[id].profile||{}).county).find(Boolean)) || '';
+      const county = cty || 'Marathon';
+      let lines, floor = 18.91, floorName = 'Wausau-area healthcare support mean', link = null, areaName = 'Wausau';
+      if (WG && WG.lookup){
+        const L = ['cna','pca'].map(r => WG.lookup(r, county)), got = L.filter(x => x.hourly && x.hourly.median);
+        areaName = L[0].areaName;
+        lines = L.map(x => x.label+': '+(x.hourly && x.hourly.median ? $2(x.hourly.median)+' '+x.areaName+' median' : (x.anchor ? $2(x.anchor.median)+' '+x.anchor.where : 'not loaded yet')));
+        if (L[0].area === 'wausau') lines = lines.concat(WG.GROUP.map(g => 'Wausau '+g.label.toLowerCase()+' '+$2(g.hourly)+' ('+g.period+')'));
+        if (got.length){ floor = Math.min(...got.map(x => x.hourly.median)); floorName = areaName+' median for '+got.map(x => x.label.toLowerCase()).join(' and '); }
+        else if (L[0].area !== 'wausau'){ floor = Math.min(...L.filter(x => x.anchor).map(x => x.anchor.median)); floorName = 'U.S. median for personal care aides'; }
+        if (L.some(x => x.check)) link = {href:L[0].url, text:'Check '+areaName+' pay on the BLS site'};
+      } else lines = SD.bench.map(b => b.label+' '+$2(b.hourly)+' ('+b.period+')');
+      const avg = cg.reduce((t,p) => t+p.rate, 0)/cg.length, low = cg.filter(p => p.rate < floor);
       const raiseCost = low.length*I.raise*(low.reduce((t,p) => t+p.work, 0)/Math.max(1,low.length)/4)*WPM;
-      out.push({title:'Check pay against the area, to keep good staff', save:0, invest:raiseCost,
-        why:'Caregivers here average '+$2(avg)+' an hour. Public figures: '+SD.bench.map(b => b.label+' '+$2(b.hourly)+' ('+b.period+')').join('; ')+'. '+low.length+' caregiver'+(low.length === 1 ? ' is' : 's are')+' under the Wausau-area healthcare support mean.',
+      out.push({title:'Check pay against the area, to keep good staff', save:0, invest:raiseCost, link,
+        why:'Caregivers here average '+$2(avg)+' an hour. Public figures: '+lines.join('; ')+'. '+low.length+' caregiver'+(low.length === 1 ? ' is' : 's are')+' under the '+floorName+'.'+(cty ? '' : ' No county is set for this home yet, so this uses Marathon County (Wausau) as a sample. Add it in Facility setup.'),
         what:'A '+$2(I.raise)+' an hour raise for those '+low.length+' would cost about '+$(raiseCost)+' a month. Replacing one caregiver costs about '+$(I.turnover)+' (hiring, training and overtime while short), so it breaks even if it prevents one departure every '+(raiseCost ? Math.max(1, Math.round(I.turnover/raiseCost)) : '–')+' months.',
-        how:'Benchmarks are U.S. Bureau of Labor Statistics figures. Check current Wisconsin numbers before deciding. Pay decisions are yours; this is context, not advice.'});
+        how:'Benchmarks are U.S. Bureau of Labor Statistics figures'+(WG ? ', from the shared pay table' : '')+'. '+(link ? 'Area figures for your county are not loaded yet, so check them before deciding. ' : '')+'Pay decisions are yours; this is context, not advice.'});
     }
     // 6. manager time
     const mgrRate = (P.find(p => p.role === 'House manager' || p.role === 'Manager')||{rate:28}).rate;
@@ -176,7 +188,7 @@
     // recommendations
     const list = h('div',{class:'list'}, R0.map((r, i) => h('div',{class:'item rec'},
       h('div',{class:'meta'}, r.save ? h('span',{class:'chip calm'},'About '+$(r.save)+' a month') : null, r.grp === 'ot' ? h('span',{class:'chip grey'},'Overtime idea') : null, r.save ? null : r.invest ? h('span',{class:'chip'},'Costs about '+$(r.invest)+' a month') : null, h('span',null,'Idea '+(i+1))),
-      h('b',null,r.title), h('span',{class:'small'},h('b',null,'What the data shows: '),r.why), h('span',{class:'small'},h('b',null,'What to try: '),r.what), h('span',{class:'small muted'},h('b',null,'How we estimated: '),r.how))));
+      h('b',null,r.title), h('span',{class:'small'},h('b',null,'What the data shows: '),r.why), h('span',{class:'small'},h('b',null,'What to try: '),r.what), h('span',{class:'small muted'},h('b',null,'How we estimated: '),r.how), r.link ? h('a',{class:'small',href:r.link.href,target:'_blank',rel:'noopener'},r.link.text+' (opens BLS)') : null)));
     ap(v, h('div',{class:'card'}, h('h2',null,'Ideas to save money and keep staff'),
       h('p',{class:'small muted'},'These are about staffing and fairness, not about rating anyone. Ideas marked "Overtime idea" are different ways to cut the same overtime, so pick one. Talk with staff before changing hours, and check numbers with your bookkeeper.'), list));
 
