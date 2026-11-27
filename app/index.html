@@ -235,11 +235,11 @@ mark.flag{background:var(--amber-soft);color:var(--ink);border-bottom:2px solid 
 .tabs{display:flex;gap:.3rem;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:.4rem}
 .tabs button{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:.55rem 1rem;min-height:44px;font-weight:700;color:var(--muted);cursor:pointer}
 .tabs button[aria-selected="true"]{background:var(--sky);border-color:var(--sky);color:#fff}
-.seg{display:flex;flex-wrap:wrap;gap:.35rem}
-.seg button{border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);border-radius:12px;min-height:44px;min-width:44px;padding:.45rem .8rem;font-weight:700;cursor:pointer}
-.seg.big{flex-wrap:nowrap}
-.seg.big button{min-height:52px;min-width:44px;flex:1 1 0;padding:.45rem .2rem;font-size:1rem}
-.seg button[aria-pressed="true"]{background:var(--sky);border-color:var(--sky);color:#fff}
+.pick{display:flex;flex-wrap:wrap;gap:.35rem}
+.pick button{border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);border-radius:12px;min-height:44px;min-width:44px;padding:.45rem .8rem;font-weight:700;cursor:pointer}
+.pick.big{flex-wrap:nowrap}
+.pick.big button{min-height:52px;min-width:44px;flex:1 1 0;padding:.45rem .2rem;font-size:1rem}
+.pick button[aria-pressed="true"]{background:var(--sky);border-color:var(--sky);color:#fff}
 .f2{display:grid;gap:.35rem}
 .flab{font-size:.88rem;font-weight:600;color:var(--muted)}
 .checkrow{display:flex;gap:.6rem;align-items:center;min-height:44px;font-weight:600;cursor:pointer}
@@ -273,6 +273,10 @@ mark.flag{background:var(--amber-soft);color:var(--ink);border-bottom:2px solid 
 .bline{position:absolute;left:0;right:0;border-top:2px dashed var(--calm);z-index:1;pointer-events:none}
 .bars{margin-bottom:1.4rem}
 @media print{.tabs,.stickybar,.help{display:none!important}.postmenu{font-size:1.1rem}}
+/* daily care on the shift change report */
+.adl{border-top:1px solid var(--line);padding-top:.6rem;gap:.55rem}
+td.changed{background:var(--sky-soft)}
+.card.alert label.f,.card.alert .flab,.card.warn label.f,.card.warn .flab,.card.alert .muted,.card.warn .muted{color:var(--ink)}
 /* face sheets (facesheet.js) */
 .facehead{display:flex;gap:.9rem;align-items:center}
 .avatar{width:56px;height:56px;border-radius:50%;background:var(--sky-soft);color:var(--sky);font:800 1.5rem/56px var(--display);text-align:center;flex:none;border:2px solid var(--sky-deep)}
@@ -451,6 +455,7 @@ details.item>summary::-webkit-details-marker{display:none}
 <script src="meals.js"></script>
 <script src="facesheet.js"></script>
 <script src="cleaning.js"></script>
+<script src="monitor.js"></script>
 <script src="reports.js"></script>
 <script src="academy-data.js"></script>
 <script src="academy.js"></script>

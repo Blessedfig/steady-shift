@@ -213,6 +213,11 @@
         openT.length ? h('div',{class:'list'}, openT.map(t => tick(t, h('span',null, t.text, h('span',{class:'small muted'},' · added by '+t.by+', '+when(t.at))), false))) : h('p',{class:'muted'},'Nothing open.'),
         h('div',{class:'row'}, tIn, h('button',{class:'btn sm',type:'button',onclick:add},'Add')),
         doneT.length ? h('details',null, h('summary',{class:'small'},'Recently finished'), h('div',{class:'list'}, doneT.map(t => tick(t, h('span',{class:'small'}, t.text+' · '+t.doneBy+', '+when(t.doneAt)), true)))) : null));
+      // follow-up checks due (resident codes only; the checks themselves are entered in the app)
+      const mon = window.SSMonitor ? SSMonitor.pending(site) : [];
+      if (mon.length) ap(out, h('div',{class:'card warn'}, h('h3',null,'Follow-up checks due ('+mon.length+')'),
+        h('ul',null, mon.map(x => h('li',null, h('b',null,x.res+': '), x.text))),
+        h('p',{class:'small muted'},'Enter them under Follow-up checks in the app. A reading outside the limits means call the nurse.')));
       // hand-off note
       const ho = b.handoff, note = h('textarea',{rows:'3',maxlength:'600','aria-label':'Hand-off note for the next person'});
       const read = ho && ho.read.some(r => r.by === n);

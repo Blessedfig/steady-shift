@@ -143,8 +143,23 @@
       {id:'situation', label:'What is going on', type:'text', on:true, hint:'Say what changed and what you did. Facts only.'},
       {id:'meds', label:'Medications', type:'choice', options:['All given as ordered','Refused or held','As-needed (PRN) given','Not on my shift'], on:true},
       {id:'behavior', label:'Mood or behavior', type:'text', on:true, hint:'What happened, what helped'},
-      {id:'sleep', label:'Sleep (night shift)', type:'choice', options:['Slept well','Up a few times','Up most of the night'], on:false},
-      {id:'bm', label:'Bowel movement this shift', type:'yesno', on:false}
+      {id:'sleep', label:'Sleep (night shift)', type:'choice', options:['Slept well','Up a few times','Up most of the night'], on:false}
+    ]},
+    // Daily care (ADL) flow sheet, modeled on the CNA daily care flow sheet and the MDS daily-living and bladder/bowel items.
+    // "on" is the home default; a manager can turn any item on or off for one resident.
+    adl:{name:'Shift change report: daily care for each resident', fields:[
+      {id:'bm', label:'Bowel movement', type:'choice', options:['None','Small','Medium','Large'], on:true},
+      {id:'bmType', label:'What it looked like', type:'choice', options:['Hard','Formed','Soft','Loose or watery'], on:true, hint:'Only if there was one'},
+      {id:'bladder', label:'Bladder', type:'choice', options:['Continent','Incontinent','Catheter care done'], on:true},
+      {id:'briefs', label:'Brief or pad changes', type:'number', on:true},
+      {id:'bath', label:'Bathing', type:'choice', options:['Shower','Tub bath','Bed or sponge bath','Not today','Refused (resident choice)'], on:true},
+      {id:'linens', label:'Bed and linens', type:'choice', options:['Full linen change','Changed because soiled','Not needed'], on:true},
+      {id:'oral', label:'Oral care or dentures done', type:'check', on:true},
+      {id:'groom', label:'Grooming (hair, shave, nails)', type:'check', on:true},
+      {id:'skin', label:'Skin OK (no new red areas, bruises or sores)', type:'yesno', on:true},
+      {id:'turn', label:'Turned or repositioned every 2 hours', type:'choice', options:['Yes, every 2 hours','Missed some (say why below)'], on:false},
+      {id:'fall', label:'Fall or near-fall this shift', type:'yesno', on:true},
+      {id:'refused', label:'Anything refused (resident choice)', type:'text', on:true, hint:'What was offered, and what they said'}
     ]},
     handoffShift:{name:'Shift change report: whole house', fields:[
       {id:'safety', label:'Any safety concern in the house?', type:'text', core:true, on:true, hint:'Doors, alarms, equipment, weather, supplies. Write "none" if none.'},
@@ -160,6 +175,35 @@
     return f;
   }
   const liveFields = k => forms()[k].fields.filter(x => x.on);
+  // daily care items for one resident: the home's form, with that resident's on/off changes
+  function adlOverrides(sid, code){ const c = ensure(); c.adlRes = c.adlRes || {birch:{'B-9':{turn:true}}, maple:{'M-4':{turn:true}}}; c.adlRes[sid] = c.adlRes[sid] || {}; return (c.adlRes[sid][code] = c.adlRes[sid][code] || {}); }
+  function adlFor(code){ const o = adlOverrides(S().site, code); return forms().adl.fields.filter(f => f.id in o ? o[f.id] : f.on); }
+  // care log: last bowel movement and last bath, from shift reports (seeded with sample history)
+  function careLog(){
+    const c = ensure();
+    if (!c.careLog){
+      c.careLog = [];
+      const t = today();
+      const SEED = {'M-1':[1,2],'M-2':[3,1],'M-3':[0,4],'M-4':[1,2],'B-2':[0,1],'B-5':[2,3],'B-7':[1,5],'B-9':[4,2],'C-1':[0,2],'C-3':[1,6],'Mom':[0,1]};
+      Object.keys(A.D.RESIDENTS).forEach(sid => (A.D.RESIDENTS[sid]||[]).forEach(r => { const [bm, bath] = SEED[r.code] || [1,3];
+        c.careLog.push({site:sid, res:r.code, date:addDays(t,-bm), kind:'bm', val:'Medium', by:'Caregiver (sample)'});
+        c.careLog.push({site:sid, res:r.code, date:addDays(t,-bath), kind:'bath', val:'Shower', by:'Caregiver (sample)'}); }));
+      save();
+    }
+    return c.careLog;
+  }
+  function lastCare(sid, code, kind){ const l = careLog().filter(x => x.site===sid && x.res===code && x.kind===kind).sort((a,b)=>a.date<b.date?1:-1)[0]; return l || null; }
+  const daysSince = d => Math.round((new Date(today()+'T12:00:00') - new Date(d+'T12:00:00'))/864e5);
+  function careAlerts(sid){
+    const th = thresholds(); const out = [];
+    (A.D.RESIDENTS[sid]||[]).forEach(r => {
+      const on = ensure().adlRes && ((ensure().adlRes[sid]||{})[r.code]||{}); const bmOn = 'bm' in (on||{}) ? on.bm : (forms().adl.fields.find(f=>f.id==='bm')||{}).on;
+      if (!bmOn) return;
+      const b = lastCare(sid, r.code, 'bm'); const n = b ? daysSince(b.date) : null;
+      if (n == null || n >= th.bmDays) out.push({res:r.code, text:n == null ? 'No bowel movement on record' : 'No bowel movement in '+n+' days (last '+fmtDate(b.date)+')', why:'House default: tell the nurse after '+th.bmDays+' days. Follow any bowel care order.'});
+    });
+    return out;
+  }
 
   // ---------- state (this browser only) ----------
   function ensure(){
@@ -230,7 +274,7 @@
   const chip = (txt, cls) => h('span',{class:'chip'+(cls?' '+cls:'')},txt);
   function seg(name, options, value, onPick, opts){
     opts = opts || {};
-    const wrap = h('div',{class:'seg'+(opts.big?' big':''),role:'group','aria-label':name});
+    const wrap = h('div',{class:'pick'+(opts.big?' big':''),role:'group','aria-label':name});
     options.forEach(o => {
       const val = Array.isArray(o) ? o[0] : o, lab = Array.isArray(o) ? o[1] : o;
       const b = h('button',{type:'button','aria-pressed':String(value===val),onclick:()=>{ const now = b.getAttribute('aria-pressed')==='true' && opts.toggle ? null : val; wrap.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed','false')); if (now!=null) b.setAttribute('aria-pressed','true'); onPick(now); }}, lab);
@@ -273,7 +317,7 @@
   // ---------- meal flags ----------
   // Starting points a home can change on the Report forms screen. Weight thresholds follow the common long-term care
   // screen (5% in 30 days, 10% in 180 days). Refusal and intake thresholds are house defaults, not rules.
-  function thresholds(){ const c = ensure(); return Object.assign({refuse:3, lowPct:50, lowDays:3, wt30:5, wt180:10, fluidGoal:1500}, c.settings[S().site]||{}); }
+  function thresholds(){ const c = ensure(); return Object.assign({refuse:3, lowPct:50, lowDays:3, wt30:5, wt180:10, fluidGoal:1500, bmDays:3}, c.settings[S().site]||{}); }
   function mealFlags(sid){
     const c = ensure(); const th = thresholds(); const t = today(); const out = [];
     (A.D.RESIDENTS[sid]||[]).forEach(r => {
@@ -485,6 +529,9 @@
     (st.reports||[]).filter(r => r.site===sid && r.at >= since).forEach(r => out.push({kind:'Report', text:(r.type||'Report')+(r.resident?' · '+r.resident:'')+' · '+r.status, res:r.resident}));
     (st.triage||[]).filter(t => t.site===sid && t.at >= since).forEach(t => out.push({kind:'Night help', text:t.note}));
     mealFlags(sid).forEach(f => out.push({kind:'Meal flag', text:f.res+': '+f.text, res:f.res}));
+    careAlerts(sid).forEach(f => out.push({kind:'Care alert', text:f.res+': '+f.text, res:f.res}));
+    try { if (window.SSMonitor){ SSMonitor.pending(sid).forEach(m => out.push({kind:m.state==='overdue'?'Follow-up check overdue':'Follow-up check due', text:m.res+': '+m.text, res:m.res}));
+      SSMonitor.active(sid).forEach(m => out.push({kind:'Follow-up checks continue', text:m.res+': '+m.kind.toLowerCase()+', '+m.left+' check'+(m.left===1?'':'s')+' left, until '+fmtTime(m.ends), res:m.res})); } } catch(e){}
     try { if (window.SSClean && SSClean.openTasks) { const cl = SSClean.openTasks(sid); if (cl.length) out.push({kind:'Cleaning not done', text:cl.length+' job'+(cl.length===1?'':'s')+': '+cl.slice(0,4).map(t => t.text).join('; ')+(cl.length>4?'; and more':'')}); } } catch(e){}
     try { if (window.SSFace && SSFace.openTasks) SSFace.openTasks(sid).forEach(t => out.push({kind:'Not done yet', text:t.res+': '+t.text, res:t.res})); } catch(e){}
     try { if (window.SSSched && SSSched.ensure){ const sc = SSSched.ensure(); (sc.shifts||[]).filter(s => s.site===sid && s.callin && s.date >= since.slice(0,10)).forEach(s => out.push({kind:'Call-in', text:(s.staff||'Open shift')+' called in for '+s.date+' '+s.start})); (sc.shifts||[]).filter(s => s.site===sid && !s.staff && s.date===today()).forEach(s => out.push({kind:'Open shift', text:'Nobody yet for '+s.start+' to '+s.end+' today'})); } } catch(e){}
@@ -539,6 +586,20 @@
           if (pre != null) rd.orders[o.id] = pre;
           box.append(h('div',{class:'order'}, h('span',{class:'small'},'Order: '+o.text+(o.verifiedBy && o.specialty!=='psych'?' · checked by '+o.verifiedBy:'')), field({label:o.track.label, type:o.track.type, req:true}, pre, val => rd.orders[o.id] = val)));
         });
+        // daily care (ADL) stays visible even with "No change"
+        const adl = adlFor(r.code);
+        if (adl.length){
+          rd.adl = {};
+          const lb = lastCare(sid, r.code, 'bm'), lt = lastCare(sid, r.code, 'bath');
+          const nb = lb ? daysSince(lb.date) : null;
+          const late = nb == null || nb >= thresholds().bmDays;
+          const dc = h('div',{class:'grid'});
+          box.append(h('details',{class:'adl about',open:late}, h('summary',null,'Daily care: BM, bladder, bath, linens and more'),
+            h('div',{class:'chips'}, chip('Last BM: '+(lb ? (nb===0?'today':nb===1?'yesterday':nb+' days ago') : 'none on record'), late ? 'amber' : 'grey'), chip('Last bath: '+(lt ? fmtDate(lt.date) : 'none on record'),'grey')), dc));
+          const fallBox = h('p',{class:'small',hidden:true}, 'Check them first, then write it up in ', h('a',{href:'#/report'},'Write a report'), '. Facts only.');
+          adl.forEach(f => dc.append(field(f, rd.adl[f.id], val => { rd.adl[f.id] = val; if (f.id==='fall') fallBox.hidden = val !== 'Yes'; })));
+          dc.append(fallBox);
+        }
         const todo = h('input',{type:'text',maxlength:'200',placeholder:'e.g. Offer the shake at breakfast','aria-label':'To-do for the next shift for '+r.code});
         inner.append(h('label',{class:'f'},'Next shift needs to (optional)',todo));
         rd.todoEl = todo;
@@ -565,8 +626,11 @@
         extra.value.split('\n').map(s=>s.trim()).filter(Boolean).forEach(t => todos.push({id:uid(), text:t, res:''}));
         // weights entered through the handoff also go to the weight log
         residents().forEach(r => trackItems(sid, r.code, 'handoff').filter(o => o.track.type==='lb').forEach(o => { const lb = d.res[r.code].orders[o.id]; if (lb > 0) c.weights.push({site:sid, res:r.code, date:today(), lb, by:fromSel.value}); }));
+        residents().forEach(r => { const a = d.res[r.code].adl || {}; const log = careLog();
+          if (a.bm && a.bm !== 'None') log.push({site:sid, res:r.code, date:today(), kind:'bm', val:a.bm+(a.bmType?', '+a.bmType:''), by:fromSel.value});
+          if (a.bath && /Shower|Tub|Bed or sponge/.test(a.bath)) log.push({site:sid, res:r.code, date:today(), kind:'bath', val:a.bath, by:fromSel.value}); });
         c.handoffs.push({id:uid(), site:sid, at:new Date().toISOString(), shift:sh.name+' to '+(sh.next||(sh.name==='Day'?'Night':'Day')), from:fromSel.value, to:toSel.value, status:'Waiting',
-          forms:{res:forms().handoffRes.v, shift:forms().handoffShift.v}, fieldsRes:fr.map(f=>({id:f.id,label:f.label,type:f.type})), fieldsShift:fs.map(f=>({id:f.id,label:f.label,type:f.type})),
+          forms:{res:forms().handoffRes.v, shift:forms().handoffShift.v, adl:forms().adl.v}, fieldsRes:fr.map(f=>({id:f.id,label:f.label,type:f.type})), fieldsShift:fs.map(f=>({id:f.id,label:f.label,type:f.type})), fieldsAdl:forms().adl.fields.map(f=>({id:f.id,label:f.label,type:f.type})),
           res:d.res, shiftVals:d.shiftVals, todos, auto:auto.map(a => a.kind+': '+a.text)});
         save(); toast('Report sent. The next shift confirms it when they read it.'); cur = 'all'; draw();
       }},'Send report to the next shift');
@@ -634,6 +698,8 @@
       const st = r.noChange ? 'No change' : vals.status || '';
       const row = h('div',{class:'item'}, h('div',{class:'meta'}, chip(code), st ? chip(st, st==='Changed'?'red':st==='Watch closely'?'amber':'calm') : null));
       Object.entries(vals).filter(([k,val]) => k!=='status' && !empty(val)).forEach(([k,val]) => row.append(h('span',{class:'small'},h('b',null,lab(x.fieldsRes||[],k)+': '),String(val))));
+      const ad = Object.entries(r.adl||{}).filter(([,val]) => !empty(val));
+      if (ad.length) row.append(h('span',{class:'small'},h('b',null,'Daily care: '), ad.map(([k,val]) => lab(x.fieldsAdl||[],k)+(val===true?'':': '+val)).join(' · ')));
       Object.entries(r.orders||{}).filter(([,val]) => !empty(val)).forEach(([oid,val]) => { const o = ordersFor(x.site, code).find(z=>z.id===oid) || SAMPLE_ORDERS.find(z=>z.id===oid); row.append(h('span',{class:'small'},h('b',null,(o&&o.track?o.track.label:'Order item')+': '),val===true?'Done':String(val))); });
       box.append(row);
     });
@@ -641,7 +707,7 @@
     if (sv.length) box.append(h('div',{class:'item'}, h('b',null,'Whole house'), sv.map(([k,val]) => h('span',{class:'small'},h('b',null,lab(x.fieldsShift||[],k)+': '),String(val)))));
     if (x.todos.length) box.append(h('div',{class:'item'}, h('b',null,'To-do for the next shift'), h('ul',null,x.todos.map(t => h('li',null,(t.res?t.res+': ':'')+t.text)))));
     if (x.ack) box.append(h('div',{class:'house ok'}, h('b',null,'Confirmed by '+x.ack.by+' · '+fmtTime(x.ack.at)), x.ack.readback ? h('span',{class:'small'},'Said back: '+x.ack.readback) : null, x.ack.question ? h('span',{class:'small'},'Question: '+x.ack.question+(x.ack.questionOpen?' (open)':' (answered)')) : null));
-    box.append(h('p',{class:'foot'},'Form version: residents v'+((x.forms||{}).res||1)+', house v'+((x.forms||{}).shift||1)+'. Past reports keep the form they were written on.'));
+    box.append(h('p',{class:'foot'},'Form version: residents v'+((x.forms||{}).res||1)+', house v'+((x.forms||{}).shift||1)+(x.forms && x.forms.adl ? ', daily care v'+x.forms.adl : '')+'. Past reports keep the form they were written on.'));
     return box;
   }
   function standardsHelp(){
@@ -650,6 +716,7 @@
         h('li',null,h('b',null,'SBAR'),' (Situation, Background, Assessment, Recommendation): the most common hand-off format in nursing and long-term care, spread in health care by Kaiser Permanente and the Institute for Healthcare Improvement. Here: "What is going on", the resident\'s diet and notes, "How are they", and "Next shift needs to".'),
         h('li',null,h('b',null,'I-PASS'),' (Illness severity, Patient summary, Action list, Situation awareness, Synthesis by receiver), backed by AHRQ. A 2014 study in the New England Journal of Medicine found about 23% fewer medical errors after hospitals adopted it. Here: "Stable / Watch closely / Changed", the to-do list, and the incoming person saying it back.'),
         h('li',null,h('b',null,'The Joint Commission, Sentinel Event Alert 58 (2017)'),' asks for a standard format, a hand-off that is interactive with time for questions, few interruptions, and the receiver confirming. Here: the same form every shift, the question box, and the "I have the report" step.')),
+      h('p',{class:'small'},h('b',null,'Daily care. '),'The daily care items follow the CNA daily care flow sheet used across long-term care and the daily-living and bladder and bowel areas of the federal Minimum Data Set (MDS). Refusals are recorded as the resident\'s choice, not as a failure. The "days without a bowel movement" alert is a house default your nurse can change.'),
       h('p',{class:'small'},'Wisconsin\'s rules for adult family homes (DHS 88) and CBRFs (DHS 83) do not set a hand-off format. They do expect staff to know each resident\'s current needs and to watch for and pass on changes in condition (for example DHS 88.07(2)(b)5, observing and documenting changes). A written, confirmed hand-off is a simple way to show that.'),
       h('p',{class:'foot'},'Checked '+fmtDate(CHECKED)+'. Not legal advice.'));
   }
@@ -903,6 +970,17 @@
           ['maple','birch','cedar'].filter(x => x !== S().site).forEach(sid => { const cf = c.forms[sid] = c.forms[sid] || {}; const old = cf[k]; if (old) c.formHist.push({site:sid, form:k, v:old.v, at:old.at, by:old.by, fields:old.fields}); cf[k] = {v:(old?old.v:1)+1, at:new Date().toISOString(), by:tier().name+' (you), copied from '+site().name, fields:JSON.parse(JSON.stringify(work))}; });
           save(); toast('Copied to your other homes');
         }},'Copy to all my homes') : null));
+      if (k === 'adl'){
+        const rs = residents(); const fl = f.fields;
+        const tb = h('table',{class:'t'}, h('caption',{class:'sr'},'Daily care items for each resident'), h('thead',null,h('tr',null,h('th',{scope:'col'},'Item'), rs.map(r => h('th',{scope:'col'},r.code)))));
+        const tbody = h('tbody');
+        fl.forEach(x => tbody.append(h('tr',null, h('th',{scope:'row'},x.label), rs.map(r => { const o = adlOverrides(S().site, r.code); const val = x.id in o ? o[x.id] : x.on;
+          const cb = h('input',{type:'checkbox',checked:val,'aria-label':x.label+' for '+r.code,onchange:()=>{ if (!isManager()){ cb.checked = !cb.checked; return toast('Switch "View as" to a manager to change this'); } if (cb.checked === x.on) delete o[x.id]; else o[x.id] = cb.checked; save(); td.className = x.id in o ? 'changed' : ''; }});
+          const td = h('td',{class:x.id in o ? 'changed' : ''}, cb); return td; }))));
+        tb.append(tbody);
+        box.append(h('h3',null,'For each resident'), h('p',{class:'small muted'},'Turn an item on just for the residents who need it (for example repositioning or catheter care), or off for someone it doesn\'t apply to. Highlighted boxes differ from the home default. Saves right away.'),
+          h('div',{class:'tablewrap',tabindex:'0',role:'region','aria-label':'Scrollable table'},tb));
+      }
       const hist = c.formHist.filter(x => x.site===S().site && x.form===k);
       if (hist.length) box.append(h('details',null, h('summary',null,'Earlier versions ('+hist.length+')'), h('ul',{class:'small'}, hist.slice().reverse().map(x => h('li',null,'v'+x.v+' · '+fmtDate(x.at)+' · '+x.by+': '+x.fields.filter(z=>z.on).map(z=>z.label).join(', '))))));
       v.append(box);
@@ -911,7 +989,7 @@
     const th = thresholds(); const st = c.settings[S().site] = c.settings[S().site] || {};
     const num = (k, lbl) => { const i = h('input',{type:'number',min:'0',value:String(th[k])}); i.addEventListener('change',()=>{ st[k] = +i.value; save(); }); return h('label',{class:'f'},lbl,i); };
     v.append(card('', h('h2',null,'Meal flag settings'), h('p',{class:'small muted'},'When a pattern is flagged for the manager or RN. Ask your RN before changing the weight screen.'),
-      h('div',{class:'grid g3'}, num('refuse','Refusals in 7 days'), num('lowPct','Low intake: average under (%)'), num('lowDays','Low intake: over how many days'), num('wt30','Weight loss in 30 days (%)'), num('wt180','Weight loss in 180 days (%)'), num('fluidGoal','Default fluid goal (mL a day)'))));
+      h('div',{class:'grid g3'}, num('refuse','Refusals in 7 days'), num('lowPct','Low intake: average under (%)'), num('lowDays','Low intake: over how many days'), num('wt30','Weight loss in 30 days (%)'), num('wt180','Weight loss in 180 days (%)'), num('fluidGoal','Default fluid goal (mL a day)'), num('bmDays','Tell the nurse after this many days with no bowel movement'))));
     // orders from doctors and nurses
     const ords = residents().map(r => [r, ordersFor(S().site, r.code).filter(o => o.track)]).filter(x => x[1].length);
     const pend = pendingOrders(S().site);
