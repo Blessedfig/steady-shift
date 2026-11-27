@@ -346,6 +346,7 @@
     const m = (location.hash||'').match(/^#\/intake(?:\/([^/]+))?(?:\/([a-z]+))?/);
     const id = m && m[1], tab = (m && m[2]) || 'files';
     if (id === 'policy') return policyView(v);
+    if (id === 'new'){ const a = {id:uid(), site:S().site, code:nextCode(S().site), nick:'New resident', admit:today(), status:'draft', docs:[], facts:[], dec:{}, check:{}, created:new Date().toISOString()}; s.list.push(a); log(a, 'Started an admission from face sheets'); save(); location.replace('#/intake/'+a.id+'/files'); return; }
     const adm = id && s.list.find(a => a.id === id);
     if (!adm) return listView(v);
     if (!adm.dec) adm.dec = {}; if (!adm.check) adm.check = {};
