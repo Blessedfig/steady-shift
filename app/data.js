@@ -39,8 +39,8 @@ window.SS_DATA = (function(){
     {id:'caregiver', name:'Caregiver',          who:'CNA or resident care staff on shift',            plan:'Included in the home plan'},
     {id:'manager',   name:'House manager',      who:'Runs one home day to day',                       plan:'Included in the home plan'},
     {id:'rn',        name:'RN',                 who:'Delegating or consulting nurse',                 plan:'Free when invited, RN Pro $29 to $49/mo (draft)'},
-    {id:'owner',     name:'Owner',              who:'Licensee or owner of one home',                  plan:'Home $79/mo, Facility $199/mo (draft)'},
-    {id:'multi',     name:'Multi-site operator',who:'Owns or runs several homes',                     plan:'$149/mo per extra site plus HQ about $99/mo (draft)'},
+    {id:'owner',     name:'Owner',              who:'Licensee or owner of one home',                  plan:'Home $59/mo, Facility $149/mo'},
+    {id:'multi',     name:'Multi-site operator',who:'Owns or runs several homes',                     plan:'$119/mo per site, 4 sites or more'},
     {id:'family',    name:'Family caregiver',   who:'Cares for a family member at home',              plan:'About $10/mo (draft)'}
   ];
 
