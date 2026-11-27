@@ -156,6 +156,12 @@ A progress note for each resident on each shift, written inside the shift change
 - **Emergency contacts** on every resident's face sheet (full sheet and the "Everyone" list), in call order. Each shows the relationship, when to call, whether they are the guardian or POA, and tap-to-call buttons for the main and other phone. Caregivers can see and call but not edit. Managers, nurses and owners can edit the list (add, reorder, remove), and changes are logged. Edits are saved in `S.faceEdits[site][code]`.
 - **Adding people on face sheets** (managers, RNs and owners): "+ Add a resident" above the face sheet tabs starts a new admission (`#/intake/new`). Each list on a sheet has its own "+ Add" and "Edit" buttons: emergency contacts, family and friends, doctors and specialists (with type, phone and fax), and the Family Care or IRIS team. Edits can add, reorder and remove entries, are saved in `S.faceEdits[site][code]`, and are logged. Caregivers see the lists but no edit buttons.
 
+
+## Quick search (search.js) and where policies go in
+
+- **Quick search:** the 🔎 Search button at the top, Ctrl+K (Cmd+K on a Mac), or "/" opens a search box from any screen. It finds every screen and service this role can open (services switched off are left out) and resident pages for the picked home ("face sheet Ruth", "care plan Walt"), using everyday words and forgiving typos ("timeshet", "vender", "fax inbx"). The last two rows hand the words to Do it by chat or to Procedure check. Chat uses the same search for "open ...", "go to ...", "where is ..." and short screen names.
+- **Policies and procedures:** managers and owners now see "Facility setup and policy upload" and "Policies and procedures" near the top of their menu, plus a Home tile. Upload the handbook and policies (PDF or Word) in Facility setup, step 2; map procedures to situations in Policies and procedures. In chat, "add a policy" or "where do I upload our handbook" gives the same two buttons.
+
 ## Fire and emergency (safety.js, `#/safety`)
 
 The fire safety records a surveyor asks for, with due dates from the rule for each setting. Fire safety was the top citation area in 2025 (60 CBRF, 81 AFH).
