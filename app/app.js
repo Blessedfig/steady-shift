@@ -204,6 +204,8 @@
 
   // ---------- views ----------
   const R = {};
+  // Plug-in point for add-on modules (meals.js and others). Modules add views, nav items, home tiles and owner cards.
+  const homeHooks = [], ownerHooks = [];
 
   R.home = v => {
     const t = S.tier;
@@ -214,6 +216,7 @@
     if (t === 'manager') homeManager(v);
     if (t === 'rn') homeRN(v);
     if (t === 'family') homeFamily(v);
+    homeHooks.forEach(f => { try { f(v, t); } catch(e){ console.error(e); } });
     v.append(tourCard());
   };
 
@@ -1121,6 +1124,7 @@
 
   // Shared helpers for the scheduling, time sheet, insights and access modules (schedule.js, time.js, insights.js, access.js)
   window.SSApp = {D, h, state:()=>S, save, toast, copy, site, setting, tier, fmtDate, fmtTime, head, download, toIcs, gcalUrl, outlookUrl, csvCell, R, VIEWS, NAV, route:()=>route(), go:v=>go(v), isoDay, addDays, uid, renderNav:()=>renderNav(current), fillSwitchers:()=>fillSwitchers(), param:()=>param};
+  Object.assign(window.SSApp, {tile:(...a) => tile(...a), residents, forSite, homeHooks, ownerHooks});
   // ---------- Doctor orders: intake, RN verification, current orders (sample data only) ----------
   // One shared order store (S.orders). Other screens read verified, active orders through window.SS_ordersFor(site, res).
   const ORDER_KINDS = {med:'Medication', diet:'Diet', activity:'Activity or therapy', appointment:'Appointment or follow-up', lab:'Lab or test', monitor:'Monitoring', other:'Other'};
@@ -1358,6 +1362,7 @@
     v.append(h('div',{class:'grid g2'},
       h('div',{class:'card'}, h('h2',null,'Top 5 things your team asked'), top.length ? h('ol',null, top.map(([id,n]) => h('li',null,ruleById(id).q+' ('+n+')'))) : h('p',{class:'muted'},'Nothing yet.'), h('p',{class:'small muted'},'Use these to plan the next training. No names attached.'), h('a',{href:'#/questions'},'Full question report')),
       h('div',{class:'card'}, h('h2',null,'Funding and rate watch'), h('ul',null, h('li',null,'Wisconsin budget items for caregiver pay and training (amounts being checked).'), h('li',null,'Medicaid payment caps proposed from 2028 may affect care manager rates.'), h('li',null,'WisCaregiver Careers can offset hiring and training costs.')), h('a',{href:'#/watch'},'Regulatory Watch'))));
+    ownerHooks.forEach(f => { try { f(v); } catch(e){ console.error(e); } });
     if (isHome){ const ic = installCard(); if (ic) v.append(ic); const pc = pulseCard(); if (pc) v.append(pc); v.append(tourCard()); }
   };
 
