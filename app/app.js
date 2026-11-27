@@ -1013,6 +1013,7 @@
     (S.orders||[]).filter(o => ids.includes(o.site) && o.status === 'pending').slice(0,1).forEach(() => ev.push({id:'ord-pending', kind:'Order check', who:'RN', site:sites[0].id,
       title:'New doctor orders waiting for a nurse check', date:today, time:'16:00', dur:15, note:'Open Doctor orders in Steady Shift to check them.', link:'#/orders'}));
     if (window.SSPeopleDates) { try { ev.push(...window.SSPeopleDates(ids)); } catch(e){ console.error(e); } }
+    (window.SSCalendarFeeds||[]).forEach(f => { try { ev.push(...f(ids)); } catch(e){ console.error(e); } });
     return ev.sort((a,b) => (a.date+(a.time||'')).localeCompare(b.date+(b.time||'')));
   }
   const appUrl = e => location.origin + location.pathname + e.link;
@@ -1136,7 +1137,7 @@
 
   // Shared helpers for the scheduling, time sheet, insights and access modules (schedule.js, time.js, insights.js, access.js)
   window.SSApp = {D, h, state:()=>S, save, toast, copy, site, setting, tier, fmtDate, fmtTime, head, download, toIcs, gcalUrl, outlookUrl, csvCell, R, VIEWS, NAV, route:()=>route(), go:v=>go(v), isoDay, addDays, uid, renderNav:()=>renderNav(current), fillSwitchers:()=>fillSwitchers(), param:()=>param};
-  Object.assign(window.SSApp, {tile:(...a) => tile(...a), residents, forSite, homeHooks, ownerHooks});
+  Object.assign(window.SSApp, {tile:(...a) => tile(...a), residents, forSite, homeHooks, ownerHooks, rewrite:x => rewrite(x), searchRules:q => searchRules(q), ruleById, dueItems:() => syncEvents(), shiftName:() => shiftName(), labelChip:l => labelChip(l), sb:() => sb, user:() => user});
   // ---------- Doctor orders: intake, RN verification, current orders (sample data only) ----------
   // One shared order store (S.orders). Other screens read verified, active orders through window.SS_ordersFor(site, res).
   const ORDER_KINDS = {med:'Medication', diet:'Diet', activity:'Activity or therapy', appointment:'Appointment or follow-up', lab:'Lab or test', monitor:'Monitoring', other:'Other'};

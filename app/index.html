@@ -287,6 +287,17 @@ mark.flag{background:var(--amber-soft);color:var(--ink);border-bottom:2px solid 
 .tasks li{align-items:flex-start}.tasks input{margin-top:.25rem}
 .callbtn{justify-self:start}
 .mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:1rem}
+.as-wrap{display:flex;flex-direction:column;gap:.7rem}
+.as-log{display:flex;flex-direction:column;gap:.6rem;min-height:240px;max-height:min(60vh,560px);overflow-y:auto;padding:.25rem}
+.as-log .bub{max-width:92%}
+.as-res{display:grid;gap:.35rem}
+.as-lines{margin:0;padding-left:1.1rem;display:grid;gap:.2rem;font-size:.93rem}
+.as-confirm{display:grid;gap:.55rem;border-color:var(--sky);align-self:stretch;margin:0}
+.as-confirm.done{border-color:var(--line);opacity:.92}
+.as-confirm .card{margin:0}
+.as-edit{min-height:14rem;font-size:.9rem;width:100%}
+.as-input{display:flex;gap:.5rem;align-items:flex-end}
+.as-input textarea{flex:1;min-height:48px;max-height:160px;resize:vertical}
 @media print{.top,.testbar,nav.side,.fab,.chat,.noprint{display:none!important}.shell{display:block}main{padding:0}.card{box-shadow:none}}
 .skip{position:absolute;left:-999px;top:0;z-index:2000;background:#1D6AA8;color:#fff;padding:.7rem 1rem;border-radius:0 0 12px 0;font-weight:700}.skip:focus{left:0}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
@@ -447,5 +458,7 @@ details.item>summary::-webkit-details-marker{display:none}
 <script src="isp.js"></script>
 <script src="money.js"></script>
 <script src="choices.js"></script>
+<script src="assistant.js"></script>
+<script src="vendors.js"></script>
 </body>
 </html>

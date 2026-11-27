@@ -1,5 +1,9 @@
 # app-chat (AI helper for the test app)
 
+Two jobs: the "Ideas and fixes" chat (below), and "Do it by chat" (`#/assistant`), sent with `mode: "assistant"`. In that mode Claude only chooses actions from a fixed list (look up the schedule, add a shift, write a report, and so on). The page runs them on its own data, shows a confirm card before anything is saved, and sends back the result. The page tells the function which actions the person's role may use, and the function offers Claude only those. Without the API key, the page uses its built-in command reader instead.
+
+**After changing this file, redeploy it** (Edge Functions > app-chat > Code, paste `index.ts`, Deploy).
+
 Server function behind the "Ideas and fixes" chat in `/app`. When it is deployed and has an API key, the chat talks with Claude, asks follow-up questions, and saves confirmed ideas to the desk's Requests for Claude (`source: test-app-ai-chat`). Until then, the app uses its scripted helper, so nothing breaks.
 
 The API key is stored only as a Supabase secret. It is never in this repo or the web page.
