@@ -396,5 +396,65 @@ window.SS_DATA = (function(){
     ]
   };
 
-  return {CHECKED, SETTINGS, SITES, RESIDENTS, TIERS, RULES, SURVEY, WATCH, BEHAVIORS, TRIAGE, GRAY, ASK_TOPICS, WORDING, FLAGS, ROUTES, SEED};
+  // ---------- Scheduling, time sheets and access (all sample; no real staff) ----------
+  const SCHED = {
+    templates:[
+      {id:'t8d', name:'Day (8 hr)', start:'07:00', end:'15:00'},
+      {id:'t8e', name:'Evening (8 hr)', start:'15:00', end:'23:00'},
+      {id:'t8n', name:'Night (8 hr)', start:'23:00', end:'07:00'},
+      {id:'t12d', name:'Day (12 hr)', start:'07:00', end:'19:00'},
+      {id:'t12n', name:'Night (12 hr)', start:'19:00', end:'07:00'},
+      {id:'t6d', name:'6a to 6p (12 hr)', start:'06:00', end:'18:00'},
+      {id:'t6n', name:'6p to 6a (12 hr)', start:'18:00', end:'06:00'},
+      {id:'tsl', name:'Overnight, asleep allowed', start:'21:00', end:'07:00', asleep:true},
+      {id:'thelp', name:'Helper (6 hr)', start:'09:00', end:'15:00'},
+      {id:'ttr', name:'Training (2 hr)', start:'13:00', end:'15:00', kind:'training'}
+    ],
+    // Minimums are the home's own setting. DHS 88 and DHS 83 tie staffing to residents' needs and the license, not to one fixed ratio.
+    rules:{
+      maple:{dayMin:1, nightMin:1, awake:true, nightStart:'22:00', nightEnd:'06:00', otWeek:40, minRest:8, maxStretch:16, weekStart:0},
+      birch:{dayMin:2, nightMin:1, awake:true, nightStart:'23:00', nightEnd:'07:00', otWeek:40, minRest:8, maxStretch:16, weekStart:0},
+      cedar:{dayMin:1, nightMin:1, awake:false, nightStart:'22:00', nightEnd:'06:00', otWeek:40, minRest:8, maxStretch:16, weekStart:0}
+    },
+    // alone: finished the orientation topics needed before working without another staff member on duty.
+    // meds: finished medication training. licensed: a nurse license (no delegation needed). rate: sample $/hour. pto: sample hours banked.
+    profiles:{
+      'Caregiver A':{alone:false, meds:false, rate:17, pto:4},  'Caregiver B':{alone:true, meds:true, rate:19, pto:32},
+      'Caregiver C':{alone:true, meds:true, rate:18, pto:20},   'Caregiver D':{alone:true, meds:true, rate:18.5, pto:16},
+      'Caregiver E':{alone:true, meds:true, rate:19.5, pto:40}, 'Manager':{alone:true, meds:true, licensed:'LPN', rate:28, pto:56},
+      'Caregiver F':{alone:true, meds:true, rate:19, pto:24},   'Caregiver G':{alone:true, meds:true, rate:18, pto:12},
+      'Caregiver H':{alone:false, meds:false, rate:16.5, pto:0},'Caregiver L':{alone:true, meds:true, rate:18, pto:30},
+      'Caregiver M':{alone:true, meds:true, rate:18.5, pto:18}, 'Caregiver N':{alone:true, meds:true, rate:19, pto:22},
+      'Caregiver P':{alone:true, meds:true, rate:17.5, pto:8},  'Caregiver Q':{alone:true, meds:true, rate:18, pto:14},
+      'Caregiver J':{alone:true, meds:true, rate:18, pto:26},   'Caregiver K':{alone:true, meds:false, rate:17, pto:10}
+    },
+    extraStaff:{
+      birch:[{n:'Caregiver L',hours:12,need:15,bg:'2024-08-12',status:'On track'},{n:'Caregiver M',hours:15,need:15,bg:'2023-03-30',status:'On track'},{n:'Caregiver N',hours:10,need:15,bg:'2024-11-02',status:'On track'},{n:'Caregiver P',hours:6,need:15,bg:'2025-02-17',status:'Behind'},{n:'Caregiver Q',hours:15,need:15,bg:'2022-09-01',status:'On track'}]
+    },
+    extraDelegations:[
+      {site:'birch', task:'Nebulizer', res:'B-2', cg:'Caregiver L', checked:'2026-05-10', review:'2027-05-10', status:'Active'},
+      {site:'birch', task:'Nebulizer', res:'B-2', cg:'Caregiver M', checked:'2026-03-02', review:'2027-03-02', status:'Active'}
+    ],
+    // Care tasks that need a cleared person on duty at set times. need: meds (medication training) or delegation (RN clearance for this task and resident).
+    tasks:{
+      maple:[{task:'Med pass', need:'meds', times:['08:00','20:00']}, {task:'Insulin pen', res:'M-3', need:'delegation', times:['07:30','17:30']}],
+      birch:[{task:'Med pass', need:'meds', times:['08:00','12:00','17:00','20:00']}, {task:'Nebulizer', res:'B-2', need:'delegation', times:['08:00','20:00']}],
+      cedar:[{task:'Med pass', need:'meds', times:['08:00','20:00']}]
+    },
+    // Switchable services. Each can be turned on or off per home and per role.
+    modules:[
+      {id:'schedule', name:'Scheduling', ic:'📅', what:'Shift templates, week and month schedule, compliance checks, open shifts, swaps and time off.'},
+      {id:'time', name:'Time sheets', ic:'⏱️', what:'Clock in and out against the schedule, breaks, missed punches, weekly approval and payroll export.'},
+      {id:'insights', name:'Owner insights', ic:'📈', what:'Numbers and charts: requests, coverage gaps, overtime, call-offs, hours and labor cost.'}
+    ],
+    // Permissions a manager or owner can share with a staff member, for a set time.
+    perms:[
+      {id:'sched.edit', name:'Build and edit the schedule', mod:'schedule'},
+      {id:'sched.approve', name:'Approve swaps, open shifts and time off', mod:'schedule'},
+      {id:'time.approve', name:'Fix punches and approve time sheets', mod:'time'},
+      {id:'insights.view', name:'See owner insights (numbers and charts)', mod:'insights'}
+    ]
+  };
+
+  return {SCHED, CHECKED, SETTINGS, SITES, RESIDENTS, TIERS, RULES, SURVEY, WATCH, BEHAVIORS, TRIAGE, GRAY, ASK_TOPICS, WORDING, FLAGS, ROUTES, SEED};
 })();
