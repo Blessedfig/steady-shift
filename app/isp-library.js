@@ -98,7 +98,7 @@ window.SS_ISP_LIB = (function(){
   // Triggered by words found in the resident's diagnoses, orders, behaviors, notes and admission intake.
   // sec: section the suggestion fills. dom: care area (shown as a chip). Everything is editable once added.
   const LIB = [
-    {id:'fall', sec:'goals', dom:'Mobility and falls', on:/walker|fall|cane|unsteady|bed alarm|wheelchair|mobility/i,
+    {id:'fall', sec:'goals', dom:'Mobility and falls', on:/walker|fall|cane|unsteady|bed alarm|wheelchair|transfer/i,
       need:'Unsteady walking; risk of falls.', goal:'"I want to get around the house on my own without falling."',
       steps:['Keep the walker within reach, including at night.','Clear path, night light on, non-slip shoes or socks.','Offer the bathroom on waking, before and after meals, and at bedtime.','After any fall: check for injury, do not lift alone, follow the fall procedure, tell the nurse.'],
       measure:'Falls per month; walks to meals on their own.', src:'steadi'},
@@ -118,10 +118,14 @@ window.SS_ISP_LIB = (function(){
       need:'Often declines showers or care.', goal:'"I want to choose when and how I bathe."',
       steps:['Offer two real choices (shower or sponge bath; now or after lunch).','Step back and offer again later, or let another caregiver offer.','Warm room, towel ready, explain each step.','Write down each offer and their words; 3 refusals in 7 days means a plan review.'],
       measure:'Bathing preferences written down; skin stays healthy.', src:'pbs'},
-    {id:'ins', sec:'goals', dom:'Health and medications', on:/insulin|diabet|blood sugar|glucose/i,
+    {id:'ins', sec:'goals', dom:'Health and medications', on:/insulin|blood sugar|glucose|diabet(?!es,? diet)/i,
       need:'Diabetes managed with insulin or other medicine.', goal:'"I want to keep my blood sugar steady and feel well."',
       steps:['Blood sugar checks and insulin as ordered, by staff the nurse has delegated.','Offer meals and snacks on time; follow the diet order.','Know the signs of low sugar (shaky, sweaty, confused) and the home\'s low-sugar steps.','Daily foot check; report sores or color changes.'],
       measure:'Readings in the range the prescriber set; no lows needing help.', src:'ada'},
+    {id:'dmdiet', sec:'goals', dom:'Health and medications', on:/diabetes,? diet/i,
+      need:'Diabetes managed with diet.', goal:'"I want to eat foods I like and keep my blood sugar steady."',
+      steps:['Follow the diet order; offer good choices, don\'t lecture.','Meals and snacks at steady times.','Tell the nurse about more thirst, more trips to the bathroom, or sores that heal slowly.'],
+      measure:'Lab results the prescriber checks; weight steady.', src:'ada'},
     {id:'neb', sec:'goals', dom:'Health and medications', on:/nebuliz|copd|inhaler|oxygen|breath/i,
       need:'Breathing condition with a nebulizer or inhaler routine.', goal:'"I want to breathe easier and stay out of the hospital."',
       steps:['Breathing treatments as ordered; clean the equipment as the instructions say.','Watch for more cough, color change or breathlessness; call the nurse.','Pace activities with rests.'],
@@ -134,7 +138,7 @@ window.SS_ISP_LIB = (function(){
       need:'Risk of skin breakdown.', goal:'"I want my skin to stay healthy and comfortable."',
       steps:['Check heels and tailbone as ordered; report redness that does not fade.','Help change position regularly if they can\'t on their own.','Keep skin clean and dry; offer fluids.'],
       measure:'No new skin injuries.', src:'npiap'},
-    {id:'diet', sec:'goals', dom:'Eating and drinking', on:/thick|texture|swallow|iddsi|soft|bite/i,
+    {id:'diet', sec:'goals', dom:'Eating and drinking', on:/thick|texture|swallow|dysphagia|iddsi|pureed|choking|bite-sized/i,
       need:'Needs a changed food texture or thickened drinks.', goal:'"I want to enjoy my meals safely."',
       steps:['Serve the texture and drink thickness the order says (IDDSI level on the meal plan).','Sit upright for meals and 30 minutes after.','Watch for coughing or a wet voice while eating; tell the nurse.'],
       measure:'No choking events; weight steady.', src:'iddsi'},

@@ -30,7 +30,24 @@
   function st(){ const s = S(); if (!s.isp || s.isp.v !== 1){ s.isp = {v:1, plans:{}, guide:true, seeded:false}; } if (!s.isp.seeded) seed(s.isp); return s.isp; }
   function plan(sid, code){ const P = st().plans; return P[key(sid,code)] || (P[key(sid,code)] = {site:sid, code, versions:[], draft:null, acks:{}, sigs:{}, copies:{}, reminded:{}}); }
   const cur = p => p.versions[p.versions.length-1] || null;
-  const person = (sid, code) => L.PEOPLE[key(sid,code)] || {};
+  // The face sheet (facesheet.js) is the main record when it is installed; the library's sample details fill the gaps.
+  function person(sid, code){
+    const base = Object.assign({}, L.PEOPLE[key(sid,code)] || {});
+    let f = null; try { f = window.SSFace && SSFace.face ? SSFace.face(code) : null; } catch(e){}
+    if (!f) return base;
+    const dx = (f.dx||[]).filter(x => !/See the service plan/.test(x));
+    const dec = f.guardian ? f.guardian.name+' ('+f.guardian.type+')' : f.poa ? f.poa.name+' ('+f.poa.type+(f.poa.activated ? ', activated' : ', not activated: the resident decides')+')' : '';
+    return Object.assign(base, {
+      dx: dx.length ? dx : base.dx || [],
+      likes: [f.history, f.culture].filter(x => x && !/^Sample resident/.test(x)).length ? [f.history, f.culture].filter(Boolean) : base.likes || [],
+      helps: (f.helps||[]).concat(f.calm||[]).length ? [...new Set([...(f.helps||[]), ...(f.calm||[])])] : base.helps || [],
+      triggers: f.triggers || [], mobility: f.mobility || '', falls: f.risks ? f.risks.fall : '', elope: f.risks ? f.risks.elope : '', choke: f.risks ? f.risks.choke : '',
+      comm: f.comm || base.comm || '', faith: f.faith || base.faith || '',
+      code: f.code ? f.code+(f.docs ? ' ('+f.docs+')' : '') : base.code,
+      decides: dec || base.decides || 'The resident',
+      fromFace: true
+    });
+  }
   function admitOf(sid, code){
     const p = plan(sid, code); if (p.admit) return p.admit;
     const r = (D.RESIDENTS[sid]||[]).find(x => x.code === code) || {};
@@ -46,6 +63,11 @@
     const pp = person(sid, code);
     (pp.dx||[]).forEach(x => add(x, 'Diagnosis (resident record)'));
     (pp.helps||[]).forEach(x => add(x, 'What helps (resident record)'));
+    (pp.triggers||[]).forEach(x => add(x, 'Face sheet: watch for'));
+    if (pp.mobility) add(pp.mobility, 'Face sheet: mobility');
+    if (/High|Medium/.test(pp.falls||'')) add('Fall risk '+pp.falls, 'Face sheet: risks');
+    if (/High/.test(pp.elope||'')) add('Wandering or leaving risk high', 'Face sheet: risks');
+    if (/High/.test(pp.choke||'')) add('Choking risk high, swallow precautions', 'Face sheet: risks');
     try { (window.SS_ordersFor ? SS_ordersFor(sid, code) : []).forEach(o => { add(o.text, 'Order, nurse-checked ('+(o.prescriber||'prescriber')+')'); if (o.diet) add([o.diet.texture, o.diet.liquids].join(' '), 'Diet order'); }); } catch(e){}
     try { const ip = window.SS_residentProfile && SS_residentProfile(sid, code); const ho = ip && ip.handoff;
       if (ho){ add(ho.summary, 'Admission intake'); (ho.risks||[]).forEach(x => add(x, 'Admission intake: risk')); (ho.triggers||[]).forEach(x => add(x, 'Admission intake: trigger')); (ho.whatHelps||[]).forEach(x => add(x, 'Admission intake: what helps')); } } catch(e){}
@@ -68,7 +90,7 @@
     const r = (D.RESIDENTS[sid]||[]).find(x => x.code === code) || {nick:code};
     const pp = person(sid, code), ms = matches(sid, code);
     const about = [
-      pp.likes && pp.likes.length ? 'A good day for me: '+pp.likes.join('; ')+'.' : '',
+      pp.likes && pp.likes.length ? 'My story and what I enjoy: '+pp.likes.join('; ')+'.' : '',
       pp.helps && pp.helps.length ? 'What helps me: '+pp.helps.join('; ')+'.' : '',
       pp.comm ? 'How to talk with me: '+pp.comm : '',
       pp.faith ? 'Faith and culture: '+pp.faith : '',
@@ -82,7 +104,7 @@
       goals:ms.filter(m => m.item.sec === 'goals').map(m => fromLib(m, r.nick)),
       risks:ms.filter(m => m.item.sec === 'risks').map(m => fromLib(m, r.nick)),
       rights:rights ? rights.item.goal.replace('[Name]', r.nick) : '', restr:[],
-      team:[{role:'resident', name:r.nick+' (sample)'}].concat(pp.decides && !/^(Herself|Himself)$/.test(pp.decides) ? [{role:'rep', name:pp.decides}] : []).concat([{role:'mgr', name:'House manager'}]),
+      team:[{role:'resident', name:r.nick+' (sample)'}].concat(pp.decides && !/^(Herself|Himself|The resident)$|not activated/.test(pp.decides) ? [{role:'rep', name:pp.decides.replace(/ \(.*$/,'')}] : []).concat([{role:'mgr', name:'House manager'}]),
       code:pp.code || '', decides:pp.decides || '', evac:pp.evac || '',
       reviewMonths:months(sid), triggers:'Any fall with injury or 2 falls in 30 days; a hospital or ER stay; new or changed orders; a new behavior; the resident or guardian asks.'
     };
