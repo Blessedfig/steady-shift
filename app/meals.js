@@ -600,6 +600,8 @@
           adl.forEach(f => dc.append(field(f, rd.adl[f.id], val => { rd.adl[f.id] = val; if (f.id==='fall') fallBox.hidden = val !== 'Yes'; })));
           dc.append(fallBox);
         }
+        // progress note (notes.js): stays visible with "No change"; drafts save as you type
+        try { if (window.SSNotes) box.append(SSNotes.shiftBlock(sid, r.code)); } catch(e){}
         const todo = h('input',{type:'text',maxlength:'200',placeholder:'e.g. Offer the shake at breakfast','aria-label':'To-do for the next shift for '+r.code});
         inner.append(h('label',{class:'f'},'Next shift needs to (optional)',todo));
         rd.todoEl = todo;
@@ -621,6 +623,8 @@
         });
         fs.filter(f => (f.req||f.core) && empty(d.shiftVals[f.id])).forEach(f => miss.push(f.label));
         if (miss.length){ toast('Still needed: '+miss.slice(0,4).join(' · ')+(miss.length>4?' and '+(miss.length-4)+' more':'')); return; }
+        let notes = [];
+        try { if (window.SSNotes){ const ns = SSNotes.shiftStatus(sid); notes = [].concat(...ns.map(n => n.signed)); const dr = ns.filter(n => n.draft && !n.signed.length).map(n => n.code); if (dr.length && !send.dataset.warned){ send.dataset.warned = '1'; toast('Unsigned progress note draft for '+dr.join(', ')+'. Sign it, or tap Send again to send without it (the draft stays saved).'); return; } } } catch(e){}
         const todos = [];
         residents().forEach(r => { const t = d.res[r.code].todoEl.value.trim(); if (t) todos.push({id:uid(), text:t, res:r.code}); delete d.res[r.code].todoEl; });
         extra.value.split('\n').map(s=>s.trim()).filter(Boolean).forEach(t => todos.push({id:uid(), text:t, res:''}));
@@ -631,7 +635,7 @@
           if (a.bath && /Shower|Tub|Bed or sponge/.test(a.bath)) log.push({site:sid, res:r.code, date:today(), kind:'bath', val:a.bath, by:fromSel.value}); });
         c.handoffs.push({id:uid(), site:sid, at:new Date().toISOString(), shift:sh.name+' to '+(sh.next||(sh.name==='Day'?'Night':'Day')), from:fromSel.value, to:toSel.value, status:'Waiting',
           forms:{res:forms().handoffRes.v, shift:forms().handoffShift.v, adl:forms().adl.v}, fieldsRes:fr.map(f=>({id:f.id,label:f.label,type:f.type})), fieldsShift:fs.map(f=>({id:f.id,label:f.label,type:f.type})), fieldsAdl:forms().adl.fields.map(f=>({id:f.id,label:f.label,type:f.type})),
-          res:d.res, shiftVals:d.shiftVals, todos, auto:auto.map(a => a.kind+': '+a.text)});
+          res:d.res, shiftVals:d.shiftVals, todos, notes, auto:auto.map(a => a.kind+': '+a.text)});
         save(); toast('Report sent. The next shift confirms it when they read it.'); cur = 'all'; draw();
       }},'Send report to the next shift');
       body.append(h('div',{class:'stickybar'}, send));
@@ -700,6 +704,7 @@
       Object.entries(vals).filter(([k,val]) => k!=='status' && !empty(val)).forEach(([k,val]) => row.append(h('span',{class:'small'},h('b',null,lab(x.fieldsRes||[],k)+': '),String(val))));
       const ad = Object.entries(r.adl||{}).filter(([,val]) => !empty(val));
       if (ad.length) row.append(h('span',{class:'small'},h('b',null,'Daily care: '), ad.map(([k,val]) => lab(x.fieldsAdl||[],k)+(val===true?'':': '+val)).join(' · ')));
+      try { if (window.SSNotes && x.notes && x.notes.length){ SSNotes.notesFor(x.site, code).filter(n => x.notes.includes(n.id)).forEach(n => row.append(h('span',{class:'small'},h('b',null,'Progress note ('+n.signed.by+', '+fmtTime(n.signed.at)+'): '), SSNotes.noteText(n).replace(/\n/g,' · ')))); } } catch(e){}
       Object.entries(r.orders||{}).filter(([,val]) => !empty(val)).forEach(([oid,val]) => { const o = ordersFor(x.site, code).find(z=>z.id===oid) || SAMPLE_ORDERS.find(z=>z.id===oid); row.append(h('span',{class:'small'},h('b',null,(o&&o.track?o.track.label:'Order item')+': '),val===true?'Done':String(val))); });
       box.append(row);
     });
