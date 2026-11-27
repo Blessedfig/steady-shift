@@ -48,7 +48,7 @@ window.SS_DATA = (function(){
   const RULES = [
     {id:'C01', topic:'Care plans', q:'How often do we update the service plan?', keys:'service plan care plan isp update review yearly annual change of condition mco',
       label:'rule',
-      afh:{a:'Update your home\'s own plan at least once a year and whenever the resident\'s condition changes, no matter when the care manager updates theirs.', cite:'DHS 88.06(3)(f)'},
+      afh:{a:'Review your home\'s own plan with the resident at least every 6 months, and update it in writing whenever their needs or preferences change a lot or they or their guardian ask, no matter when the care manager updates theirs.', cite:'DHS 88.06(3)(f)'},
       cbrf:{a:'Review and update the service plan at least once a year and whenever the resident\'s needs change. This was the most cited CBRF rule in 2025.', cite:'DHS 83.35(3)(d)'},
       home:{a:'Your agency or care manager owns the plan. Tell them whenever something changes, and keep your own notes of what changed and when.', cite:'Your program\'s plan rules'},
       steps:['Put each resident\'s plan due date on the calendar.','Any "change of condition" note starts a plan review.','Date and sign the review, even if nothing changed.'],
