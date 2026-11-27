@@ -29,7 +29,7 @@
       risks:{fall:'High',elope:'Low',choke:'Low'}, faith:'Lutheran. Likes the Sunday TV service.', culture:'Prefers to be called "Mrs. R."',
       helps:['Coffee at 7 before anything else','Talk about her grandchildren'], triggers:['Being rushed in the morning'], calm:['Sit with her, slow down, offer coffee'],
       guardian:null, poa:{name:'Daughter (sample)', type:'Health care POA', activated:false, phone:'715-555-0101', papers:'Copy in red folder'},
-      payee:null, family:[P('Daughter','Daughter (sample)','715-555-0101',{call:'all'})], emergency:[P('Daughter','Daughter (sample)','715-555-0101',{call:'all'}),P('Son','Son (sample)','715-555-0102',{call:'all'})],
+      payee:null, family:[P('Daughter','Daughter (sample)','715-555-0101',{call:'all'})], emergency:[P('Daughter','Daughter (sample)','715-555-0101',{call:'all', alt:'715-555-0161', when:'Any emergency, hospital trip, fall or big change, day or night'}),P('Son','Son (sample)','715-555-0102',{call:'all', when:'If the daughter does not answer in 15 minutes'})],
       team:[P('Primary doctor','Dr. Sample, family medicine','715-555-0110',{specialty:'primary', call:'all'}),P('Eye doctor','Sample Eye Clinic','715-555-0111',{specialty:'specialist', call:'manager'})],
       mco:MCO(0), pharmacy:PHARM, hospital:HOSP,
       ins:{medicare:'SAMPLE-MBI-0001', medicaid:'SAMPLE-FH-1001', program:'Family Care (MCO)', partD:'Sample Part D plan, ID SAMPLE-D-11', supp:'None'},
@@ -41,7 +41,7 @@
       helps:['Walk with him instead of blocking the door','Talk about the farm and his cows','Finger foods, one item at a time'], triggers:['Late afternoon (after 4 PM)','Loud TV'], calm:['Offer a task like folding towels','Lower the lights and noise before supper'],
       guardian:{name:'Guardian (sample)', type:'Guardian of the person and estate', scope:'Health care, placement, finances', letters:'Letters of guardianship (sample county court), copy in red folder', phone:'715-555-0103'},
       poa:null, payee:{name:'Sample Payee Services', phone:'715-555-0130', handles:'Pays rent to the home on the 1st; gives a $45 a month personal allowance', note:'SSA representative payee'},
-      family:[P('Son','Son (sample)','715-555-0104',{call:'all'})], emergency:[P('Guardian','Guardian (sample)','715-555-0103',{call:'all'}),P('Son','Son (sample)','715-555-0104',{call:'all'})],
+      family:[P('Son','Son (sample)','715-555-0104',{call:'all'})], emergency:[P('Guardian','Guardian (sample)','715-555-0103',{call:'all', alt:'715-555-0163', when:'Any emergency, hospital trip, missing or left the home, or a health decision'}),P('Son','Son (sample)','715-555-0104',{call:'all', when:'Family news and visits; if the guardian can\'t be reached in an emergency'})],
       team:[P('Primary doctor','Dr. Sample, family medicine','715-555-0110',{specialty:'primary', call:'all'}),P('Psychiatry','Sample Behavioral Health','715-555-0112',{specialty:'psych', call:'manager'})],
       mco:MCO(1), pharmacy:PHARM, hospital:HOSP,
       ins:{medicare:'SAMPLE-MBI-0002', medicaid:'SAMPLE-FH-1002', program:'Family Care (MCO)', partD:'Sample Part D plan, ID SAMPLE-D-12', supp:'None'},
@@ -94,6 +94,7 @@
       if (ho.triggers && ho.triggers.length) f.triggers = [...new Set([...(f.triggers||[]), ...ho.triggers])];
       if (ho.summary) f.history = ho.summary; } } catch(e){}
     f.ssn = f.ssn || '000-'+String(40+code.charCodeAt(0)%50)+'-'+code.replace(/\D/g,'').padStart(4,'0');   // 000 numbers are never issued
+    const ed = ((S().faceEdits||{})[S().site]||{})[code]; if (ed && Array.isArray(ed.emergency)) f.emergency = ed.emergency;
     if (f.mco && !Array.isArray(f.mco)) f.mco = [f.mco];
     f.mco = f.mco || [];
     f.nick = r.nick; f.code0 = code; f.note = r.note;
@@ -178,6 +179,7 @@
       h('div',{class:'bandi'}, h('span',null,'Diet'), h('b',null,p.diet), h('small',null,[p.texture, p.liquids && p.liquids!=='Thin' ? 'Drinks: '+p.liquids : 'Thin drinks'].join(' · '))),
       h('div',{class:'bandi'}, h('span',null,'Risks'), h('b',null,['fall','elope','choke'].map(k => ({fall:'Falls',elope:'Wandering/leaving',choke:'Choking'})[k]+': '+f.risks[k]).join(' · ')))));
     box.append(h('p',{class:'small'},h('b',null,'Diagnoses: '),f.dx.join('; ')));
+    box.append(emergencyBlock(f, code, brief));
     // care plan summary from isp.js: what helps, with read-and-acknowledge
     try { const ib = window.SSISP && SSISP.faceBlock(code); if (ib) box.append(ib); } catch(e){}
     try { const cb = window.SSChoices && SSChoices.faceBlock(code); if (cb) box.append(cb); } catch(e){}
@@ -213,6 +215,56 @@
       h('span',null,x.name), x.note ? h('span',{class:'small muted'},x.note) : null,
       x.phone ? (allowCall ? h('a',{class:'btn ghost sm callbtn',href:tel(x.phone)},'📞 Call '+x.phone) : h('span',{class:'small muted'},'Manager or nurse calls this contact')) : null);
   }
+  // Emergency contacts: everyone on shift sees them and can tap to call; managers, nurses and owners edit them.
+  const canEditEC = () => ['manager','rn','owner','multi'].includes(S().tier);
+  function decides(f, x){
+    const same = p => p && x.phone && p.phone && p.phone.replace(/\D/g,'') === x.phone.replace(/\D/g,'');
+    if (same(f.guardian)) return f.guardian.type;
+    if (same(f.poa)) return f.poa.type+(f.poa.activated ? ' (activated)' : ' (not activated)');
+    return '';
+  }
+  function emergencyBlock(f, code, brief){
+    const box = h('section',{class:'ec','aria-label':'Emergency contacts'});
+    const list = f.emergency || [];
+    box.append(h('div',{class:'row',style:'justify-content:space-between'}, h('h3',null,'🚨 Emergency contacts'), !brief && canEditEC() ? h('button',{class:'btn quiet sm noprint',type:'button',onclick:()=>box.replaceWith(ecEditor(f, code))},'Edit') : null));
+    box.append(h('p',{class:'small'},'Call 911 first for a medical emergency. Then call in this order.'));
+    if (!list.length) box.append(h('p',{class:'small',style:'color:var(--amber)'},'No emergency contact on file. Tell the manager today.'));
+    const ol = h('ol',{class:'eclist'});
+    (brief ? list.slice(0,1) : list).forEach((x, i) => { const d = decides(f, x);
+      ol.append(h('li',{class:'item'},
+        h('div',{class:'meta'}, h('b',{style:'color:var(--ink)'},(i+1)+'. '+x.name), h('span',null,x.role), d ? chip('Decides: '+d,'amber') : null),
+        x.when ? h('span',{class:'small'},'When to call: '+x.when) : (i === 0 ? h('span',{class:'small'},'When to call: any emergency, hospital trip, fall or big change') : null),
+        h('div',{class:'row'}, x.phone ? h('a',{class:'btn sm callbtn',href:tel(x.phone)},'📞 Call '+x.phone) : null, x.alt ? h('a',{class:'btn ghost sm callbtn',href:tel(x.alt)},'📞 Other phone '+x.alt) : null))); });
+    box.append(ol);
+    if (brief && list.length > 1) box.append(h('span',{class:'small muted'},list.length-1+' more on the full face sheet'));
+    return box;
+  }
+  function ecEditor(f, code){
+    const rows = (f.emergency||[]).map(x => Object.assign({}, x));
+    const box = h('section',{class:'ec'});
+    const draw = () => {
+      box.textContent = '';
+      box.append(h('h3',null,'Edit emergency contacts'), h('p',{class:'small muted'},'In the order staff should call. Changes are logged. Sample contacts only.'));
+      rows.forEach((x, i) => {
+        const f1 = (lab, k, ph) => h('label',{class:'f'},lab, h('input',{type:k==='phone'||k==='alt'?'tel':'text',value:x[k]||'',placeholder:ph||'',oninput:e=>{ x[k] = e.target.value; }}));
+        box.append(h('div',{class:'item'}, h('b',null,'Contact '+(i+1)),
+          h('div',{class:'grid g2'}, f1('Name','name'), f1('Relationship','role','Daughter, guardian, friend…'), f1('Phone','phone','715-555-0100'), f1('Other phone','alt'), f1('When to call','when','Any emergency, day or night')),
+          h('div',{class:'row'}, i ? h('button',{class:'btn quiet sm',type:'button',onclick:()=>{ [rows[i-1], rows[i]] = [rows[i], rows[i-1]]; draw(); }},'Move up') : null,
+            h('button',{class:'btn quiet sm',type:'button',onclick:()=>{ rows.splice(i,1); draw(); }},'Remove'))));
+      });
+      box.append(h('div',{class:'row'},
+        h('button',{class:'btn ghost sm',type:'button',onclick:()=>{ rows.push({role:'', name:'', phone:'', call:'all'}); draw(); }},'Add a contact'),
+        h('button',{class:'btn sm',type:'button',onclick:()=>{
+          const clean = rows.filter(x => (x.name||'').trim() && (x.phone||'').trim()).map(x => Object.assign(x, {call:'all'}));
+          if (!clean.length){ toast('Add at least one contact with a name and phone'); return; }
+          const st = S(); st.faceEdits = st.faceEdits || {}; st.faceEdits[st.site] = st.faceEdits[st.site] || {};
+          st.faceEdits[st.site][code] = Object.assign(st.faceEdits[st.site][code]||{}, {emergency:clean, by:tier().name+' (you)', at:new Date().toISOString()});
+          save(); logView('Updated emergency contacts for '+code); toast('Saved'); A.route(); }},'Save'),
+        h('button',{class:'btn quiet sm',type:'button',onclick:()=>A.route()},'Cancel')));
+    };
+    draw(); return box;
+  }
+
   // Care team from the MCO or IRIS: care manager and nurse manager, with phone, fax and email.
   function teamBlock(f, may){
     const prog = /IRIS/i.test((f.ins||{}).program||'') ? 'IRIS team' : 'Family Care (MCO) team';
@@ -235,7 +287,6 @@
       h('span',{class:'small'},'Decides: '+f.guardian.scope), h('span',{class:'small muted'},'Papers: '+f.guardian.letters), h('a',{class:'btn ghost sm callbtn',href:tel(f.guardian.phone)},'📞 Call '+f.guardian.phone)));
     if (f.poa) list.append(h('div',{class:'item'}, h('div',{class:'meta'},h('b',{style:'color:var(--ink)'},'Power of attorney'),chip(f.poa.type,'grey'),chip(f.poa.activated?'Activated':'Not activated (resident decides)',f.poa.activated?'amber':'calm')), h('span',null,f.poa.name), h('span',{class:'small muted'},'Papers: '+f.poa.papers), h('a',{class:'btn ghost sm callbtn',href:tel(f.poa.phone)},'📞 Call '+f.poa.phone)));
     if (!f.guardian && !f.poa) list.append(h('div',{class:'item'}, h('b',null,'Decision maker'), h('span',{class:'small'},'The resident makes their own decisions.')));
-    f.emergency.forEach(x => list.append(person(Object.assign({}, x, {role:'Emergency: '+x.role}), true)));
     f.family.filter(x => !f.emergency.some(e => e.phone===x.phone)).forEach(x => list.append(person(x, may(x))));
     f.team.forEach(x => list.append(person(Object.assign({}, x, {specialty:x.specialty==='psych' && S().tier==='caregiver' ? null : x.specialty}), may(x))));
     list.append(person(f.pharmacy, may(f.pharmacy)));
