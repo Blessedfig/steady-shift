@@ -233,6 +233,21 @@ mark.flag{background:var(--amber-soft);color:var(--ink);border-bottom:2px solid 
 @media print{.top,.testbar,nav.side,.fab,.chat,.noprint{display:none!important}.shell{display:block}main{padding:0}.card{box-shadow:none}}
 .skip{position:absolute;left:-999px;top:0;z-index:2000;background:#1D6AA8;color:#fff;padding:.7rem 1rem;border-radius:0 0 12px 0;font-weight:700}.skip:focus{left:0}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+
+/* admission intake */
+.ss-drop{display:grid;justify-items:center;gap:.5rem;text-align:center;border:2px dashed var(--line-strong);border-radius:20px;padding:1.5rem 1rem;background:var(--bg)}
+.ss-drop.on{border-color:var(--sky);background:var(--sky-soft)}
+.ss-drop.off{opacity:.6}
+.ss-cap video{width:100%;max-height:60vh;border-radius:14px;background:#0d1620;object-fit:contain}
+.ss-thumbs{display:flex;gap:.5rem;flex-wrap:wrap}
+.ss-thumbs img{width:88px;height:116px;object-fit:cover;border-radius:10px;border:1px solid var(--line);-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.ss-dlg{border:1px solid var(--line);border-radius:20px;padding:1.2rem;width:min(720px,calc(100% - 24px));max-height:85vh;overflow:auto;color:var(--ink);background:var(--surface)}
+.ss-dlg::backdrop{background:rgba(20,40,60,.45)}
+.ss-src{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:1rem;font-size:.95rem;line-height:1.55;-webkit-user-select:none;user-select:none}
+.ss-src img{-webkit-touch-callout:none}
+.ss-srcchip{min-height:36px}
+.ss-opt{display:grid;gap:.4rem;border-top:1px solid var(--line);padding-top:.6rem}
+.ss-removed b{text-decoration:line-through;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -339,5 +354,7 @@ mark.flag{background:var(--amber-soft);color:var(--ink);border-bottom:2px solid 
 <script src="access.js"></script>
 <script src="time.js"></script>
 <script src="insights.js"></script>
+<script src="intake-samples.js"></script>
+<script src="intake.js"></script>
 </body>
 </html>
