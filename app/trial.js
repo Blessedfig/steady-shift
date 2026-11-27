@@ -17,14 +17,14 @@
   const fmt = d => new Date(d).toLocaleDateString(undefined, {weekday:'long', month:'long', day:'numeric'});
   const cleanCode = s => String(s||'').toUpperCase().replace(/[^A-Z0-9-]/g,'');
 
-  // Prices match the public website's Plans table. They are drafts until Christian and Angelika set final prices.
+  // Prices from the pricing decision of Nov 27, 2026 (Lower entry prices). Family, Nurse Pro and Agency are still drafts.
   const PLANS = [
-    {id:'home',     name:'Home',      price:'$79',        per:'a month per home',          fits:['afh'],    pts:['Adult family homes','All caregivers, manager and owner','Every screen you used in the trial']},
-    {id:'facility', name:'Facility',  price:'$199',       per:'a month per facility',      fits:['cbrf'],   pts:['CBRFs','All staff, manager, nurse and owner','Survey-Ready Check and reports']},
-    {id:'family',   name:'Family',    price:'about $10',  per:'a month',                   fits:['family'], pts:['One family caregiver','You and the person you care for','Hand-off packet for helpers']},
-    {id:'nurse',    name:'Nurse Pro', price:'$29 to $49', per:'a month',                   fits:['nurse'],  pts:['Free when a home invites you','Pro puts all your homes in one place']},
-    {id:'agency',   name:'Agency',    price:'about $5',   per:'per caregiver a month, $99 minimum', fits:['agency'], pts:['Home care agencies','Caregivers, office and nurse views']},
-    {id:'group',    name:'Group',     price:'$149',       per:'per extra site, plus about $99 for the HQ view', fits:['multi'], pts:['Several sites','Each site keeps its own private space','We set this one up with you']}
+    {id:'home',     name:'Home suite',     price:'$59',  per:'a month per adult family home', deal:'Founding homes: $35 a month for the first 12 months', fits:['afh'], pts:['Every screen you used in the trial','All caregivers, manager and owner','Pay yearly: $590 (2 months free)']},
+    {id:'facility', name:'Facility suite', price:'$149', per:'a month per CBRF up to 20 beds', deal:'Founding homes: $89 a month for the first 12 months', fits:['cbrf'], pts:['$229 a month above 20 beds','All staff, manager, nurse and owner','Survey-Ready Check and reports']},
+    {id:'group',    name:'Multi-site',     price:'$119', per:'a month per site, 4 sites or more', fits:['multi'], pts:['Each site keeps its own private space','A view across all your sites','We set this one up with you']},
+    {id:'family',   name:'Family',         price:'about $10',  per:'a month', fits:['family'], pts:['One family caregiver','You and the person you care for','Hand-off packet for helpers']},
+    {id:'nurse',    name:'Nurse Pro',      price:'$29 to $49', per:'a month', fits:['nurse'],  pts:['Free when a home invites you','Pro puts all your homes in one place']},
+    {id:'agency',   name:'Agency',         price:'about $5',   per:'per caregiver a month, $99 minimum', fits:['agency'], pts:['Home care agencies','Caregivers, office and nurse views']}
   ];
 
   // ---------- after sign-in: may this person use the app? ----------
@@ -96,8 +96,8 @@
         if (error || !data){ say('That didn\'t save ('+((error&&(error.code||error.message))||'no trial found')+'). Please try again in a moment.', true); return; }
         t.plan = planId;
         const done = {
-          reduced:'Thank you for telling us. Angelika reads every one of these and will get back to you personally by email.',
-          more_time:'Got it. We\'ll reach out by email about more time.',
+          reduced:'Thank you! We\'ll email you to set up Rules Check at $22 a month. Angelika reads every note personally.',
+          more_time:'Got it. We\'ll email you about your extra free month.',
           not_now:'Thanks for trying Steady Shift. If you change your mind, sign in any time and pick a plan.'
         }[planId] || 'Thank you! Online payment isn\'t switched on yet, so we\'ll email '+user.email+' to set up your plan. You don\'t need to do anything else right now.';
         say(done);
@@ -122,23 +122,25 @@
         best ? h('span',{class:'chip'},'Fits what you told us') : null,
         h('h2',{style:'margin:0;font:800 1.15rem var(--display)'}, p.name),
         h('div',{class:'price'}, p.price, ' ', h('small',null,p.per)),
+        p.deal ? h('span',{class:'chip'}, p.deal) : null,
         h('ul',null, p.pts.map(x => h('li',null,x))),
         h('div',{class:'row'}, btn)));
     });
 
-    // the gentle option for homes that can't stretch to full price right now
-    const note = h('textarea',{id:'reducedNote',maxlength:'1000','aria-labelledby':'reducedH',placeholder:'For example: "We\'re a 3-bed home. Could we start at a lower monthly amount?"'});
-    const rb = h('button',{class:'btn sm',type:'button'},'Send to Angelika');
-    rb.addEventListener('click', () => pick('reduced', note.value, rb));
-    const mt = h('button',{class:'btn quiet sm',type:'button'},'I need a little more time');
-    mt.addEventListener('click', () => pick('more_time', note.value, mt));
+    // the gentle option for homes that can't stretch to full price right now:
+    // start with Rules Check alone ($22 a month), or ask for one more free month
+    const note = h('textarea',{id:'reducedNote',maxlength:'900','aria-labelledby':'reducedH',placeholder:'Anything you\'d like Angelika to know (optional)'});
+    const rb = h('button',{class:'btn sm',type:'button'},'Start with Rules Check, $22 a month');
+    rb.addEventListener('click', () => pick('reduced', 'Rules Check only ($22 a month).' + (note.value.trim() ? ' ' + note.value.trim() : ''), rb));
+    const mt = h('button',{class:'btn quiet sm',type:'button'},'Ask for one more free month');
+    mt.addEventListener('click', () => pick('more_time', 'One more free month.' + (note.value.trim() ? ' ' + note.value.trim() : ''), mt));
     const help = h('div',{class:'card soft'},
       h('h2',{id:'reducedH',style:'margin:0;font:800 1.1rem var(--display)'},'Is the price a stretch right now?'),
-      h('p',{class:'small'},'Small homes run on thin margins, and we were a small home too. Tell us what would work for you: a lower monthly amount for a while, a smaller plan, or starting after a tight month. There\'s no obligation, and nothing is charged.'),
+      h('p',{class:'small'},'Small homes run on thin margins, and we were a small home too. You can start with just Rules Check (procedure and rule answers for your staff) for $22 a month, or ask for one more free month to decide. Nothing is charged today.'),
       note, h('div',{class:'row'}, rb, mt));
 
     const foot = h('div',{class:'card warn'},
-      h('p',{class:'small',style:'margin:0'}, h('b',null,'Test version. '),'Prices are drafts and may change before release. Even on a paid plan, this version is for made-up sample data only: please don\'t enter real resident names or health details until we tell you the secure version is ready.'));
+      h('p',{class:'small',style:'margin:0'}, h('b',null,'Test version. '),'Pay yearly and get 2 months free. Prices may change before release. Even on a paid plan, this version is for made-up sample data only: please don\'t enter real resident names or health details until we tell you the secure version is ready.'));
 
     const actions = h('div',{class:'row'},
       opts.locked ? null : h('button',{class:'btn ghost sm',type:'button',onclick:() => { box.hidden = true; $('app').hidden = false; if (opts.onBack) opts.onBack(); }},'Back to the app'),
