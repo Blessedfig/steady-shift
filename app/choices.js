@@ -672,6 +672,7 @@
       }
       const ds = c.decisions.filter(d => list.includes(d.site) && daysAgo(d.at) < days);
       if (ds.length){ out.append(card('soft', h('h3',null,'Decisions already shared with the team'), h('ul',{class:'small'}, ds.map(d => h('li',null, d.text+' ('+fmtDate(d.at)+')'))))); text.push('', 'Decided and shared:'); ds.forEach(d => text.push('- '+d.text)); }
+      (window.SSBriefHooks||[]).forEach(fn => { try { fn(out, text, list, days); } catch(e){} });
       const all = text.join('\n');
       out.append(h('div',{class:'row'},
         h('button',{class:'btn quiet',type:'button',onclick:e => copy(all, e.target)}, 'Copy as text'),
