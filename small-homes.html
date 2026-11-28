@@ -97,14 +97,16 @@ ol.steps{margin:0;padding-left:1.3rem;display:grid;gap:.55rem}
 ul.ticks{list-style:none;padding:0;margin:0;display:grid;gap:.5rem}
 ul.ticks li{padding-left:1.6rem;position:relative}ul.ticks li::before{content:"✓";position:absolute;left:0;color:var(--calm);font-weight:800}
 .price{font:800 1.6rem/1 var(--display)}
+.navcta{background:#1D6AA8;color:#fff!important;border-radius:12px;padding:0 1rem;font-weight:800}.navcta:hover{background:#155485}
+@media (max-width:600px){.top nav a:not(.navcta):not([href="app/"]){display:none}.top nav{gap:.8rem}}
 </style>
 </head>
 <body>
 <a class="skip" href="#main">Skip to main content</a>
 <header class="top">
   <div class="wrap">
-    <a class="brand" href="./"><span class="brand-mark" aria-hidden="true"></span>Steady Shift</a>
-    <nav aria-label="Sections"><a href="./">Home</a><a href="demo.html">See a demo</a><a href="get-app.html">Get the app</a><a href="app/?trial"><b>Start free trial</b></a></nav>
+    <a class="brand" href="./"><svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true" style="flex:none"><rect width="32" height="32" rx="9" fill="#1D6AA8"/><path d="M7.5 19.5c3-6 6.5-6 8.3 0s5.2 6 8.7 0" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/><circle cx="23" cy="10" r="2.7" fill="#F4C98A"/></svg>Steady Shift</a>
+    <nav aria-label="Sections"><a href="./">Home</a><a href="demo.html">See a demo</a><a href="get-app.html">Get the app</a><a class="navcta" href="app/?trial">Start free trial</a></nav>
   </div>
 </header>
 <main id="main" tabindex="-1"><div class="wrap" style="display:grid;gap:2.4rem">
