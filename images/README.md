@@ -3,5 +3,5 @@ screens with made-up sample residents only (Maple Grove AFH, Maya, Dee, Jo, Glen
 real resident or staff information. To refresh them, open `demo.html#card`, `#report`, `#triageResult`, `#owner`
 or `#home`, screenshot the phone at 2x, and save as WebP about 600px wide.
 
-`care-together.webp` is an AI-generated illustration (made-up people, no real residents), made in ChatGPT for this
-site in the Sky and Sun palette, then resized to 1200x800 WebP.
+`care-together.webp`, `night-shift.webp` and `handoff.webp` are AI-generated illustrations (made-up people, no real residents), made in ChatGPT for this
+site in the Sky and Sun palette, then resized to 1200x800 WebP. Keep new pictures in the same style.
