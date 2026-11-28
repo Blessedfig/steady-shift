@@ -105,7 +105,7 @@
   const staffNames = site => (S().staff[site]||[]).map(p => p.n);
   const prof = n => SD.profiles[n] || {alone:true, meds:false, rate:18, pto:0};
   const rec = (site, n) => (S().staff[site]||[]).find(p => p.n === n);
-  const rulesFor = site => Object.assign({dayMin:1, nightMin:1, nightStart:'22:00', nightEnd:'06:00', otWeek:40, minRest:8, maxStretch:16, weekStart:0}, ensure().rules[site]||{});
+  const rulesFor = site => { const r = Object.assign({dayMin:1, nightMin:1, nightStart:'22:00', nightEnd:'06:00', otWeek:40, minRest:8, maxStretch:16, weekStart:0}, ensure().rules[site]||{}); r.otWeek = Math.min(40, +r.otWeek || 40); return r; }; // FLSA and DWD 274.03: overtime after 40 hours, never later
   const MGR = ['manager','owner','multi'];
   const me = () => { const t = S().tier; if (t === 'caregiver') return staffNames(S().site)[1] || 'Caregiver'; if (t === 'manager') return 'Manager'; return A.tier().name; };
   const actor = () => S().tier === 'caregiver' ? me() : A.tier().name;
@@ -831,7 +831,7 @@
       h('div',{class:'grid g3'}, field('Minimum staff, day and evening', num('dayMin',0,20)), field('Minimum staff, overnight', num('nightMin',0,20)), field('Workweek starts', ws)),
       h('div',{class:'grid g3'}, field('Overnight starts', tm('nightStart')), field('Overnight ends', tm('nightEnd'))),
       h('p',{class:'small muted'},'Every overnight shift is an awake, working shift.'),
-      h('div',{class:'grid g3'}, field('Overtime after (hours a week)', num('otWeek',1,80)), field('Least hours off between shifts', num('minRest',0,16)), field('Most hours in a row', num('maxStretch',8,26))),
+      h('div',{class:'grid g3'}, field('Overtime after (hours a week, 40 at most)', num('otWeek',1,40)), field('Least hours off between shifts', num('minRest',0,16)), field('Most hours in a row', num('maxStretch',8,26))),
       h('div',{class:'row'}, h('button',{class:'btn sm',type:'button',onclick:()=>{ ensure().rules[site] = r; audit('Changed coverage rules', site); A.save(); A.route(); toast('Rules saved'); }},'Save rules')));
   }
   function shiftEvent(s){

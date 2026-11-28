@@ -533,7 +533,7 @@
   function setBusy(){ if (logEl) logEl.setAttribute('aria-busy', busy && !pendingConfirm ? 'true' : 'false'); }
   function setStatus(){
     if (!statusEl) return;
-    statusEl.textContent = mode === 'ai' ? 'AI helper on. It asks before saving anything.' : mode === 'local' ? 'Quick commands. The AI helper is not switched on yet, so type short requests like the examples.' : 'Checking the AI helper…';
+    statusEl.textContent = mode === 'ai' ? 'AI helper on. Your messages go to Anthropic\'s Claude AI to write answers, and answers can be wrong. Use resident codes, never names or health details. It asks before saving anything.' : mode === 'local' ? 'Quick commands. The AI helper is not switched on yet, so type short requests like the examples.' : 'Checking the AI helper…';
   }
 
   // ---------- the screen ----------
