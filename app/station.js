@@ -38,7 +38,7 @@
   const CARE_BTNS = [['face','✅','Shift checklist'],['mar','💊','Medications'],['notes','📝','Care notes'],['report','⚠️','Report something'],['shift','🔁','Shift report'],['meals','🍽️','Meals'],['clean','🧽','Cleaning'],['night','📞','Who do I call?'],['check','❓','Ask a question'],['tabletlearn','📘','Learn the tablet']];
   const FAMILY_BTNS = [['home','🏠','Today'],['family','👪','Meds and family'],['mar','💊','Medications'],['notes','📝','Care notes'],['report','⚠️','Report something'],['handoff','🧾','Hand-off packet'],['night','📞','Who do I call?'],['check','❓','Ask a question'],['tabletlearn','📘','Learn the tablet']];
   // Screens those buttons link on to. Nothing here shows pay, owner, HR files or other people's schedules.
-  const CARE_OK = new Set(['home','whatif','askpolicy','behavior','cards','monitor','menu','forms'].concat(CARE_BTNS.map(x => x[0]), FAMILY_BTNS.map(x => x[0])));
+  const CARE_OK = new Set(['home','whatif','askpolicy','behavior','cards','monitor','menu','forms','sharing'].concat(CARE_BTNS.map(x => x[0]), FAMILY_BTNS.map(x => x[0])));
   const careBtns = site => (site === 'family' ? FAMILY_BTNS : CARE_BTNS).filter(x => A.VIEWS[x[0]] && SSAccess.viewOn(x[0]));
   function care(){ try { const c = JSON.parse(sessionStorage.getItem(CARE) || 'null'); return c && here() && c.site === here().site ? c : null; } catch(e){ return null; } }
   const setCare = c => { try { if (c) sessionStorage.setItem(CARE, JSON.stringify(c)); else sessionStorage.removeItem(CARE); } catch(e){} };

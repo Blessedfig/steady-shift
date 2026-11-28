@@ -676,7 +676,7 @@
       const all = text.join('\n');
       out.append(h('div',{class:'row'},
         h('button',{class:'btn quiet',type:'button',onclick:e => copy(all, e.target)}, 'Copy as text'),
-        h('button',{class:'btn quiet',type:'button',onclick:()=>{ download('executive-summary-'+today()+'.txt', all, 'text/plain'); audit('Downloaded the executive summary'); }}, 'Download'),
+        h('button',{class:'btn quiet',type:'button',onclick:()=>{ download('executive-summary-'+today()+'.txt', 'text/plain', all); audit('Downloaded the executive summary'); }}, 'Download'),
         h('button',{class:'btn quiet',type:'button',onclick:()=>window.print()}, 'Print')),
         h('p',{class:'foot'},'Sample data. Staff names are left out of the summary; anonymous notes stay anonymous. Test version: everything stays in this browser.'));
     }

@@ -35,7 +35,7 @@
       const j = [-4,-2,0,1,3,-6,2,-1,5,0,-3,12,1,-2,0,4,-5,2,9,-1][k%20];
       const a = absA(s) + j, b0 = absB(s), out = b0 + [3,-2,6,0,1,-9,14,2,0,4,-3,1][k%12];
       const p = {id:A.uid(), site:s.site, staff:s.staff, shift:s.id, in:fromM(a), out:out < now ? fromM(out) : null, breaks:[], dev:devs[k%2], edits:[]};
-      if (s.site === 'birch' && s.kind !== 'training' && out < now) p.breaks.push({s:fromM(a+240), e:fromM(a+270)});
+      if (s.site === 'birch' && s.kind !== 'training' && out < now) p.breaks.push({s:fromM(a+240), e:fromM(a+270), covered:true});
       if (k % 37 === 5 && out < now - 120) p.out = null; // a forgotten clock-out
       punches.push(p);
     });
@@ -48,7 +48,9 @@
   const shiftById = id => X.ensure().shifts.find(s => s.id === id);
   const breakMin = p => p.breaks.reduce((t,b) => t + (b.e ? Math.max(0, toM(b.e)-toM(b.s)) : 0), 0);
   // Breaks of 30 minutes or more, when the person is fully relieved, are unpaid. Shorter ones are paid (federal and Wisconsin rules).
-  const unpaid = (p, site) => p.breaks.reduce((t,b) => { const m = b.e ? toM(b.e)-toM(b.s) : 0; return t + (m >= setFor(site).unpaidBreakMin ? m : 0); }, 0);
+  // A break only counts as unpaid when someone else at the home was on the clock to cover (b.covered, set when the
+  // break starts). A lone caregiver who must stay available is still working, so that time is paid (29 CFR 785.19; DWD 274.02(3)).
+  const unpaid = (p, site) => p.breaks.reduce((t,b) => { const m = b.e ? toM(b.e)-toM(b.s) : 0; return t + (b.covered && m >= setFor(site).unpaidBreakMin ? m : 0); }, 0);
   const worked = p => p.out ? Math.max(0, toM(p.out) - toM(p.in) - unpaid(p, p.site)) : 0;
   function flags(p){
     const f = [], s = p.shift && shiftById(p.shift), g = setFor(p.site).grace;
@@ -70,7 +72,7 @@
   function weekTotals(site, n, ws){
     const {L, sched} = weekRows(site, n, ws), r = rulesFor(site);
     const work = L.reduce((t,p) => t + worked(p), 0), plan = sched.reduce((t,s) => t + (absB(s)-absA(s)), 0);
-    const ot = Math.max(0, work - r.otWeek*60);
+    const ot = Math.max(0, work - Math.min(40, r.otWeek)*60); // the law sets 40; a home may start overtime sooner, never later
     const pto = X.ensure().requests.filter(q => q.type==='timeoff' && q.pto==='PTO' && q.status==='Approved' && q.site===site && q.by===n).reduce((t,q) => { let c = 0; for (let d = dn(q.from); d <= dn(q.to); d++) if (d >= ws && d < ws+7) c++; return t + c*8; }, 0);
     const fl = L.reduce((t,p) => t + flags(p).filter(f => f !== 'Edited').length, 0);
     const rate = prof(n).rate || 18;
@@ -111,7 +113,10 @@
       return {msg:'Clocked in at '+clock(now)+'.'+(s ? ' Shift '+span(s)+'.' : ' This is not on the schedule, so your manager will check it.')+(late ? ' Marked late.' : '')};
     }
     if (!cur) return {err:'You are not clocked in.'};
-    if (action === 'break'){ cur.breaks.push({s:now, e:null}); audit(n+' started a break ('+dev.label+')', site); A.save(); return {msg:'Break started at '+clock(now)+'. Breaks of 30 minutes or more are unpaid when you are fully off duty.'}; }
+    if (action === 'break'){
+      const covered = T.punches.some(q => q.site === site && q.staff !== n && !q.out && !q.breaks.some(b => !b.e));
+      cur.breaks.push({s:now, e:null, covered}); audit(n+' started a break ('+dev.label+')'+(covered ? '' : ', no one else on the clock, so it stays paid'), site); A.save();
+      return {msg:'Break started at '+clock(now)+'. '+(covered ? 'Breaks of 30 minutes or more are unpaid when you are fully off duty.' : 'No one else is on the clock to cover you, so this break is paid.')}; }
     if (action === 'back'){ const b = cur.breaks.find(x => !x.e); if (b) b.e = now; audit(n+' ended a break ('+dev.label+')', site); A.save(); return {msg:'Back from break at '+clock(now)+'.'}; }
     if (action === 'out'){
       // Angelika (2026-11-27): staff can't clock out until everything is finished, including incident reports.
@@ -234,7 +239,7 @@
     })) : h('p',{class:'muted'},'No punches this week.'));
     ap(wrap, h('div',{class:'grid g4'},
       h('div',{class:'stat'}, h('b',null,String(hrs(t.work))), h('span',null,'hours worked')),
-      h('div',{class:'stat '+(t.ot?'warnc':'')}, h('b',null,String(hrs(t.ot))), h('span',null,'overtime hours (over '+rulesFor(site).otWeek+')')),
+      h('div',{class:'stat '+(t.ot?'warnc':'')}, h('b',null,String(hrs(t.ot))), h('span',null,'overtime hours (over '+Math.min(40, rulesFor(site).otWeek)+')')),
       h('div',{class:'stat'}, h('b',null,String(t.pto)), h('span',null,'PTO hours')),
       h('div',{class:'stat'}, h('b',null,String(hrs(t.plan))), h('span',null,'hours scheduled'))));
     const row = h('div',{class:'row'});
@@ -274,7 +279,7 @@
       field('Minutes before a punch counts as late or early', gr),
       h('ul',{class:'small'},
         h('li',null,'Overtime: over 40 hours in the workweek, at 1.5 times the regular rate (federal FLSA; Wisconsin DWD 274). Wisconsin has no daily overtime for adults.'),
-        h('li',null,'Breaks: under 30 minutes are paid. A meal period of 30 minutes or more is unpaid only when the person is fully relieved of duty. In a small home where staff must stay available, it is paid.'),
+        h('li',null,'Breaks: under 30 minutes are paid. A meal period of 30 minutes or more is unpaid only when the person is fully relieved of duty. The app counts a break as unpaid only when someone else was on the clock to cover. If staff must stay available, it is paid.'),
         h('li',null,'Every hour of an overnight shift is paid work time. Overnight shifts are awake shifts.'),
         h('li',null,'Later, for the in-home care version: Wisconsin Medicaid electronic visit verification (EVV). Not built yet.')));
   }

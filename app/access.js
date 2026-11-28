@@ -8,7 +8,8 @@
   const SD = D.SCHED;
   const VIEW_MOD = {schedule:'schedule', time:'time', kiosk:'time', insights:'insights', labor:'insights'};
   const ALL_TIERS = D.TIERS.map(t => t.id);
-  const DEFAULT_TIERS = {schedule:ALL_TIERS.filter(t => t !== 'family'), time:ALL_TIERS.filter(t => t !== 'family'), insights:['owner','multi']};
+  const STAFF_TIERS = ALL_TIERS.filter(t => t !== 'family' && t !== 'kin');
+  const DEFAULT_TIERS = {schedule:STAFF_TIERS.slice(), time:STAFF_TIERS.slice(), insights:['owner','multi']};
 
   function st(){
     const s = S();
@@ -86,7 +87,7 @@
       SD.modules.forEach(m => {
         const x = mod(site, m.id), id = 'mod_'+m.id;
         const sw = h('input',{type:'checkbox',id,role:'switch',checked:x.on,disabled:!isOwner(),onchange:e=>{ x.on = e.target.checked; log((x.on?'Turned on ':'Turned off ')+m.name, site); A.renderNav(); A.route(); }});
-        const tiers = h('div',{class:'chips',role:'group','aria-label':'Roles that see '+m.name}, D.TIERS.filter(t => t.id !== 'family').map(t => h('button',{type:'button',class:'chip','aria-pressed':String(x.tiers.includes(t.id)),disabled:!isOwner(),onclick:e=>{
+        const tiers = h('div',{class:'chips',role:'group','aria-label':'Roles that see '+m.name}, D.TIERS.filter(t => t.id !== 'family' && t.id !== 'kin').map(t => h('button',{type:'button',class:'chip','aria-pressed':String(x.tiers.includes(t.id)),disabled:!isOwner(),onclick:e=>{
           if (x.tiers.includes(t.id)) x.tiers = x.tiers.filter(y => y !== t.id); else x.tiers.push(t.id);
           e.currentTarget.setAttribute('aria-pressed', String(x.tiers.includes(t.id))); log(m.name+': '+(x.tiers.includes(t.id)?'shown to ':'hidden from ')+t.name, site); A.renderNav(); }}, t.name)));
         ap(card, h('div',{class:'item'}, h('label',{class:'row',for:id}, sw, h('b',null,m.ic+' '+m.name)), h('span',{class:'small'},m.what), x.on ? h('div',null, h('span',{class:'small muted'},'Roles that see it'), tiers) : null));
@@ -204,7 +205,7 @@
   function register(m){
     if (!m || !m.id || SD.modules.some(x => x.id === m.id)) return;
     SD.modules.push({id:m.id, name:m.name||m.id, ic:m.ic||'', what:m.what||''});
-    DEFAULT_TIERS[m.id] = (m.tiers || ALL_TIERS).slice();
+    DEFAULT_TIERS[m.id] = (m.tiers || STAFF_TIERS).slice();
     (m.views||[]).forEach(v => { VIEW_MOD[v] = m.id; });
   }
   window.SSAccess = {viewOn, offView, can, log, kioskCfg, checkPin, setPin, mod, active, register};

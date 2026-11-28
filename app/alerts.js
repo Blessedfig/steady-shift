@@ -169,7 +169,7 @@
     const main = document.getElementById('main'); if (!main) return;
     const old = document.getElementById('ssAlerts'); if (old) old.remove();
     const view = (location.hash.match(/^#\/([a-z]+)/)||[])[1] || 'home';
-    if (view === 'alerts' || view === 'kiosk' || S().site === 'family' || S().tier === 'family') return;
+    if (view === 'alerts' || view === 'kiosk' || S().site === 'family' || S().tier === 'family' || S().tier === 'kin') return;
     const list = openFor(S().site); if (!list.length) return;
     const bar = h('section',{id:'ssAlerts',class:'card',style:'border:2px solid var(--red);margin-bottom:1rem','aria-label':'Priority care updates'},
       h('h2',null,'Priority care update'+(list.length > 1 ? 's ('+list.length+')' : '')),
