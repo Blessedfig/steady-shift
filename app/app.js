@@ -92,7 +92,8 @@
     rn:['home','delegations','orders','schedule','time','sync','check','askpolicy','whatif','cards','night','behavior','watch'],
     owner:['home','owner','insights','outlook','labor','setup','procedures','schedule','time','access','sync','review','peer','askpolicy','whatif','required','survey','questions','decide','ask','watch','cards'],
     multi:['home','sites','owner','insights','outlook','labor','setup','procedures','schedule','time','access','sync','review','peer','askpolicy','whatif','required','survey','watch','ask','cards'],
-    family:['home','check','night','behavior','handoff','cards','watch']
+    family:['home','check','night','behavior','handoff','cards','watch'],
+    kin:[]   // approved family of a resident: only "Your loved one" (loved.js adds it)
   };
 
   function renderNav(view){
@@ -110,7 +111,7 @@
     nav.append(h('div',{class:'grp'},(/^[aeiou]/i.test(tier().name)?'For an ':'For a ')+tier().name.toLowerCase()));
     if (S.tier === 'caregiver') nav.append(h('a',{href:'#/home',onclick:e=>{ e.preventDefault(); setSimple(true); }},h('span',{class:'ic','aria-hidden':'true'},'🔲'),'Back to simple view'));
     mine.forEach(v => nav.append(navLink(v, view)));
-    if (S.tier === 'family') return;   // family plan: only what a family caregiver needs
+    if (S.tier === 'family' || S.tier === 'kin') return;   // family plan and approved family: only what they need
     const rest = Object.keys(VIEWS).filter(v => !mine.includes(v) && on(v));
     nav.append(h('div',{class:'grp'},'Everything else (unlocked)'));
     rest.forEach(v => nav.append(navLink(v, view)));
@@ -140,6 +141,8 @@
     param = m && m[2] ? decodeURIComponent(m[2]) : '';
     // A registered shift station only ever shows the station (see station.js).
     if (window.SSStation && SSStation.holds() && current !== 'kiosk'){ history.replaceState(null,'','#/kiosk'); current = 'kiosk'; param = ''; }
+    // Approved family of a resident see only their own page (loved.js), never staff screens.
+    if (S.tier === 'kin' && VIEWS.loved && current !== 'loved'){ history.replaceState(null,'','#/loved'); current = 'loved'; param = ''; }
     if (window.SSResidents) SSResidents.apply(); // moved-out residents leave every active list
     renderNav(current);
     const main = $('main'); main.textContent = '';
@@ -294,7 +297,7 @@
     const mine = SIMPLE.filter(x => on(x[0]));
     const now = Object.keys(info).filter(k => info[k].urgent && !mine.some(x => x[0] === k) && on(k)).slice(0, 3);
     if (now.length) v.append(h('div',{class:'bignow',role:'region','aria-label':'Needs you now'},
-      now.map(k => h('a',{class:'bigbtn wide '+(['voice','myfile','hr','celebrate'].includes(k) ? 'info' : 'urgent'),href:info[k].href}, h('span',{class:'ic','aria-hidden':'true'},VIEWS[k].ic), h('b',null,info[k].text)))));
+      now.map(k => h('a',{class:'bigbtn wide '+(['voice','myfile','hr','celebrate','sharing'].includes(k) ? 'info' : 'urgent'),href:info[k].href}, h('span',{class:'ic','aria-hidden':'true'},VIEWS[k].ic), h('b',null,info[k].text)))));
     v.append(h('div',{class:'biggrid'}, mine.map(([id, ic, label]) => {
       const x = info[id]; const status = x && /\d/.test(x.text) ? x.text.replace(/^[^:]*:\s*/,'') : '';
       return h('a',{class:'bigbtn'+(x && x.urgent ? ' urgent' : ''),href:x && x.href ? x.href : '#/'+id},
@@ -1679,7 +1682,7 @@
   const statusChip = s => { const x = STATUS[s] || [s,'grey']; return h('span',{class:'chip '+x[1]},x[0]); };
   const LAYER_ORDER = ['federal','state','county','city','payer','org','house'];
   const LAYER_NAME = {federal:'Federal',state:'State (Wisconsin)',county:'County',city:'City or town',payer:'Funding source (MCO)',org:'Your company',house:'House'};
-  const roleFor = () => ({caregiver:'caregiver', family:'caregiver', manager:'manager', rn:'manager', owner:'owner', multi:'owner'}[S.tier] || 'caregiver');
+  const roleFor = () => ({caregiver:'caregiver', family:'caregiver', kin:'caregiver', manager:'manager', rn:'manager', owner:'owner', multi:'owner'}[S.tier] || 'caregiver');
   const inSetting = x => setting() === 'home' || !x.settings || x.settings.includes(setting());
   const baseHours = x => x.hours != null ? x.hours : x.business_days != null ? x.business_days * 24 : null;
   const orgFor = id => (S.orgProcs || []).filter(p => p.scenario_id === id && p.site === S.site);
