@@ -161,15 +161,16 @@
       form.hidden = !on; open.setAttribute('aria-expanded', String(on)); $('trialCard').hidden = on;
       $('pwForm').hidden = on; $('firstCard').hidden = on; $('codeForm').hidden = true; if (verify) verify.hidden = true;
       $('gateTitle').textContent = on ? 'Start your free trial' : 'Sign in';
-      $('gateIntro').textContent = on ? 'Two weeks with everything unlocked. No card needed. Create your account with the code you were given.' : intro;
+      $('gateIntro').textContent = on ? 'Two weeks with everything unlocked. No card needed. One free trial per email address.' : intro;
       gate('');
-      if (on) ($('t-code').value ? $('t-name') : $('t-code')).focus(); else $('email').focus();
+      if (on) $('t-name').focus(); else $('email').focus();
     }
     open.addEventListener('click', () => show(true));
     $('trialBack').addEventListener('click', () => show(false));
-    // links Angelika shares: .../app/?code=SS-XXXX-XXXX
+    // links: .../app/?trial opens the sign-up form; .../app/?code=SS-XXXX-XXXX also fills in a code
     const q = new URLSearchParams(location.search).get('code') || new URLSearchParams(location.search).get('trial');
     if (q !== null){ $('t-code').value = cleanCode(q); show(true); window.scrollTo(0,0); }
+    if (/[#&]signup\b/.test(location.hash) && q === null){ show(true); window.scrollTo(0,0); }
     let pendingEmail = '';
     form.addEventListener('submit', async e => {
       e.preventDefault();
@@ -182,11 +183,11 @@
       try { localStorage.setItem('desk-email', email); localStorage.setItem('ss-after-signin','app'); } catch(err){}
       const {data, error} = await sb.auth.signUp({email, password:pw, options:{
         emailRedirectTo: location.origin + location.pathname,
-        data:{trial_code:code, name:$('t-name').value.trim().slice(0,60), home_type:$('t-type').value, password_set:true}}});
+        data:{trial_code:code || undefined, name:$('t-name').value.trim().slice(0,60), home_type:$('t-type').value, password_set:true}}});
       busy(b, false, 'Create my account');
       if (error){
         const m = String(error.message||'');
-        if (/signups? not allowed|signup.*disabled/i.test(m)) gate('Trial sign-ups aren\'t switched on yet. Please let the person who gave you the code know.', true, b);
+        if (/signups? not allowed|signup.*disabled/i.test(m)) gate('New sign-ups are paused right now. Please try again later.', true, b);
         else if (/already (been )?registered|already exists/i.test(m)) gate('This email already has an account. Sign in above with your password, or use "Email me a sign-in code".', true, b);
         else if (/rate|seconds|too many/i.test(m)) gate('Too many tries just now. Please wait a few minutes and try again.', true, b);
         else if (/password/i.test(m)) gate(m, true, b);

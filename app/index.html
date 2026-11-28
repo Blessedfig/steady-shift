@@ -423,12 +423,12 @@ fieldset.goals{border:0;padding:0;margin:0;display:grid;gap:.35rem}fieldset.goal
       <div class="row"><button class="btn ghost sm" id="sendBtn" type="button">Email me a sign-in code</button></div>
     </div>
     <div class="card soft" style="box-shadow:none;gap:.5rem" id="trialCard">
-      <b>Have a free trial code?</b>
-      <span class="small">Someone from Steady Shift gave you a code for 2 free weeks with everything unlocked. Create your account with it here.</span>
+      <b>New here? Try it free for 2 weeks</b>
+      <span class="small">Everything unlocked, no card needed. Create your account in a minute. If someone gave you a trial code, you can add it too.</span>
       <div class="row"><button class="btn ghost sm" id="trialOpen" type="button" aria-expanded="false" aria-controls="trialForm">Start my free trial</button></div>
     </div>
     <form id="trialForm" class="grid" hidden>
-      <label class="f">Trial code<input id="t-code" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="32" required placeholder="SS-XXXX-XXXX"></label>
+      <label class="f">Trial code (optional)<input id="t-code" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="32" placeholder="Leave empty if you don't have one"></label>
       <label class="f">Your first name<input id="t-name" type="text" autocomplete="given-name" maxlength="60"></label>
       <label class="f">Email<input id="t-email" type="email" autocomplete="email" inputmode="email" required placeholder="you@example.com"></label>
       <label class="f">Choose a password (10 or more characters)<input id="t-pw" type="password" autocomplete="new-password" minlength="10" required></label>
