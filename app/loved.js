@@ -25,7 +25,7 @@
   const sites = () => D.SITES.filter(s => s.id !== 'family');
   const sid = () => S().site === 'family' ? 'maple' : S().site;
   const siteName = id => (D.SITES.find(s => s.id === id)||{}).name || id;
-  const resOf = (site, code) => (D.RESIDENTS[site]||[]).find(r => r.code === code) || {code, nick:code};
+  const resOf = (site, code) => (D.RESIDENTS[site]||[]).find(r => r.code === code) || (S().movedOut||[]).find(x => x.site === site && x.code === code) || {code, nick:code};
   const daysBetween = (a, b) => Math.floor((new Date(b) - new Date(a)) / 864e5);
   const field = (label, el, hint) => { el.id = el.id || 'ls'+uid(); return h('label',{class:'f',for:el.id}, label, el, hint ? h('span',{class:'small muted',style:'font-weight:400'},hint) : null); };
   const plural = (n, w) => n+' '+w+(n === 1 ? '' : 's');
@@ -85,7 +85,7 @@
     sh.auths.push(mk({site:'maple', res:'M-2', to:{name:'Son (sample)', rel:'Son', phone:'715-555-0104', email:'son@family.example', idCheck:'Guardian confirmed by phone'},
       level:'details', topics:['wellbeing','activities','appts','health','falls','plan'], freq:7, rightAway:true, signer:{name:'Guardian (sample)', cap:'guardian', authority:'Guardian of the person and estate. Letters of guardianship (sample county court) cover health care. Copy in red folder.'},
       sig:{method:'typed', typed:'Guardian (sample)'}, witness:'House manager (sample)', signedAt:iso(ago(25)), start:ago(25), expires:A.addDays(ago(25), 365),
-      wishes:'Walt smiled and said "my boy should know how I am." He asked that his son hear about his walks.', nudge:{on:true, every:7, best:'Late mornings'}, emailOk:{text:EMAIL_RISK}}));
+      wishes:'Walt smiled and said "my boy should know how I am." He asked that his son hear about his walks.', nudge:{on:true, every:7, best:'Late mornings'}, emailOk:{text:EMAIL_RISK}, familyEmailAck:{at:iso(ago(24),'18:00'), text:EMAIL_RISK}}));
     sh.auths.push(mk({site:'maple', res:'M-3', to:{name:'Old friend (sample)', rel:'Friend from church', phone:'715-555-0121', email:'', idCheck:'Niece (POA) introduced in person'},
       level:'summary', topics:SUMMARY.slice(), freq:30, signer:{name:'Niece (sample)', cap:'poa', authority:'Health care POA, activated. Activation letter in red folder.'},
       sig:{method:'typed', typed:'Niece (sample)'}, witness:'House manager (sample)', signedAt:iso(ago(200)), start:ago(200), expires:ago(20), nudge:{on:false, every:14, best:''}}));
@@ -116,13 +116,36 @@
   }
 
   // ---------- status ----------
+  function movedOut(a){ return (S().movedOut||[]).find(x => x.site === a.site && x.code === a.res); }
   function status(a){
     if (a.status === 'revoked') return 'revoked';
+    if (movedOut(a)) return 'ended';
+    if (a.paused) return 'paused';
     if (a.expires && a.expires < today()) return 'expired';
     if (a.start && a.start > today()) return 'later';
     return 'active';
   }
-  const STAT = {active:['Active','calm'], revoked:['Ended by signer','grey'], expired:['Expired','amber'], later:['Starts later','grey']};
+  const STAT = {active:['Active','calm'], revoked:['Ended by signer','grey'], expired:['Expired','amber'], later:['Starts later','grey'], paused:['Paused','amber'], ended:['Ended: moved out','grey']};
+  const PAUSE_WHY = {objects:'The resident objects right now', concern:'Concern about the signer or this person (for example, suspected abuse or neglect; 45 CFR 164.502(g)(5))', check:'Checking legal papers or identity'};
+  // Any staff member can pause at once when the resident objects; only a manager or owner can pause for a concern about a representative, resume, or end.
+  function pause(a, why, note){
+    a.paused = {at:new Date().toISOString(), by:me(), why, note:note||''};
+    log('paused', 'Sharing with '+a.to.name+' paused: '+PAUSE_WHY[why]+(note ? ' ('+note+')' : ''), a);
+  }
+  function pauseDlg(a){
+    const dlg = h('dialog',{class:'qs',style:'padding:1.1rem'});
+    const opts = canSign() ? Object.keys(PAUSE_WHY) : ['objects'];
+    const why = h('select',null, opts.map(k => h('option',{value:k}, PAUSE_WHY[k])));
+    const note = h('input',{type:'text',placeholder:canSign() ? 'Required for a concern' : 'What they said, in their words'});
+    dlg.append(h('form',{method:'dialog',class:'grid'}, h('h2',null,'Pause sharing with '+a.to.name),
+      h('p',{class:'small'},'Nothing more is shared with them until a manager looks at it. They see a kind "updates are paused" message. The signed record stays on file.'),
+      field('Why', why), field('Notes', note),
+      h('div',{class:'row'}, h('button',{class:'btn red',type:'button',onclick:()=>{
+        if (why.value === 'concern' && note.value.trim().length < 5){ toast('Write the reason for a concern'); return; }
+        pause(a, why.value, note.value.trim()); dlg.close(); dlg.remove(); toast('Paused. The manager will see it.'); A.route(); }},'Pause now'),
+        h('button',{class:'btn quiet',type:'button',onclick:()=>{ dlg.close(); dlg.remove(); }},'Cancel'))));
+    document.body.append(dlg); dlg.showModal();
+  }
   const soon = a => status(a) === 'active' && a.expires && daysBetween(today(), a.expires) <= 30;
   const live = (site, code) => st().auths.filter(a => a.site === site && (!code || a.res === code) && status(a) === 'active');
   const allows = (a, topics) => topics.every(t => (a.level === 'summary' ? SUMMARY : a.topics).includes(t));
@@ -149,7 +172,7 @@
     const r = resOf(a.site, a.res), sh = a.level === 'summary' ? SUMMARY : a.topics;
     return [
       'PERMISSION TO SHARE UPDATES WITH FAMILY OR FRIENDS',
-      'Home: '+siteName(a.site)+' (the home shares the updates)',
+      'Who shares the information: '+siteName(a.site)+' ('+(D.SETTINGS[(D.SITES.find(x => x.id === a.site)||{}).setting]||{name:'licensed home'}).name+') and its staff, including its nurse.',
       'Resident: '+r.nick+' (sample), code '+a.res,
       '',
       '1. Who may get updates: '+a.to.name+', '+a.to.rel+(a.to.phone ? ', phone '+a.to.phone : '')+(a.to.email ? ', email '+a.to.email : '')+'.',
@@ -161,13 +184,15 @@
       '',
       'Please read:',
       '- You can end this permission at any time. Tell the home in writing (a note, the form in the app, or an email to the manager). Ending it stops future sharing; it cannot take back what was already shared.',
-      '- The home will not change care, housing, payment or admission because of signing or not signing this.',
+      '- Signing is your choice. The home will not change care, housing, payment or admission because of signing or not signing this.',
       '- Once information is shared, the person who gets it could share it further, and federal privacy law may no longer protect it.',
       '- You get a copy of this signed form.',
       '',
       'Signed by: '+a.signer.name+', as '+CAP[a.signer.cap].t+'.',
+      a.papers && a.papers.length ? 'Legal papers checked by staff: '+a.papers.join('; ')+'.' : '',
       a.signer.cap !== 'self' ? 'Authority: '+a.signer.authority : 'Decision making: '+a.signer.authority,
       a.wishes ? 'What the resident said about this: '+a.wishes : '',
+      a.familyEmailAck ? 'The person getting updates also signed that regular email is not secure ('+fmtTime(a.familyEmailAck.at)+').' : '',
       'Signature: '+(a.sig.method === 'drawn' ? 'signed by hand on screen' : a.sig.method === 'mark' ? 'signed with a mark, witnessed' : 'typed signature')+' ('+(a.sig.typed||a.signer.name)+')',
       'Date and time signed: '+fmtTime(a.signedAt),
       'Witnessed and collected by: '+a.witness,
@@ -235,6 +260,7 @@
       if (!code) return;
       const r = resOf(sid(), code), on = live(sid(), code);
       log('lookup', 'Checked who may get updates about '+r.nick, {id:'', res:code, site:sid()});
+      st().auths.filter(a => a.site === sid() && a.res === code && status(a) === 'paused').forEach(a => out.append(h('div',{class:'item'}, h('div',{class:'meta'}, chip('Paused','amber')), h('b',null,a.to.name+' · '+a.to.rel), h('span',{class:'small'},'Share nothing with them right now. '+PAUSE_WHY[a.paused.why]+'.'))));
       if (!on.length){ out.append(card('warn', h('b',null,'No one has signed permission for '+r.nick+' yet.'), h('p',{class:'small'},'Share nothing about '+r.nick+'\'s health or care. Take a message for the manager.'))); return; }
       on.forEach(a => {
         const sh = a.level === 'summary' ? SUMMARY : a.topics;
@@ -243,7 +269,8 @@
           h('b',null, a.to.name+' · '+a.to.rel),
           h('span',{class:'small'}, h('b',null,'You may share: '), sh.map(topicName).join(', ')+'.'),
           h('span',{class:'small muted'}, 'Not: anything else, and never '+['mental health treatment','alcohol or drug treatment','HIV results'].join(', ')+'.'),
-          h('span',{class:'small muted'}, 'Signed by '+a.signer.name+' ('+CAP[a.signer.cap].short+') on '+fmtDate(a.signedAt)+'. Confirm it is really them: '+(a.to.phone ? 'call back at '+a.to.phone+' if unsure.' : 'ask the manager if unsure.'))));
+          h('span',{class:'small muted'}, 'Signed by '+a.signer.name+' ('+CAP[a.signer.cap].short+') on '+fmtDate(a.signedAt)+'. Confirm it is really them: '+(a.to.phone ? 'call back at '+a.to.phone+' if unsure.' : 'ask the manager if unsure.')),
+          h('div',{class:'row'}, h('button',{class:'btn quiet sm',type:'button',onclick:()=>pauseDlg(a)}, r.nick+' says no right now: pause'))));
       });
     }
   }
@@ -259,7 +286,8 @@
       const c = card('', h('div',{class:'row',style:'justify-content:space-between'}, h('h2',{style:'margin:0'}, r.nick+' ('+r.code+')'),
         canSign() ? h('a',{class:'btn sm',href:'#/sharing/new/'+encodeURIComponent(r.code)},'+ New permission') : null),
         h('p',{class:'small muted'}, 'Who signs: '+d.why));
-      if (!mine.length) c.append(h('p',{class:'small muted'},'No one has permission yet.'));
+      if (!mine.length) c.append(h('p',{class:'small muted'},'No one has permission yet. Offer it at admission and at care plan meetings. It is never required.'));
+      else c.append(h('div',{class:'row'}, h('button',{class:'btn quiet sm',type:'button',onclick:()=>history(r.code)},'Permission history report')));
       mine.sort((a,b) => (status(a) === 'active' ? 0 : 1) - (status(b) === 'active' ? 0 : 1)).forEach(a => {
         const s = STAT[status(a)];
         const reads = sh.updates.filter(u => u.to.includes(a.id)).length;
@@ -269,13 +297,31 @@
           h('span',{class:'small'}, (a.level === 'summary' ? SUMMARY : a.topics).map(topicName).join(', ')),
           h('span',{class:'small muted'}, 'Signed by '+a.signer.name+' ('+CAP[a.signer.cap].short+'), '+fmtDate(a.signedAt)+(a.expires ? ' · ends '+fmtDate(a.expires+'T12:00:00') : '')+' · '+plural(reads,'update')+' sent'),
           a.revoked ? h('span',{class:'small muted'}, 'Ended '+fmtDate(a.revoked.at)+' by '+a.revoked.by+': '+a.revoked.how+(a.revoked.reason ? ' ('+a.revoked.reason+')' : '')) : null,
+          a.paused && status(a) === 'paused' ? h('span',{class:'small'}, 'Paused '+fmtDate(a.paused.at)+' by '+a.paused.by+': '+PAUSE_WHY[a.paused.why]+(a.paused.note ? ' ('+a.paused.note+')' : '')) : null,
           h('div',{class:'row'}, h('a',{class:'btn quiet sm',href:'#/sharing/record/'+a.id},'Open the signed record'),
-            status(a) === 'active' && canSign() ? h('button',{class:'btn quiet sm',type:'button',onclick:()=>revoke(a)},'End this permission') : null,
+            status(a) === 'active' ? h('button',{class:'btn quiet sm',type:'button',onclick:()=>pauseDlg(a)},'Pause') : null,
+            status(a) === 'paused' && canSign() ? h('button',{class:'btn quiet sm',type:'button',onclick:()=>{ const n = a.paused; delete a.paused; log('resumed','Sharing with '+a.to.name+' resumed after a pause ('+PAUSE_WHY[n.why]+')', a); toast('Resumed'); A.route(); }},'Resume') : null,
+            ['active','paused'].includes(status(a)) && canSign() ? h('button',{class:'btn quiet sm',type:'button',onclick:()=>revoke(a)},'End this permission') : null,
             status(a) !== 'active' && canSign() && status(a) !== 'later' ? h('a',{class:'btn quiet sm',href:'#/sharing/new/'+encodeURIComponent(a.res)+'?from='+a.id},'Sign a new one') : null)));
       });
       v.append(c);
     });
     if (!canSign()) v.append(h('p',{class:'small muted'},'Only a house manager or owner collects and witnesses signatures.'));
+  }
+
+  // one-click permission history for one resident: every permission, who signed and how, and its log
+  function history(code){
+    const r = resOf(sid(), code), sh = st(), mine = sh.auths.filter(a => a.site === sid() && a.res === code).sort((x, y) => x.signedAt < y.signedAt ? -1 : 1);
+    const lines = ['Permission history: '+r.nick+' (sample, '+code+'), '+siteName(sid()), 'Made '+fmtTime(new Date().toISOString())+' by '+me(), ''];
+    mine.forEach((a, i) => {
+      lines.push((i+1)+'. '+a.to.name+' ('+a.to.rel+'): '+LEVEL[a.level]+' · '+STAT[status(a)][0]);
+      lines.push('   Signed '+fmtTime(a.signedAt)+' by '+a.signer.name+' as '+CAP[a.signer.cap].t.toLowerCase()+'; witness '+a.witness+'; fingerprint '+a.hash);
+      lines.push('   Topics: '+(a.level === 'summary' ? SUMMARY : a.topics).map(topicName).join(', ')+'; ends '+a.expires+(a.emailOk ? '; full email allowed by signer' : '; email notices only'));
+      sh.log.filter(l => l.auth === a.id).slice().reverse().forEach(l => lines.push('   - '+fmtTime(l.at)+' · '+l.who+' · '+l.text));
+    });
+    const text = lines.join('\n');
+    log('printed', 'Made the permission history report for '+r.nick, {id:'', res:code, site:sid()});
+    A.download('permission-history-'+code+'-'+today()+'.txt', 'text/plain', text);
   }
 
   function revoke(a){
@@ -328,7 +374,17 @@
       const au = h('textarea',{style:'min-height:3.5rem'}, a.signer.authority);
       const wish = h('textarea',{style:'min-height:3.5rem',placeholder:'In their own words, for example: "Yes, my daughter should know how I am."'}, a.wishes);
       const note = h('div');
+      const papers = h('div',{class:'grid',style:'gap:.35rem'});
+      const PAPERS = {
+        guardian:['Court letters of guardianship seen, and they cover health care or the person','A copy is in the resident file (uploaded in the live version)'],
+        poa:['The signed health care POA document seen','The signed activation statement seen: 2 physicians, or 1 physician and a psychologist, nurse practitioner or qualified physician assistant, say the person cannot make health care decisions (Wis. Stat. 155.05(2))','The agent is not an employee of this home, or is a relative','Copies are in the resident file (uploaded in the live version)'],
+        other:['Legal papers seen that give this person authority over health information','A copy is in the resident file (uploaded in the live version)'],
+        self:['Staff believe the resident understands what they are signing']
+      };
+      const drawPapers = () => { papers.textContent = ''; papers.append(h('span',{class:'small muted'},'Tick each one. Without them, the representative cannot sign.'));
+        PAPERS[cap.value].forEach((t, i) => { const id = 'pp-'+i; papers.append(h('label',{class:'row small',for:id,style:'align-items:start'}, h('input',{type:'checkbox',id,'data-pp':t}), h('span',null,t))); }); };
       const upd = () => {
+        drawPapers();
         note.textContent = '';
         if (cap.value !== d.cap) note.append(card('warn', h('b',null,'This is different from the face sheet.'), h('p',{class:'small'}, 'The face sheet says: '+d.why+' Only change this if you have seen newer legal papers. Write what you saw below, and update the face sheet too.')));
         if (cap.value === 'self' && d.cap !== 'self') note.append(card('alert', h('b',null,'A '+CAP[d.cap].short.toLowerCase()+' is on file.'), h('p',{class:'small'},'When a guardian or activated POA is on file, they sign. Ask the manager or the nurse before going on.')));
@@ -336,9 +392,12 @@
       cap.addEventListener('change', upd);
       body.append(card('', h('h2',null,'1. Who is signing?'),
         h('p',null, d.why), d.warn ? card('warn', h('p',{class:'small'}, d.warn)) : null,
-        field('Signing as', cap), note, field('Full name of the person signing', nm), field('Their authority (what papers you saw)', au, 'Guardian: court letters and what they cover. POA: the document and the activation letter. Resident: say they make their own decisions.'),
+        field('Signing as', cap), note, papers, field('Full name of the person signing', nm), field('Their authority (what papers you saw)', au, 'Guardian: court letters and what they cover. POA: the document and the activation letter. Resident: say they make their own decisions.'),
         d.cap !== 'self' ? field('What did '+r.nick+' say about sharing?', wish, 'Even with a guardian or POA, ask the resident and write down their wishes. Wisconsin resident rights protect their privacy and their say.') : null,
         nav(() => { a.signer = {name:nm.value.trim(), cap:cap.value, authority:au.value.trim()}; a.wishes = wish.value.trim();
+          const boxes = [...papers.querySelectorAll('input[data-pp]')];
+          if (boxes.some(b => !b.checked)) return cap.value === 'self' ? 'If the resident may not understand, stop and ask the manager or nurse' : 'Each paper must be seen before a '+CAP[cap.value].short.toLowerCase()+' can sign';
+          a.papers = boxes.map(b => b.dataset.pp);
           if (!a.signer.name) return 'Add the name of the person signing';
           if (a.signer.cap !== 'self' && a.signer.authority.length < 8) return 'Write what legal papers you saw';
           if (a.signer.cap === 'self' && d.cap !== 'self') return 'A guardian or activated POA is on file, so they sign';
@@ -384,7 +443,7 @@
         h('label',{class:'row small',for:'ls-ra'}, ra, 'Call or message right away about a fall, an emergency room or hospital trip, or a serious illness'),
         field('How often to send a summary', fq),
         card('', h('h3',null,'✉️ Email'),
-          h('p',{class:'small'}, a.to.email ? 'Emails to '+a.to.name+' only say there is a new update, with a link to sign in. No health details go in the email.' : 'No email given, so updates stay in the app.'),
+          h('p',{class:'small'}, a.to.email ? 'Emails to '+a.to.name+' only say "You have a new update" with a link to sign in. No name and no health details go in the email.' : 'No email given, so updates stay in the app.'),
           a.to.email ? h('label',{class:'row small',for:'ls-eo',style:'align-items:start'}, eo, h('span',null, h('b',null,'Also allow full updates by regular email. '), EMAIL_RISK.replace('The signer still wants','I still want'))) : null),
         card('soft', h('b',null,'Never shared with this form'), h('ul',{class:'small'}, NEVER.map(x => h('li',null,x))), h('p',{class:'small muted'},'These need their own consent form with extra steps.')),
         card('', h('h3',null,'💛 Check-in reminders for '+(a.to.name||'them')),
@@ -456,7 +515,7 @@
       body.append(card('', h('h2',null,'6. Sign'),
         h('p',null, a.signer.name+', as '+CAP[a.signer.cap].t.toLowerCase()+', gives permission for '+siteName(a.site)+' to share '+(a.level === 'summary' ? 'summary updates' : 'updates about '+a.topics.map(topicName).join(', ').toLowerCase())+' about '+r.nick+' with '+a.to.name+' until '+fmtDate(a.expires+'T12:00:00')+'.'),
         field('How are they signing?', method), padWrap, field('Signer\'s full name, typed', typed), markRow, field('Staff witness', wit),
-        h('p',{class:'small muted'},'The date and time are added when you save. The app stores a fingerprint (SHA-256) of the signed form so any later change can be spotted.'),
+        h('p',{class:'small muted'},'The date and time are added when you save. The app stores a fingerprint (SHA-256) of the signed form so any later change can be spotted. In the live version, a signer who is not in the room signs from their own phone after a one-time code.'),
         h('div',{class:'row'}, h('button',{class:'btn quiet',type:'button',onclick:()=>{ step--; draw(); }},'Back'), btn)));
       sync();
     }
@@ -561,7 +620,7 @@
       const r = resOf(sid(), rs.value);
       const u = {id:'up-'+uid(), site:sid(), res:rs.value, at:new Date().toISOString(), by:me(), kind:kind.value === 'summary' ? 'summary' : kind.value === 'right-away' ? 'right-away' : 'detail', topics:topics.slice(), text:txt.value.trim(), to:ok.map(a => a.id), reads:{}};
       st().updates.push(u);
-      const how = a => !a.to.email || acct(a).get === 'app' ? 'app' : acct(a).get === 'full' && a.emailOk ? 'full' : 'notice';
+      const how = a => !a.to.email || acct(a).get === 'app' ? 'app' : acct(a).get === 'full' && a.emailOk && a.familyEmailAck ? 'full' : 'notice';
       u.email = {}; ok.forEach(a => { if (how(a) !== 'app') u.email[a.id] = how(a); });
       ok.forEach(a => log('sent', 'Sent a '+(u.kind === 'right-away' ? 'right-away message' : u.kind)+' about '+r.nick+' to '+a.to.name+' ('+topics.map(topicName).join(', ')+'), '+{app:'in the app', notice:'in the app, with an email notice (no details)', full:'in the app and in full by email (signer allowed email)'}[how(a)], a));
       toast('Sent to '+ok.map(a => a.to.name).join(', ')+(Object.keys(u.email).length ? '. Emails: '+Object.keys(u.email).length+' (test: not really sent)' : '')); A.route();
@@ -599,7 +658,7 @@
   // ---------- Access log ----------
   function logTab(v){
     const sh = st(), rows = sh.log.filter(l => l.site === sid());
-    const KIND = {signed:'Signed', copy:'Copy given', revoked:'Ended', expired:'Expired', sent:'Sent', viewed:'Opened by family', lookup:'Staff checked', printed:'Record opened', note:'Family note', checkin:'Check-in', invite:'Account invite', account:'Family account'};
+    const KIND = {paused:'Paused', resumed:'Resumed', signed:'Signed', copy:'Copy given', revoked:'Ended', expired:'Expired', sent:'Sent', viewed:'Opened by family', lookup:'Staff checked', printed:'Record opened', note:'Family note', checkin:'Check-in', invite:'Account invite', account:'Family account'};
     const text = ['Family sharing access log: '+siteName(sid())+' ('+fmtDate(new Date())+')'].concat(rows.map(l => fmtTime(l.at)+' | '+(KIND[l.kind]||l.kind)+' | '+l.who+' | '+l.text)).join('\n');
     v.append(card('', h('h2',null,'Every signature, change, update and view'),
       h('p',{class:'small'},'Nothing here can be edited or deleted. Each signed record also shows its own part of this log.'),
@@ -622,7 +681,8 @@
     v.append(card('', h('h2',null,'Why a signed permission protects the home'),
       h('ul',null,
         h('li',null, h('b',null,'Federal law: '), 'HIPAA lets a home share health information with anyone the resident (or their personal representative) names in a valid written authorization (45 CFR 164.508). The form has every required part: what is shared, who shares, who gets it, why, an end date, the signature and date, the signer\'s authority, and the three required statements. The signer gets a copy.'),
-        h('li',null, h('b',null,'Personal representatives: '), 'A guardian, or a health care agent whose POA is activated, stands in the resident\'s shoes for health information (45 CFR 164.502(g)). The app checks the face sheet so the right person signs, and records the papers staff saw.'),
+        h('li',null, h('b',null,'Personal representatives: '), 'A guardian, or a health care agent whose POA is activated, stands in the resident\'s shoes for health information (45 CFR 164.502(g)). A POA is activated only by a signed statement from 2 physicians, or a physician and a psychologist, nurse practitioner or qualified physician assistant (Wis. Stat. 155.05(2)). The app checks the face sheet so the right person signs, and staff must tick each paper they saw. A home employee cannot be the agent unless they are a relative.'),
+        h('li',null, h('b',null,'Pausing: '), 'Any staff member can pause sharing at once if the resident objects. A manager can pause a representative\'s sharing when there is a concern such as suspected abuse or neglect (45 CFR 164.502(g)(5)), with the reason written down. Sharing ends on its own at the end date or when the resident moves out or dies.'),
         h('li',null, h('b',null,'Wisconsin law: '), 'Health records may be released with informed consent (Wis. Stat. 146.82), which needs the resident\'s name, the type of information, who discloses it, the purpose, who gets it, the signature (and the signer\'s authority), the date, and how long it lasts (146.81(2)). The form covers each one.'),
         h('li',null, h('b',null,'Resident rights: '), 'Residents keep the right to privacy and confidential records in adult family homes and CBRFs (DHS 88.10, DHS 83.32, Wis. Stat. 50.09). The resident\'s own wishes are asked and written down even when a guardian signs.'),
         h('li',null, h('b',null,'Electronic signatures: '), 'Wisconsin\'s electronic transactions law gives an electronic signature the same effect as ink (Wis. Stat. 137.15), and HHS allows electronic HIPAA authorizations. The app keeps the drawn signature, typed name, date and time, the staff witness, and a fingerprint of the signed form.'))));
@@ -660,8 +720,8 @@
     v.append(head('Hi '+a.to.name.replace(/\s*\(sample\)/,''), 'Updates about '+r.nick, s === 'active' ? siteName(a.site)+' shares these with you because '+(a.signer.cap === 'self' ? r.nick : r.nick+'\'s '+CAP[a.signer.cap].short.toLowerCase())+' said yes.' : siteName(a.site)));
     if (s === 'active' && !acct(a).joinedAt){ a.account.joinedAt = new Date().toISOString(); log('account', a.to.name+' joined with their family account', a); }
     if (s !== 'active'){
-      v.append(card('soft', h('h2',null, s === 'revoked' ? 'Updates have stopped' : 'Your permission has ended'),
-        h('p',null, s === 'revoked' ? 'The person who signed has chosen to stop sharing updates for now. This is their right, and it is not a judgment about you.' : 'The signed permission reached its end date on '+fmtDate(a.expires+'T12:00:00')+'.'),
+      v.append(card('soft', h('h2',null, s === 'revoked' ? 'Updates have stopped' : s === 'paused' ? 'Updates are paused' : 'Your permission has ended'),
+        h('p',null, s === 'revoked' ? 'The person who signed has chosen to stop sharing updates for now. This is their right, and it is not a judgment about you.' : s === 'paused' ? 'Updates are paused for now. The home will be in touch.' : s === 'ended' ? 'Updates have ended because '+r.nick+' no longer lives at '+siteName(a.site)+'.' : 'The signed permission reached its end date on '+fmtDate(a.expires+'T12:00:00')+'.'),
         h('p',null,'You can still call or visit '+r.nick+' as usual. If you would like updates again, ask '+(a.signer.cap === 'self' ? r.nick : 'their '+CAP[a.signer.cap].short.toLowerCase())+' or call the home.')));
       log('viewed', a.to.name+' opened the app after access ended (nothing shown)', a);
       return;
@@ -706,8 +766,13 @@
     if (myNotes.length) v.append(card('', h('h3',null,'What you sent'), h('ul',{class:'small'}, myNotes.map(n => h('li',null, fmtDate(n.at)+': '+n.text+' · ', n.status === 'done' ? h('b',null, n.kind === 'question' ? 'Answered: '+(n.reply||'') : 'Read to '+r.nick+' ✓') : h('span',{class:'muted'},'Waiting'))))));
     // how updates reach me
     const gs = h('select',null, getOpts(a, acct(a).get));
-    gs.addEventListener('change', () => { acct(a).get = gs.value; log('account', a.to.name+' chose: '+GET[gs.value].toLowerCase(), a); toast('Saved'); });
-    v.append(card('', h('h3',null,'How you get updates'), field('Send me updates', gs, !a.to.email ? 'To get email notices, ask the home to add your email address.' : a.emailOk ? 'Full updates by email were allowed by the person who signed. Email is not secure, so the app and email notices are the safer choice.' : 'Emails go to '+a.to.email+' and only say there is a new update, with a link to sign in. Health details stay in the app.')));
+    gs.addEventListener('change', () => {
+      if (gs.value === 'full' && !a.familyEmailAck){
+        if (!confirm('Regular email is not secure. Someone else could read it, or it could go to the wrong person. Do you still want full updates by email?')){ gs.value = acct(a).get; return; }
+        a.familyEmailAck = {at:new Date().toISOString(), text:EMAIL_RISK}; log('account', a.to.name+' signed that regular email is not secure', a);
+      }
+      acct(a).get = gs.value; log('account', a.to.name+' chose: '+GET[gs.value].toLowerCase(), a); toast('Saved'); });
+    v.append(card('', h('h3',null,'How you get updates'), field('Send me updates', gs, !a.to.email ? 'To get email notices, ask the home to add your email address.' : a.emailOk ? 'Full updates by email were allowed by the person who signed. Email is not secure, so the app and email notices are the safer choice.' : 'Emails go to '+a.to.email+'. They never name your loved one or say anything about their health: just "You have a new update", with a link to sign in.')));
     // what you can see
     const sh2 = a.level === 'summary' ? SUMMARY : a.topics;
     v.append(card('soft', h('h2',null,'What you can see'),
