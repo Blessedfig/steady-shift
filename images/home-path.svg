@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 420" role="img" aria-labelledby="t">
+<title id="t">Illustration: a caregiver pushes a smiling older man in a wheelchair along a garden path toward a small home with a ramp to the front door.</title>
+<defs>
+<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#DCEEFB"/><stop offset="1" stop-color="#F4F9FD"/></linearGradient>
+</defs>
+<rect width="560" height="420" rx="28" fill="url(#sky)"/>
+<circle cx="460" cy="74" r="34" fill="#F6C98B"/>
+<ellipse cx="120" cy="70" rx="46" ry="14" fill="#FFFFFF"/><ellipse cx="146" cy="62" rx="28" ry="14" fill="#FFFFFF"/>
+<!-- far hills -->
+<path d="M0 230 C90 200 170 214 260 222 S420 196 560 216 V300 H0Z" fill="#CFE6F5"/>
+<!-- lawn -->
+<path d="M0 262 C120 246 260 254 380 250 S520 244 560 248 V392 Q560 420 532 420 H28 Q0 420 0 392Z" fill="#CFE9D9"/>
+<!-- house -->
+<rect x="236" y="150" width="190" height="110" rx="6" fill="#FFFFFF"/>
+<path d="M222 156 L331 92 L440 156Z" fill="#1D6AA8" stroke="#1D6AA8" stroke-width="10" stroke-linejoin="round"/>
+<rect x="396" y="100" width="18" height="34" fill="#155485"/>
+<rect x="254" y="178" width="44" height="38" rx="5" fill="#E8F3FC" stroke="#9CC6E8" stroke-width="4"/>
+<path d="M276 178 V216 M254 197 H298" stroke="#9CC6E8" stroke-width="3"/>
+<rect x="364" y="178" width="44" height="38" rx="5" fill="#FBE3C2" stroke="#E7C08A" stroke-width="4"/>
+<path d="M386 178 V216 M364 197 H408" stroke="#E7C08A" stroke-width="3"/>
+<rect x="316" y="196" width="34" height="64" rx="4" fill="#E2A65B"/>
+<circle cx="342" cy="230" r="3" fill="#8F5410"/>
+<path d="M331 120 c-9 -7 -8 -16 -1 -16 c3 0 4 2 5 3 c1 -1 2 -3 5 -3 c7 0 8 9 -1 16 l-4 3z" fill="#F6C98B"/>
+<!-- ramp with rail -->
+<path d="M226 266 L316 254 H352 V266Z" fill="#E6D8C3"/>
+<path d="M232 252 L316 240" stroke="#9CB4C8" stroke-width="4" stroke-linecap="round"/>
+<path d="M240 251 V262 M276 246 V258 M312 241 V254" stroke="#9CB4C8" stroke-width="3"/>
+<!-- path -->
+<path d="M226 266 C180 280 150 300 160 330 C168 356 130 380 60 420 H200 C250 380 270 352 256 322 C246 300 262 284 300 266Z" fill="#F4ECDF"/>
+<!-- bushes and trees -->
+<ellipse cx="452" cy="258" rx="34" ry="20" fill="#7CC9A3"/><ellipse cx="482" cy="252" rx="24" ry="16" fill="#4FA07A"/>
+<ellipse cx="210" cy="252" rx="22" ry="14" fill="#7CC9A3"/>
+<rect x="510" y="196" width="8" height="60" rx="3" fill="#8A6A4A"/><circle cx="514" cy="184" r="30" fill="#4FA07A"/><circle cx="500" cy="200" r="20" fill="#7CC9A3"/>
+<rect x="70" y="200" width="8" height="64" rx="3" fill="#8A6A4A"/><circle cx="74" cy="186" r="32" fill="#7CC9A3"/><circle cx="92" cy="204" r="18" fill="#4FA07A"/>
+<circle cx="470" cy="300" r="5" fill="#F6C98B"/><circle cx="486" cy="312" r="5" fill="#F2A99A"/><circle cx="458" cy="318" r="5" fill="#F6C98B"/>
+<path d="M470 305 V322 M486 317 V330 M458 323 V336" stroke="#4FA07A" stroke-width="3"/>
+
+<!-- wheelchair (facing left) -->
+<g transform="translate(0 6)">
+<circle cx="236" cy="352" r="38" fill="none" stroke="#1F3A52" stroke-width="7"/>
+<path d="M236 314 V390 M198 352 H274 M209 325 L263 379 M263 325 L209 379" stroke="#9CB4C8" stroke-width="3"/>
+<circle cx="236" cy="352" r="6" fill="#1F3A52"/>
+<circle cx="176" cy="382" r="9" fill="none" stroke="#1F3A52" stroke-width="5"/>
+<path d="M188 330 H254 M254 330 L262 270 M262 270 H276 M184 330 L178 372" stroke="#1F3A52" stroke-width="7" stroke-linecap="round" fill="none"/>
+<path d="M170 360 H190" stroke="#1F3A52" stroke-width="6" stroke-linecap="round"/>
+<!-- resident -->
+<path d="M206 330 Q200 288 218 270 H244 Q258 282 256 330Z" fill="#2E86C9"/>
+<path d="M196 312 H246 Q252 312 252 320 V334 H190 V320 Q190 312 196 312Z" fill="#FFFFFF"/>
+<path d="M196 322 H248" stroke="#CFE6F5" stroke-width="5"/>
+<path d="M196 330 Q186 330 186 342 V356 H174" stroke="#334A63" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<rect x="160" y="352" width="26" height="12" rx="6" fill="#1F3A52"/>
+<rect x="222" y="246" width="18" height="24" rx="8" fill="#E4B18E"/>
+<circle cx="228" cy="230" r="24" fill="#F0C7A4"/>
+<path d="M206 232 Q204 204 232 204 Q254 206 252 226 Q240 214 222 218 Q210 222 210 238Z" fill="#D9D7E2"/>
+<path d="M210 236 q4 3 8 0" stroke="#6B3E26" stroke-width="3" fill="none" stroke-linecap="round"/>
+<path d="M210 246 q6 5 12 0" stroke="#6B3E26" stroke-width="3" fill="none" stroke-linecap="round"/>
+<path d="M214 290 Q206 304 214 314" stroke="#2E86C9" stroke-width="12" stroke-linecap="round" fill="none"/>
+</g>
+<!-- caregiver pushing -->
+<path d="M318 314 L306 392 M330 314 L350 390" stroke="#155485" stroke-width="18" stroke-linecap="round"/>
+<path d="M298 396 H316 M344 394 H362" stroke="#1F3A52" stroke-width="10" stroke-linecap="round"/>
+<path d="M300 318 Q292 246 322 232 H340 Q364 244 354 320Z" fill="#7FB8E8"/>
+<path d="M322 232 L331 252 L340 232" fill="#E8F3FC"/>
+<rect x="320" y="208" width="20" height="26" rx="9" fill="#A8704C"/>
+<circle cx="330" cy="192" r="25" fill="#B47A55"/>
+<path d="M304 196 Q300 162 332 162 Q358 164 356 192 Q350 176 332 176 Q314 176 308 200Z" fill="#1E1C24"/>
+<path d="M356 186 Q370 204 360 226 Q356 210 352 202Z" fill="#1E1C24"/>
+<path d="M312 196 q4 3 8 0" stroke="#3A2418" stroke-width="3" fill="none" stroke-linecap="round"/>
+<path d="M310 206 q6 5 12 0" stroke="#3A2418" stroke-width="3" fill="none" stroke-linecap="round"/>
+<path d="M314 254 Q298 266 286 276" stroke="#7FB8E8" stroke-width="16" stroke-linecap="round" fill="none"/>
+<circle cx="282" cy="277" r="8" fill="#B47A55"/>
+</svg>
