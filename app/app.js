@@ -92,7 +92,8 @@
     rn:['home','delegations','orders','schedule','time','sync','check','askpolicy','whatif','cards','night','behavior','watch'],
     owner:['home','owner','insights','outlook','labor','setup','procedures','schedule','time','access','sync','review','peer','askpolicy','whatif','required','survey','questions','decide','ask','watch','cards'],
     multi:['home','sites','owner','insights','outlook','labor','setup','procedures','schedule','time','access','sync','review','peer','askpolicy','whatif','required','survey','watch','ask','cards'],
-    family:['home','check','night','behavior','handoff','cards','watch']
+    family:['home','check','night','behavior','handoff','cards','watch'],
+    kin:[]   // approved family of a resident: only "Your loved one" (loved.js adds it)
   };
 
   function renderNav(view){
@@ -112,7 +113,7 @@
     if (['owner','multi'].includes(S.tier)) nav.append(h('a',{href:DESK_URL},h('span',{class:'ic','aria-hidden':'true'},'🗃️'),'Owner Desk ↗'));
     if (S.tier === 'caregiver') nav.append(h('a',{href:'#/home',onclick:e=>{ e.preventDefault(); setSimple(true); }},h('span',{class:'ic','aria-hidden':'true'},'🔲'),'Back to simple view'));
     mine.forEach(v => nav.append(navLink(v, view)));
-    if (S.tier === 'family') return;   // family plan: only what a family caregiver needs
+    if (S.tier === 'family' || S.tier === 'kin') return;   // family plan and approved family: only what they need
     const rest = Object.keys(VIEWS).filter(v => !mine.includes(v) && on(v));
     nav.append(h('div',{class:'grp'},'Everything else (unlocked)'));
     rest.forEach(v => nav.append(navLink(v, view)));
@@ -142,6 +143,8 @@
     param = m && m[2] ? decodeURIComponent(m[2]) : '';
     // A registered shift station only ever shows the station (see station.js).
     if (window.SSStation && SSStation.holds(current)){ history.replaceState(null,'','#/kiosk'); current = 'kiosk'; param = ''; }
+    // Approved family of a resident see only their own page (loved.js), never staff screens.
+    if (S.tier === 'kin' && VIEWS.loved && current !== 'loved'){ history.replaceState(null,'','#/loved'); current = 'loved'; param = ''; }
     if (window.SSResidents) SSResidents.apply(); // moved-out residents leave every active list
     renderNav(current);
     const main = $('main'); main.textContent = '';
@@ -205,7 +208,7 @@
       h('div',{class:'row'},h('button',{class:'btn sm',type:'submit'},'Send'),h('button',{class:'btn quiet sm',type:'button',onclick:()=>box.remove()},'Cancel')));
     box.addEventListener('submit', e => {
       e.preventDefault();
-      if (/\b(abuse|hurt|hit|neglect|stole)\b/i.test(txt.value)){ toast('If someone may be harmed, tell your manager now. This button is not a reporting channel.'); }
+      if (/\b(abuse|hurt|hit|neglect|stole)\b/i.test(txt.value)){ toast('If someone may be harmed, tell your manager now, or report it yourself to the state or county adult protective services. Call 911 if anyone is in danger. This button is not a reporting channel.'); }
       S.confusions.push({rule:r.id, text:txt.value.trim(), from:from.value, site:S.site, at:new Date().toISOString()}); save();
       box.replaceWith(h('div',{class:'card calm'},h('b',null,'Thanks. It\'s logged.'),h('span',{class:'small'},'When this one gets a clearer answer, you\'ll see a "you asked, here\'s the answer" note.')));
     });
@@ -296,7 +299,7 @@
     const mine = SIMPLE.filter(x => on(x[0]));
     const now = Object.keys(info).filter(k => info[k].urgent && !mine.some(x => x[0] === k) && on(k)).slice(0, 3);
     if (now.length) v.append(h('div',{class:'bignow',role:'region','aria-label':'Needs you now'},
-      now.map(k => h('a',{class:'bigbtn wide '+(['voice','myfile','hr','celebrate'].includes(k) ? 'info' : 'urgent'),href:info[k].href}, h('span',{class:'ic','aria-hidden':'true'},VIEWS[k].ic), h('b',null,info[k].text)))));
+      now.map(k => h('a',{class:'bigbtn wide '+(['voice','myfile','hr','celebrate','sharing'].includes(k) ? 'info' : 'urgent'),href:info[k].href}, h('span',{class:'ic','aria-hidden':'true'},VIEWS[k].ic), h('b',null,info[k].text)))));
     v.append(h('div',{class:'biggrid'}, mine.map(([id, ic, label]) => {
       const x = info[id]; const status = x && /\d/.test(x.text) ? x.text.replace(/^[^:]*:\s*/,'') : '';
       return h('a',{class:'bigbtn'+(x && x.urgent ? ' urgent' : ''),href:x && x.href ? x.href : '#/'+id},
@@ -1691,7 +1694,7 @@
   const statusChip = s => { const x = STATUS[s] || [s,'grey']; return h('span',{class:'chip '+x[1]},x[0]); };
   const LAYER_ORDER = ['federal','state','county','city','payer','org','house'];
   const LAYER_NAME = {federal:'Federal',state:'State (Wisconsin)',county:'County',city:'City or town',payer:'Funding source (MCO)',org:'Your company',house:'House'};
-  const roleFor = () => ({caregiver:'caregiver', family:'caregiver', manager:'manager', rn:'manager', owner:'owner', multi:'owner'}[S.tier] || 'caregiver');
+  const roleFor = () => ({caregiver:'caregiver', family:'caregiver', kin:'caregiver', manager:'manager', rn:'manager', owner:'owner', multi:'owner'}[S.tier] || 'caregiver');
   const inSetting = x => setting() === 'home' || !x.settings || x.settings.includes(setting());
   const baseHours = x => x.hours != null ? x.hours : x.business_days != null ? x.business_days * 24 : null;
   const orgFor = id => (S.orgProcs || []).filter(p => p.scenario_id === id && p.site === S.site);
@@ -2508,7 +2511,7 @@
     let acc;
     if (window.SSTrial) acc = await SSTrial.check(sb);
     else { const r = await sb.rpc('is_desk_member'); acc = r.error ? {error:r.error} : {member:!!r.data, active:!!r.data}; }
-    if (acc.error || (!acc.member && !acc.trial)){ user = null; gate(acc.error ? 'Could not check access ('+(acc.error.code||acc.error.message)+'). Try reloading.' : 'This email is signed in but is not on the list for the test app. If you were given a free trial code, sign out and use "Start my free trial". Otherwise ask Christian to add it.', true); return; }
+    if (acc.error || (!acc.member && !acc.trial)){ user = null; gate(acc.error ? 'Could not check access ('+(acc.error.code||acc.error.message)+'). Try reloading.' : 'This email is signed in but is not on the list for the test app. To try it, sign out and use "Start my free trial".', true); return; }
     try { localStorage.removeItem('ss-after-signin'); } catch(e){}
     if (/[?&](code|trial|paid)=/.test(location.search)) history.replaceState(null,'',location.pathname+location.hash);
     trial = acc.trialOnly ? acc.trial : null;

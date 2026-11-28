@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 420" role="img" aria-labelledby="t">
+<title id="t">Illustration: a soft blue landscape with rolling hills and trees. A winding path leads to a small home on a hill, and a caregiver pushes a person in a wheelchair along the path.</title>
+<!-- sky -->
+<rect width="560" height="420" rx="28" fill="#E8F3FC"/>
+<circle cx="430" cy="92" r="48" fill="#FBF1E2"/>
+<circle cx="430" cy="92" r="34" fill="#F8E2BF"/>
+<ellipse cx="132" cy="80" rx="52" ry="15" fill="#FFFFFF"/><ellipse cx="166" cy="69" rx="32" ry="15" fill="#FFFFFF"/>
+<ellipse cx="300" cy="52" rx="30" ry="9" fill="#FFFFFF" opacity=".8"/>
+<!-- far hills -->
+<path d="M0 230 C90 190 170 205 250 214 S400 180 560 204 V420 H0Z" fill="#CFE3F3"/>
+<!-- the home on the far hill -->
+<g transform="translate(330 168)">
+  <rect x="0" y="22" width="56" height="34" rx="2" fill="#FFFFFF"/>
+  <path d="M-6 25 L28 0 L62 25Z" fill="#1D6AA8"/>
+  <rect x="44" y="4" width="6" height="12" fill="#1D6AA8"/>
+  <rect x="23" y="36" width="11" height="20" rx="1.5" fill="#F6C98B"/>
+  <rect x="7" y="32" width="11" height="10" rx="1.5" fill="#BFDCF2"/>
+  <rect x="39" y="32" width="11" height="10" rx="1.5" fill="#FBE3C2"/>
+  <path d="M-10 58 L23 56 H34 L60 58" stroke="#B5D3EC" stroke-width="2" fill="none"/>
+</g>
+<!-- trees on the far hill -->
+<rect x="436" y="176" width="4" height="26" fill="#7891A6"/><path d="M438 140 L456 186 H420Z" fill="#1D6AA8"/><path d="M438 154 L460 196 H416Z" fill="#1D6AA8"/>
+<rect x="290" y="196" width="3" height="18" fill="#7891A6"/><circle cx="291.5" cy="190" r="11" fill="#4E8CC2"/>
+<rect x="476" y="182" width="3" height="20" fill="#7891A6"/><circle cx="477.5" cy="176" r="12" fill="#4E8CC2"/>
+<!-- middle hill -->
+<path d="M0 270 C110 236 210 252 300 252 S460 236 560 250 V420 H0Z" fill="#B9D6EE"/>
+<!-- trees on the left -->
+<rect x="74" y="196" width="6" height="46" fill="#7891A6"/>
+<circle cx="77" cy="186" r="28" fill="#1D6AA8"/><circle cx="58" cy="204" r="18" fill="#1D6AA8"/><circle cx="97" cy="202" r="19" fill="#1D6AA8"/>
+<rect x="150" y="220" width="4" height="28" fill="#7891A6"/><circle cx="152" cy="212" r="15" fill="#4E8CC2"/>
+<!-- near hills -->
+<path d="M0 318 C120 290 260 312 340 306 S470 294 560 304 V420 H0Z" fill="#AACDEA"/>
+<path d="M0 364 C140 340 260 360 360 352 S480 340 560 350 V392 Q560 420 532 420 H28 Q0 420 0 392Z" fill="#94BFE3"/>
+<!-- winding path from the foreground up to the home -->
+<path d="M356 226 C356 236 330 242 318 252 C300 266 250 272 236 292 C222 314 260 336 236 360 C214 384 160 400 120 420 H232 C262 398 298 380 300 352 C302 326 276 310 290 294 C304 278 352 270 368 252 C376 242 370 232 364 226Z" fill="#F6FAFD"/>
+<!-- small round tree near right -->
+<rect x="500" y="276" width="5" height="34" fill="#7891A6"/><circle cx="502.5" cy="266" r="20" fill="#1D6AA8"/>
+<!-- caregiver and wheelchair, small, walking up the path (facing right, toward the home) -->
+<g transform="translate(250 296)">
+  <!-- wheelchair -->
+  <circle cx="26" cy="30" r="10" fill="none" stroke="#1F3A52" stroke-width="2.6"/>
+  <circle cx="44" cy="37" r="3" fill="none" stroke="#1F3A52" stroke-width="2"/>
+  <path d="M20 8 L22 22 H42 L44 34" stroke="#1F3A52" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M20 8 H14" stroke="#1F3A52" stroke-width="2.6" stroke-linecap="round"/>
+  <!-- resident -->
+  <path d="M24 22 Q22 6 30 4 Q36 4 36 12 L38 22Z" fill="#F6C98B"/>
+  <path d="M34 20 L42 20 L44 30" stroke="#1D6AA8" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="31" cy="-1" r="5" fill="#E9EEF4"/>
+  <!-- caregiver -->
+  <path d="M2 40 L6 24 M10 40 L8 24" stroke="#1F3A52" stroke-width="3.4" stroke-linecap="round"/>
+  <path d="M1 26 Q0 8 7 4 Q13 4 13 12 L12 26Z" fill="#1D6AA8"/>
+  <path d="M10 10 L16 9" stroke="#1D6AA8" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="8" cy="-3" r="5" fill="#1F3A52"/>
+</g>
+<!-- birds -->
+<path d="M210 110 q5 -5 10 0 q5 -5 10 0" stroke="#7891A6" stroke-width="2" fill="none" stroke-linecap="round"/>
+<path d="M238 126 q4 -4 8 0 q4 -4 8 0" stroke="#7891A6" stroke-width="2" fill="none" stroke-linecap="round"/>
+</svg>

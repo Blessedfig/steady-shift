@@ -6,6 +6,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Get the Steady Shift App</title>
 <meta name="description" content="Put the Steady Shift test app on your Android phone, iPhone or computer.">
+<link rel="icon" type="image/svg+xml" href="images/icon.svg">
 <link rel="icon" type="image/png" href="app/icons/icon-192.png">
 <link rel="apple-touch-icon" href="app/icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -99,14 +100,17 @@ footer{border-top:1px solid var(--line);padding-block:1.5rem;font-size:.9rem;col
 @media (max-width:380px){.steps{grid-template-columns:1fr}}
 .skip{position:absolute;left:-999px;top:0;z-index:2000;background:#1D6AA8;color:#fff;padding:.7rem 1rem;border-radius:0 0 12px 0;font-weight:700}.skip:focus{left:0}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+.navcta{background:#1D6AA8;color:#fff!important;border-radius:12px;padding:0 1rem;font-weight:800}.navcta:hover{background:#155485}
+@media (max-width:600px){.top nav a:not(.navcta):not([href="app/"]){display:none}.top nav{gap:.8rem}}
+@media (max-width:440px){.top nav a[href="app/"]{display:none}}
 </style>
 </head>
 <body>
 <a class="skip" href="#main">Skip to main content</a>
 <header class="top">
   <div class="wrap">
-    <a class="brand" href="./"><span class="brand-mark" aria-hidden="true"></span>Steady Shift</a>
-    <nav aria-label="Sections"><a href="./">Home</a><a href="demo.html">See a demo</a><a href="app/">Open the app</a></nav>
+    <a class="brand" href="./"><img src="images/icon.svg" width="30" height="30" alt="" style="flex:none">Steady Shift</a>
+    <nav aria-label="Sections"><a href="./">Home</a><a href="demo.html">See a demo</a><a href="app/">Sign in</a><a class="navcta" href="app/?trial">Start free trial</a></nav>
   </div>
 </header>
 
@@ -115,7 +119,7 @@ footer{border-top:1px solid var(--line);padding-block:1.5rem;font-size:.9rem;col
   <div class="wrap">
     <span class="eyebrow">Get the app</span>
     <h1>Put Steady Shift on your phone</h1>
-    <p class="lede">The app is in private testing. Sign in with the email you were invited with. It works on Android phones, iPhones and computers, and it updates on its own.</p>
+    <p class="lede">The app is in testing. New here? <a href="app/?trial">Start a free 2-week trial</a>, no card needed. Already have an account? Sign in with your email. It works on Android phones, iPhones and computers, and it updates on its own.</p>
     <div class="picker" role="group" aria-label="Pick your device">
       <button type="button" data-for="iphone" aria-pressed="false">iPhone or iPad</button>
       <button type="button" data-for="android" aria-pressed="false">Android</button>
@@ -161,7 +165,7 @@ footer{border-top:1px solid var(--line);padding-block:1.5rem;font-size:.9rem;col
       <h3>Good to know</h3>
       <ul class="plain small" style="margin:0;padding-left:1.1rem;display:grid;gap:.35rem">
         <li>If you opened this page from an email or text app, tap its menu and choose <b>Open in Safari</b> first. Other browsers can't add it to the Home Screen.</li>
-        <li>First time signing in? Tap <b>Email me a sign-in code</b>, type the code, then choose your password.</li>
+        <li>New here? Tap <b>Start my free trial</b> and create your account. Invited by your home? Tap <b>Email me a sign-in code</b>, type the code, then choose your password.</li>
         <li>It isn't in the App Store yet. That comes later, after testing.</li>
       </ul>
     </div>

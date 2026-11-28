@@ -1,0 +1,135 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 400" role="img" aria-labelledby="t">
+<title id="t">Illustration: in a sunny living room, a caregiver sits on a low stool beside an older woman in an armchair and holds her hand in both of hers. Both are smiling. Tea and flowers sit on a small table between them.</title>
+<defs>
+  <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E6F1FB"/><stop offset="1" stop-color="#F5F9FD"/></linearGradient>
+  <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F3E7D6"/><stop offset="1" stop-color="#EAD8C0"/></linearGradient>
+  <linearGradient id="beam" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE3B3" stop-opacity=".75"/><stop offset="1" stop-color="#FFE3B3" stop-opacity="0"/></linearGradient>
+  <radialGradient id="sunglow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#FFF1D6"/><stop offset="1" stop-color="#FFF1D6" stop-opacity="0"/></radialGradient>
+  <radialGradient id="heartglow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#FFD9A0" stop-opacity=".9"/><stop offset="1" stop-color="#FFD9A0" stop-opacity="0"/></radialGradient>
+  <linearGradient id="chair" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#B4D6F1"/><stop offset="1" stop-color="#7FB0DC"/></linearGradient>
+  <linearGradient id="chairArm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9CC6E8"/><stop offset="1" stop-color="#75A8D6"/></linearGradient>
+  <linearGradient id="cardigan" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F8CD94"/><stop offset="1" stop-color="#E5A35F"/></linearGradient>
+  <linearGradient id="scrubs" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4A9BD8"/><stop offset="1" stop-color="#1D6AA8"/></linearGradient>
+  <linearGradient id="pants" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1D5E93"/><stop offset="1" stop-color="#154A75"/></linearGradient>
+  <linearGradient id="pot" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#EDB574"/><stop offset="1" stop-color="#D4914A"/></linearGradient>
+  <linearGradient id="curtain" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#DCEBF7"/></linearGradient>
+  <clipPath id="frame"><rect width="560" height="400" rx="28"/></clipPath>
+</defs>
+<g clip-path="url(#frame)">
+<!-- room -->
+<rect width="560" height="400" fill="url(#wall)"/>
+<rect y="300" width="560" height="100" fill="url(#floor)"/>
+<rect y="296" width="560" height="6" fill="#E3D3BC"/>
+
+<!-- window with curtains and a soft sun -->
+<rect x="356" y="38" width="160" height="150" rx="12" fill="#FFFFFF"/>
+<rect x="364" y="46" width="144" height="134" rx="8" fill="#D9ECFA"/>
+<circle cx="466" cy="92" r="40" fill="url(#sunglow)"/>
+<circle cx="466" cy="92" r="20" fill="#F8D29B"/>
+<path d="M364 146 C398 126 440 138 508 118 V172 Q508 180 500 180 H372 Q364 180 364 172Z" fill="#BCDDB0"/>
+<path d="M364 158 C410 146 450 156 508 146 V172 Q508 180 500 180 H372 Q364 180 364 172Z" fill="#9FCB98"/>
+<path d="M436 46 V180 M364 113 H508" stroke="#FFFFFF" stroke-width="6"/>
+<path d="M346 30 H526" stroke="#C7A27A" stroke-width="5" stroke-linecap="round"/>
+<path d="M350 32 C356 90 344 150 360 204 L338 204 C340 150 336 90 342 32Z" fill="url(#curtain)"/>
+<path d="M522 32 C516 90 528 150 512 204 L534 204 C532 150 536 90 530 32Z" fill="url(#curtain)"/>
+<!-- warm light falling into the room -->
+<path d="M508 60 L364 180 L120 330 L470 330 Z" fill="url(#beam)" opacity=".32"/>
+
+<!-- framed picture -->
+<rect x="96" y="58" width="78" height="60" rx="6" fill="#FFFFFF" stroke="#D8C2A2" stroke-width="4"/>
+<path d="M106 106 L124 88 L138 100 L148 92 L164 106Z" fill="#9CC6E8"/>
+<circle cx="150" cy="76" r="6" fill="#F6C98B"/>
+
+<!-- rug -->
+<ellipse cx="262" cy="350" rx="210" ry="26" fill="#E2CFB4"/>
+<ellipse cx="262" cy="350" rx="186" ry="19" fill="none" stroke="#F2E6D4" stroke-width="3" stroke-dasharray="10 8"/>
+
+<!-- plant in the corner -->
+<ellipse cx="516" cy="330" rx="30" ry="6" fill="#D9C4A6"/>
+<path d="M494 280 H538 L530 330 H502Z" fill="url(#pot)"/>
+<path d="M516 280 C500 250 482 246 470 236 C490 238 508 250 516 270Z" fill="#5FAE86"/>
+<path d="M516 280 C514 240 520 218 532 200 C534 226 528 252 518 278Z" fill="#7CC9A3"/>
+<path d="M516 280 C530 252 548 246 558 240 C552 260 536 272 518 280Z" fill="#4FA07A"/>
+<path d="M516 280 C506 260 504 238 498 222 C512 236 518 258 518 278Z" fill="#8ED4B0"/>
+
+<!-- side table with tea and flowers -->
+<ellipse cx="316" cy="338" rx="34" ry="5" fill="#D9C4A6"/>
+<rect x="282" y="254" width="70" height="10" rx="5" fill="#C99A63"/>
+<rect x="294" y="264" width="7" height="72" rx="3" fill="#B58550"/><rect x="333" y="264" width="7" height="72" rx="3" fill="#B58550"/>
+<rect x="290" y="232" width="24" height="22" rx="6" fill="#FFFFFF" stroke="#D4E3EF" stroke-width="2"/>
+<path d="M314 238 q9 0 9 7 t-9 7" stroke="#D4E3EF" stroke-width="3" fill="none"/>
+<path d="M297 224 q-5 -8 2 -15 M307 224 q-5 -8 2 -15" stroke="#B9C9D6" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+<path d="M330 254 h14 l-2 -20 h-10z" fill="#BFDCF2"/>
+<path d="M337 234 q-6 -14 -12 -20 M337 234 q2 -16 4 -24 M337 234 q8 -12 14 -16" stroke="#4FA07A" stroke-width="2" fill="none"/>
+<circle cx="325" cy="213" r="5" fill="#F2A99A"/><circle cx="341" cy="209" r="5" fill="#F6C98B"/><circle cx="351" cy="217" r="5" fill="#F2A99A"/>
+
+<!-- armchair -->
+<ellipse cx="160" cy="342" rx="110" ry="10" fill="#D7C2A3"/>
+<rect x="64" y="150" width="192" height="180" rx="54" fill="url(#chair)"/>
+<path d="M90 176 Q160 160 230 176" stroke="#C9E2F6" stroke-width="5" fill="none" stroke-linecap="round" opacity=".8"/>
+<rect x="44" y="232" width="50" height="102" rx="24" fill="url(#chairArm)"/>
+<rect x="226" y="232" width="50" height="102" rx="24" fill="url(#chairArm)"/>
+<rect x="86" y="326" width="10" height="18" rx="4" fill="#6E8FA8"/><rect x="224" y="326" width="10" height="18" rx="4" fill="#6E8FA8"/>
+
+<!-- resident -->
+<!-- legs and slippers under the blanket -->
+<rect x="196" y="300" width="20" height="38" rx="9" fill="#8FA6BB"/>
+<ellipse cx="212" cy="340" rx="16" ry="7" fill="#E07B6A"/>
+<!-- body -->
+<path d="M112 296 Q104 214 132 192 Q160 180 188 192 Q214 210 210 296Z" fill="url(#cardigan)"/>
+<path d="M146 190 L160 222 L174 190Z" fill="#FFFFFF"/>
+<circle cx="160" cy="236" r="3" fill="#C98A4B"/><circle cx="160" cy="256" r="3" fill="#C98A4B"/><circle cx="160" cy="276" r="3" fill="#C98A4B"/>
+<!-- knitted blanket on the lap -->
+<path d="M96 272 Q160 258 234 272 Q244 300 232 324 Q160 336 98 324 Q86 300 96 272Z" fill="#FFFFFF"/>
+<path d="M100 286 l10 -6 l10 6 l10 -6 l10 6 l10 -6 l10 6 l10 -6 l10 6 l10 -6 l10 6 l10 -6 l10 6 l10 -6" stroke="#BFDCF2" stroke-width="3" fill="none" stroke-linejoin="round"/>
+<path d="M100 308 l10 -6 l10 6 l10 -6 l10 6 l10 -6 l10 6 l10 -6 l10 6 l10 -6 l10 6 l10 -6 l10 6 l10 -6" stroke="#F6C98B" stroke-width="3" fill="none" stroke-linejoin="round"/>
+<!-- neck and head -->
+<rect x="150" y="164" width="22" height="28" rx="10" fill="#E8B48D"/>
+<circle cx="162" cy="140" r="33" fill="#F3CDA9"/>
+<path d="M130 142 Q124 104 162 102 Q200 104 196 140 Q190 120 164 118 Q140 120 132 146Z" fill="#E9E7F0"/>
+<circle cx="188" cy="108" r="13" fill="#E9E7F0"/>
+<path d="M131 140 Q126 152 134 162" stroke="#E9E7F0" stroke-width="6" fill="none" stroke-linecap="round"/>
+<!-- glasses, closed happy eyes, smile -->
+<circle cx="166" cy="142" r="8" fill="none" stroke="#8E7A6A" stroke-width="2"/><circle cx="186" cy="142" r="8" fill="none" stroke="#8E7A6A" stroke-width="2"/>
+<path d="M174 142 h4" stroke="#8E7A6A" stroke-width="2"/>
+<path d="M162 143 q4 -4 8 0 M182 143 q4 -4 8 0" stroke="#6B3E26" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+<path d="M172 156 q7 6 14 0" stroke="#6B3E26" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+<circle cx="194" cy="153" r="5" fill="#F2A99A" opacity=".7"/><circle cx="158" cy="154" r="5" fill="#F2A99A" opacity=".6"/>
+<!-- resident's arm reaching out -->
+<path d="M196 214 Q226 232 250 246" stroke="#EDB77C" stroke-width="20" stroke-linecap="round" fill="none"/>
+
+<!-- caregiver on a low stool -->
+<ellipse cx="404" cy="340" rx="56" ry="8" fill="#D7C2A3"/>
+<rect x="376" y="292" width="60" height="12" rx="6" fill="#C99A63"/>
+<rect x="382" y="304" width="7" height="34" rx="3" fill="#B58550"/><rect x="423" y="304" width="7" height="34" rx="3" fill="#B58550"/>
+<!-- legs -->
+<path d="M396 292 Q366 292 356 300 L350 334" stroke="url(#pants)" stroke-width="20" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<path d="M412 294 Q384 298 378 306 L376 334" stroke="url(#pants)" stroke-width="20" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<ellipse cx="344" cy="338" rx="15" ry="6" fill="#FFFFFF"/><ellipse cx="370" cy="338" rx="15" ry="6" fill="#F4F7FA"/>
+<!-- body leaning in -->
+<path d="M380 296 Q370 226 398 206 Q420 196 438 210 Q452 240 440 296Z" fill="url(#scrubs)"/>
+<path d="M398 206 L410 230 L424 204Z" fill="#E8F3FC"/>
+<rect x="420" y="238" width="12" height="16" rx="3" fill="#E8F3FC" opacity=".8"/>
+<!-- head -->
+<rect x="402" y="180" width="20" height="28" rx="9" fill="#8C5B3D"/>
+<circle cx="408" cy="160" r="29" fill="#9A6646"/>
+<path d="M380 160 Q376 126 410 124 Q442 126 438 160 Q434 140 412 138 Q392 140 386 166Z" fill="#2B2A33"/>
+<circle cx="434" cy="134" r="14" fill="#2B2A33"/>
+<path d="M386 158 q4 -4 8 0" stroke="#2B1A12" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+<path d="M384 172 q6 6 12 0" stroke="#2B1A12" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+<circle cx="398" cy="170" r="5" fill="#C9705A" opacity=".45"/>
+<!-- both arms reaching to hold her hand -->
+<path d="M396 230 Q330 250 284 252" stroke="#3C8CCB" stroke-width="20" stroke-linecap="round" fill="none"/>
+<path d="M408 248 Q340 268 288 262" stroke="#2F7DBE" stroke-width="20" stroke-linecap="round" fill="none"/>
+
+<!-- the hands: hers held between both of the caregiver's -->
+<circle cx="292" cy="268" r="70" fill="url(#heartglow)" opacity=".55"/>
+<ellipse cx="262" cy="252" rx="15" ry="11" fill="#F3CDA9"/>
+<ellipse cx="278" cy="246" rx="13" ry="10" fill="#9A6646"/>
+<ellipse cx="280" cy="262" rx="14" ry="10" fill="#8C5B3D"/>
+
+<!-- heart -->
+<circle cx="268" cy="196" r="26" fill="url(#heartglow)"/>
+<path d="M268 212 c-17 -12 -15 -28 -3 -28 c5 0 7 3 8 6 c1 -3 3 -6 8 -6 c12 0 14 16 -3 28 l-5 4z" transform="translate(-5 0)" fill="#E9A54E"/>
+</g>
+</svg>

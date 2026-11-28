@@ -76,6 +76,18 @@
     const last2 = l.slice(-2);
     return last2.length === 2 && last2.every(x => x.status === 'refused') && !last2[1].prescriberTold;
   }
+  // The order's own limits ("Every 6 hours", "no more than 3 doses a day"). Giving outside them is a medication error,
+  // so the app stops and points to the nurse or prescriber instead (DHS 88.07(3)(d), DHS 83.37(1)(a)).
+  function prnTooSoon(m, d){
+    const txt = String(m.prnMax || ''), every = /every\s+(\d+)\s*hours?/i.exec(txt), most = /no more than\s+(\d+)\s+doses?\s+(a|per|in a)\s+day/i.exec(txt);
+    const given = st().log.filter(l => l.med === m.id && l.slot === 'PRN' && l.status === 'given');
+    if (every && given.length){
+      const last = given.map(l => new Date(l.at).getTime()).sort((a,b) => b-a)[0], gap = (now() - last)/3600000;
+      if (gap < +every[1]) return 'Too soon: the order says every '+every[1]+' hours, and the last dose was '+(Math.round(gap*10)/10)+' hours ago. Call the nurse or prescriber if it is needed now.';
+    }
+    if (most && given.filter(l => l.day === d).length >= +most[1]) return 'This order allows no more than '+most[1]+' doses a day, and that many are already recorded today. Call the nurse or prescriber.';
+    return '';
+  }
   const prnWaiting = sid => st().log.filter(l => l.site === sid && l.slot === 'PRN' && l.status === 'given' && !l.prnResult);
   function dueNow(sid){
     const d = today(), n = toMin(hhmm(now())), out = [];
@@ -130,6 +142,8 @@
           const why = h('input',{type:'text',maxlength:'200',placeholder:'Why now? What you saw and what you tried first','aria-label':'Reason for '+m.name});
           row.append(h('div',{class:'row'}, why, h('button',{class:'btn sm',type:'button',onclick:()=>{
             if (why.value.trim().length < 5) return toast('Write why it is needed now');
+            const tooSoon = prnTooSoon(m, d);
+            if (tooSoon) return toast(tooSoon);
             const at = now(); s.log.push({id:uid(), site:sid, res:r.code, med:m.id, day:d, slot:'PRN', status:'given', at:d+'T'+hhmm(at), by:me(), prnReason:why.value.trim()});
             if (m.controlled && typeof m.count === 'number') m.count -= 1;
             save(); toast('Recorded. Come back within an hour to write the result.'); A.route(); }},'Give and record')));
@@ -256,6 +270,7 @@
     v.append(card('soft', h('h2',null,'How the medication alarm works'),
       h('p',{class:'small'},'When a dose time comes up, everyone on shift gets a pop-up with a sound and vibration. It repeats every '+cfg.every+' minutes until the dose is recorded as given, refused, held or not given.'),
       h('p',{class:'small'},'Phone lock screens show only "Medication time", the home and the resident codes, never the medicine.'),
+      h('p',{class:'small'},h('b',null,'A backup, not the plan. '),'The alarm only works while Steady Shift is open on a device with sound on. Keep your home\'s own med pass routine, and follow the pharmacy label and the prescriber\'s order.'),
       soundOn() ? h('p',{class:'small'},'🔔 Sound is on for this device.') : h('button',{class:'btn ghost sm',type:'button',onclick:enableAlarmSound},'🔔 Turn on sound and notifications on this device')));
     if (may){
       const lead = h('select',{'aria-label':'Alarm when'}, [[0,'At the dose time'],[5,'5 minutes before'],[10,'10 minutes before'],[15,'15 minutes before']].map(([n,l]) => h('option',{value:n,selected:n===cfg.lead},l)));
@@ -392,7 +407,7 @@
       if (document.visibilityState !== 'visible') try {
         if ('Notification' in window && Notification.permission === 'granted'){
           const title = 'Medication time '+tm, opt = {body:site().name+' · Resident'+(codes.length>1?'s ':' ')+codes.join(', ')+'. Open Steady Shift.', tag:'ss-med-'+k, renotify:true, requireInteraction:true, icon:'icons/icon-192.png'};
-          if (navigator.serviceWorker && navigator.serviceWorker.ready) navigator.serviceWorker.ready.then(r => r.showNotification(title, opt)).catch(() => new Notification(title, opt));
+          if (navigator.serviceWorker) navigator.serviceWorker.getRegistration().then(r => r ? r.showNotification(title, opt) : new Notification(title, opt)).catch(() => { try { new Notification(title, opt); } catch(e){} }); // .ready never settles when no worker is registered
           else new Notification(title, opt);
         }
       } catch(e){}
