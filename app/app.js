@@ -204,7 +204,7 @@
       h('div',{class:'row'},h('button',{class:'btn sm',type:'submit'},'Send'),h('button',{class:'btn quiet sm',type:'button',onclick:()=>box.remove()},'Cancel')));
     box.addEventListener('submit', e => {
       e.preventDefault();
-      if (/\b(abuse|hurt|hit|neglect|stole)\b/i.test(txt.value)){ toast('If someone may be harmed, tell your manager now. This button is not a reporting channel.'); }
+      if (/\b(abuse|hurt|hit|neglect|stole)\b/i.test(txt.value)){ toast('If someone may be harmed, tell your manager now, or report it yourself to the state or county adult protective services. Call 911 if anyone is in danger. This button is not a reporting channel.'); }
       S.confusions.push({rule:r.id, text:txt.value.trim(), from:from.value, site:S.site, at:new Date().toISOString()}); save();
       box.replaceWith(h('div',{class:'card calm'},h('b',null,'Thanks. It\'s logged.'),h('span',{class:'small'},'When this one gets a clearer answer, you\'ll see a "you asked, here\'s the answer" note.')));
     });

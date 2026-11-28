@@ -147,7 +147,11 @@
       ended ? h('button',{class:'btn quiet sm',type:'button',onclick:() => pick('not_now', null)},'No thanks, not right now') : null,
       h('button',{class:'linkbtn',type:'button',onclick:opts.onSignOut},'Sign out'));
 
-    box.append(head, msg, grid, help, foot, actions);
+    // Automatic renewal terms, shown before anyone reaches the payment page (FTC ROSCA; Wis. Stat. 134.49 for business plans).
+    const renew = pay.ok ? h('p',{class:'small',style:'margin:0'}, h('b',null,'How paid plans work. '),
+      'Plans paid online are monthly subscriptions. They renew automatically each month at the price shown, and you are charged on the same day each month until you cancel. To cancel, email ',
+      h('a',{href:'mailto:owner@theblessedfigtree.com'},'owner@theblessedfigtree.com'), ' any time before your next renewal date. The payment page shows the exact amount before you agree.') : null;
+    box.append(head, msg, renew, grid, help, foot, actions);
     const ti = $('plansTitle'); if (ti) ti.focus();
   }
 

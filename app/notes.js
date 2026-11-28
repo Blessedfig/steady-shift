@@ -122,7 +122,7 @@
     pro.addEventListener('input', () => { dr.pro = pro.value; keep(); });
     els.raw = raw; els.pro = pro;
     const rec = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const mic = rec ? h('button',{type:'button',class:'btn quiet sm',onclick:()=>{ try { const r = new rec(); r.lang = 'en-US'; r.onresult = e => { raw.value = (raw.value ? raw.value+' ' : '')+e.results[0][0].transcript; dr.raw = raw.value; keep(); }; r.start(); toast('Listening… speak your note'); } catch(e){ toast('Speaking is not available here. Type the note.'); } }},'🎤 Speak') : null;
+    const mic = rec ? h('button',{type:'button',class:'btn quiet sm',onclick:()=>{ try { const r = new rec(); r.lang = 'en-US'; r.onresult = e => { raw.value = (raw.value ? raw.value+' ' : '')+e.results[0][0].transcript; dr.raw = raw.value; keep(); }; r.start(); toast('Listening… speak your note. Your browser\'s speech service turns it into text (in Chrome, that is Google), so sample details only.'); } catch(e){ toast('Speaking is not available here. Type the note.'); } }},'🎤 Speak') : null;
     const tips = h('div',{class:'small',hidden:true});
     const btnRow = h('div',{class:'row'});
     wrap.append(h('label',{class:'f'},'Quick note in your own words', raw), btnRow, tips);

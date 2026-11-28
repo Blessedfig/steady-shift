@@ -256,6 +256,7 @@
     v.append(card('soft', h('h2',null,'How the medication alarm works'),
       h('p',{class:'small'},'When a dose time comes up, everyone on shift gets a pop-up with a sound and vibration. It repeats every '+cfg.every+' minutes until the dose is recorded as given, refused, held or not given.'),
       h('p',{class:'small'},'Phone lock screens show only "Medication time", the home and the resident codes, never the medicine.'),
+      h('p',{class:'small'},h('b',null,'A backup, not the plan. '),'The alarm only works while Steady Shift is open on a device with sound on. Keep your home\'s own med pass routine, and follow the pharmacy label and the prescriber\'s order.'),
       soundOn() ? h('p',{class:'small'},'🔔 Sound is on for this device.') : h('button',{class:'btn ghost sm',type:'button',onclick:enableAlarmSound},'🔔 Turn on sound and notifications on this device')));
     if (may){
       const lead = h('select',{'aria-label':'Alarm when'}, [[0,'At the dose time'],[5,'5 minutes before'],[10,'10 minutes before'],[15,'15 minutes before']].map(([n,l]) => h('option',{value:n,selected:n===cfg.lead},l)));
@@ -392,7 +393,7 @@
       if (document.visibilityState !== 'visible') try {
         if ('Notification' in window && Notification.permission === 'granted'){
           const title = 'Medication time '+tm, opt = {body:site().name+' · Resident'+(codes.length>1?'s ':' ')+codes.join(', ')+'. Open Steady Shift.', tag:'ss-med-'+k, renotify:true, requireInteraction:true, icon:'icons/icon-192.png'};
-          if (navigator.serviceWorker && navigator.serviceWorker.ready) navigator.serviceWorker.ready.then(r => r.showNotification(title, opt)).catch(() => new Notification(title, opt));
+          if (navigator.serviceWorker) navigator.serviceWorker.getRegistration().then(r => r ? r.showNotification(title, opt) : new Notification(title, opt)).catch(() => { try { new Notification(title, opt); } catch(e){} }); // .ready never settles when no worker is registered
           else new Notification(title, opt);
         }
       } catch(e){}

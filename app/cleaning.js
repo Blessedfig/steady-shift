@@ -348,9 +348,9 @@
     const sh = C.shiftNow();
     return dueNow().filter(x => !x.always && (x.freq==='shift' || (x.freq==='daily' && (x.shift===sh.name || x.shift==='Any')))).map(x => { const d = doneFor(x); return {id:x.id, text:x.text, area:x.area, done:!!d, by:d ? d.by : '', at:d ? d.at : ''}; });
   }
-  function markJob(id, on){
+  function markJob(id, on, by){
     const x = tpl().items.find(i => i.id === id); if (!x) return false;
-    const mine = me(), c = st();
+    const mine = by || me(), c = st();
     if (on){
       if (proofFor(mine)) return 'photo';
       if (!doneFor(x)) c.done[S().site].push({task:x.id, period:periodKey(x.freq), at:new Date().toISOString(), by:mine, photos:0});

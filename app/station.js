@@ -156,12 +156,15 @@
     }
     return b;
   }
+  // When the cleaning checklist (cleaning.js) is in use, the board shows and checks off that same list, so the tablet,
+  // the shift checklist and the clock-out reminder always agree. The six-job list above is only the fallback.
+  function realJobs(site){ try { if (window.SSClean && SSClean.shiftJobs && site === S().site && (!SSAccess.viewOn || SSAccess.viewOn('clean'))) return SSClean.shiftJobs(); } catch(e){} return null; }
   function summary(site){
     const b = board(site), today = A.isoDay(new Date()), now = new Date(), nowHM = String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
-    const open = b.tasks.filter(t => !t.done).length, cl = b.clean.items.filter(i => i.by).length;
+    const open = b.tasks.filter(t => !t.done).length, rc = realJobs(site), cl = rc ? rc.filter(j => j.done).length : b.clean.items.filter(i => i.by).length;
     const due = b.reminders.filter(r => !r.done[today] && r.time <= nowHM).length;
     const next = b.reminders.filter(r => !r.done[today] && r.time > nowHM).sort((a,c) => a.time.localeCompare(c.time))[0];
-    return [open+' open task'+(open === 1 ? '' : 's'), b.handoff && b.handoff.text ? 'Hand-off note from '+b.handoff.by : 'No hand-off note', period().label+' cleaning '+cl+' of '+b.clean.items.length,
+    return [open+' open task'+(open === 1 ? '' : 's'), b.handoff && b.handoff.text ? 'Hand-off note from '+b.handoff.by : 'No hand-off note', period().label+' cleaning '+cl+' of '+(rc ? rc.length : b.clean.items.length),
       due ? due+' reminder'+(due === 1 ? '' : 's')+' due' : next ? 'Next reminder '+tLong(next.time) : 'No more reminders today'];
   }
 
@@ -287,8 +290,15 @@
           b.handoff = {text:t, by:n, at:new Date().toISOString(), read:[]}; say(n, 'Wrote the hand-off note'); redo(); toast('Saved for the next person'); }},'Save note')),
         h('p',{class:'small muted'},'For anything about a resident\'s care, use the hand-off packet or report screens in the app.')));
       // cleaning
+      const rj = realJobs(site);
+      if (rj) ap(out, h('div',{class:'card'}, h('h3',null,period().label+' cleaning ('+rj.filter(j => j.done).length+' of '+rj.length+')'),
+        h('div',{class:'list'}, rj.map((j, i) => { const id = 'bj_'+i; return h('label',{class:'row kcheck',for:id}, h('input',{type:'checkbox',id,checked:j.done,onchange:e=>{
+            const r = SSClean.markJob(j.id, e.target.checked, n);
+            if (r === 'photo'){ e.target.checked = false; toast('Photo proof is on for you. Check this one on the Cleaning screen with a photo.'); return; }
+            say(n, (e.target.checked ? 'Cleaning done: ' : 'Cleaning unchecked: ')+j.text); redo(); }}),
+          h('span',null, j.text, j.done && j.by ? h('span',{class:'small muted'},' · '+j.by+(j.at ? ', '+hm(new Date(j.at)) : '')) : null)); }))));
       const cl = b.clean;
-      ap(out, h('div',{class:'card'}, h('h3',null,period().label+' cleaning ('+cl.items.filter(i => i.by).length+' of '+cl.items.length+')'),
+      if (!rj) ap(out, h('div',{class:'card'}, h('h3',null,period().label+' cleaning ('+cl.items.filter(i => i.by).length+' of '+cl.items.length+')'),
         h('div',{class:'list'}, cl.items.map((it, i) => { const id = 'bc_'+i; return h('label',{class:'row kcheck',for:id}, h('input',{type:'checkbox',id,checked:!!it.by,onchange:e=>{ if (e.target.checked){ it.by = n; it.at = new Date().toISOString(); say(n, 'Cleaning done: '+it.t); } else { delete it.by; delete it.at; say(n, 'Cleaning unchecked: '+it.t); } redo(); }}),
           h('span',null, it.t, it.by ? h('span',{class:'small muted'},' · '+it.by+', '+hm(new Date(it.at))) : null)); })),
         b.cleanLast ? h('p',{class:'small muted'},'Last shift finished '+b.cleanLast.done+' of '+b.cleanLast.of+'.') : null));

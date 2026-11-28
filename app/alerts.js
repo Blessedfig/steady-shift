@@ -117,7 +117,7 @@
     try {
       if ('Notification' in window && Notification.permission === 'granted'){
         const t = lockText(a, esc), opt = {body:t.body, tag:'ss-alert-'+a.id, renotify:true, requireInteraction:true, icon:'icons/icon-192.png'};
-        if (navigator.serviceWorker && navigator.serviceWorker.ready) navigator.serviceWorker.ready.then(r => r.showNotification(t.title, opt)).catch(() => new Notification(t.title, opt));
+        if (navigator.serviceWorker) navigator.serviceWorker.getRegistration().then(r => r ? r.showNotification(t.title, opt) : new Notification(t.title, opt)).catch(() => { try { new Notification(t.title, opt); } catch(e){} }); // .ready never settles when no worker is registered
         else new Notification(t.title, opt);
       }
     } catch(e){}

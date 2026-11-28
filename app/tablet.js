@@ -169,7 +169,7 @@
     if (n === 2){
       const dev = x.device || 'ipad';
       ap(body, h('h2',null,'Privacy checklist'),
-        h('p',{class:'small'},'HIPAA allows a shared tablet when each person has their own sign-in, the screen locks itself, and there is a record of who looked at what. The app does those three. These checks cover the tablet itself.'),
+        h('p',{class:'small'},'HIPAA\'s Security Rule expects three things from a shared tablet: each person has their own sign-in, the screen locks itself, and there is a record of who did what. The app is built for those three. These checks cover the tablet itself. Your home still needs its own privacy policies and staff training.'),
         h('div',{class:'row'}, h('span',{class:'small'},'Show steps for'), ...[['ipad','iPad'],['android','Android tablet']].map(([id, t]) => h('button',{class:'btn sm '+(dev === id ? '' : 'quiet'),type:'button','aria-pressed':String(dev === id),onclick:()=>{ x.device = id; redo(); }},t))),
         h('div',{class:'list'}, CHECKS.map(c => { const id = 'pc_'+c.id;
           return h('div',{class:'item'}, h('label',{class:'row kcheck',for:id}, h('input',{type:'checkbox',id,checked:!!x.checks[c.id],onchange:e=>{ x.checks[c.id] = e.target.checked; redo(); }}), h('b',null, fam && c.fam ? c.fam : c.t)),
