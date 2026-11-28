@@ -4,4 +4,4 @@ real resident or staff information. To refresh them, open `demo.html#card`, `#re
 or `#home`, screenshot the phone at 2x, and save as WebP about 600px wide.
 
 `care-together.webp` is an AI-generated illustration (made-up people, no real residents), made in ChatGPT for this
-site in the Sky and Sun palette, then resized to 1120x800 WebP.
+site in the Sky and Sun palette, then resized to 1200x800 WebP.
