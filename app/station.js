@@ -36,7 +36,8 @@
   // locked station after a few minutes without a tap, or when they press "Done, lock it". Each screen they open is logged.
   const CARE = 'ss-station-care';
   const CARE_BTNS = [['face','✅','Shift checklist'],['mar','💊','Medications'],['notes','📝','Care notes'],['report','⚠️','Report something'],['shift','🔁','Shift report'],['meals','🍽️','Meals'],['clean','🧽','Cleaning'],['night','📞','Who do I call?'],['check','❓','Ask a question'],['tabletlearn','📘','Learn the tablet']];
-  const FAMILY_BTNS = [['home','🏠','Today'],['family','👪','Meds and family'],['mar','💊','Medications'],['notes','📝','Care notes'],['report','⚠️','Report something'],['handoff','🧾','Hand-off packet'],['night','📞','Who do I call?'],['check','❓','Ask a question'],['tabletlearn','📘','Learn the tablet']];
+  // Family tablet: only the family screens (Angelika, 2026-11-28: nothing AFH or CBRF, no night help).
+  const FAMILY_BTNS = [['home','🏠','Today'],['family','👪','Medicines and notes'],['handoff','🧾','Hand-off sheet'],['tabletlearn','📘','Learn the tablet']];
   // Screens those buttons link on to. Nothing here shows pay, owner, HR files or other people's schedules.
   const CARE_OK = new Set(['home','whatif','askpolicy','behavior','cards','monitor','menu','forms','sharing'].concat(CARE_BTNS.map(x => x[0]), FAMILY_BTNS.map(x => x[0])));
   const careBtns = site => (site === 'family' ? FAMILY_BTNS : CARE_BTNS).filter(x => A.VIEWS[x[0]] && SSAccess.viewOn(x[0]));
