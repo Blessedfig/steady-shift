@@ -104,7 +104,7 @@
     const tab = (A.param && A.param()) || 'pass';
     v.append(head('Medication record · '+site().name, 'Every dose, refusal and as-needed result',
       'Sample medicines only. Give only from a signed written order on file ('+cite('order')+') and only if you have finished medication training.'));
-    v.append(h('div',{class:'row',role:'tablist'}, [['pass','Med pass'],['history','History'],['counts','Counts and disposal'],['times','Times and alarms']].map(([k,l]) =>
+    v.append(h('div',{class:'row',role:'tablist'}, [['pass','Med pass'],['history','History'],['counts','Counts and disposal'],['times','Add medicines, times, alarms']].map(([k,l]) =>
       h('a',{class:'btn '+(k === tab ? '' : 'quiet ')+'sm', href:'#/mar/'+k, role:'tab','aria-selected':String(k === tab)}, l))));
 
     const al = alerts(sid);
@@ -264,6 +264,7 @@
         h('div',{class:'grid g2'}, h('label',{class:'f'},'Alarm goes off', lead), h('label',{class:'f'},'Until recorded, repeat', every)),
         h('div',{class:'row'}, h('button',{class:'btn sm',type:'button',onclick:()=>{ s.alarm = s.alarm || {}; s.alarm[sid] = {lead:+lead.value, every:+every.value}; save(); toast('Alarm settings saved'); A.route(); }},'Save alarm settings'))));
     }
+    if (may) v.append(addMedForm(sid));
     v.append(card(may ? '' : 'soft', h('h2',null,'Dose times'), may ? h('p',{class:'small muted'},'Change a time only to match a signed order or the pharmacy label. Each change is logged with your name.') : h('p',{class:'small'},'Only a manager or nurse can change these times. Ask them if a time looks wrong.')));
     residents().forEach(r => {
       if (s.selfRes[sid+':'+r.code]) return;
@@ -279,12 +280,55 @@
           const add = h('input',{type:'time','aria-label':'New time for '+m.name,style:'max-width:9rem'});
           row.append(h('div',{class:'row'}, add, h('button',{class:'btn quiet sm',type:'button',onclick:()=>{ if (!add.value) return toast('Pick a time'); if (m.times.includes(add.value)) return toast('That time is already there'); setTimes(m, m.times.concat([add.value]).sort()); }},'Add time')));
         }
+        if (may) row.append(h('div',{class:'row'}, h('button',{class:'btn quiet sm',type:'button',onclick:()=>{ if (!confirm('Stop '+m.name+' for '+r.code+'? Do this only with a signed order to stop it.')) return; m.stopped = today(); s.timeLog = s.timeLog || []; s.timeLog.push({at:new Date().toISOString(), by:me(), med:m.id, from:m.times.slice(), to:[], stop:true}); save(); toast('Stopped. It stays in the history.'); A.route(); }},'Stop (with a signed order)')));
         const last = (s.timeLog||[]).filter(x => x.med === m.id).slice(-1)[0];
         if (last) row.append(h('span',{class:'small muted'},'Changed '+fmtDate(last.at)+' by '+last.by+': '+(last.from.join(', ')||'none')+' → '+(last.to.join(', ')||'none')));
         c.append(row);
       });
       v.append(c);
     });
+  }
+  // Angelika (2026-11-28): add each resident's medicines under their initials or code, so several residents stay organized.
+  function addMedForm(sid){
+    const s = st();
+    const res = h('select',{'aria-label':'Resident',required:true}, h('option',{value:''},'Pick a resident'), residents().map(r => h('option',{value:r.code}, r.code+' · '+r.nick)));
+    const name = h('input',{type:'text',maxlength:'80',placeholder:'Name and strength on the label','aria-label':'Medicine'});
+    const dose = h('input',{type:'text',maxlength:'60',placeholder:'e.g. 1 tablet (10 mg)','aria-label':'Dose'});
+    const route = h('select',{'aria-label':'How it is given'}, ['By mouth','Under the tongue','Eye drops','Ear drops','On the skin','Inhaled (inhaler)','Inhaled (nebulizer)','Under the skin (injection or pen)','Other'].map(x => h('option',null,x)));
+    const kind = h('select',{'aria-label':'Scheduled or as needed'}, h('option',{value:'sched'},'At set times'), h('option',{value:'prn'},'As needed (PRN)'));
+    const prnFor = h('input',{type:'text',maxlength:'120',placeholder:'Give for (from the order)','aria-label':'Give for'});
+    const prnMax = h('input',{type:'text',maxlength:'120',placeholder:'How often at most (from the order)','aria-label':'How often at most'});
+    const prnBox = h('div',{class:'grid g2',hidden:true}, prnFor, prnMax);
+    let times = [];
+    const tbox = h('div',{class:'row',style:'gap:.4rem'});
+    const drawT = () => { tbox.textContent = ''; times.slice().sort().forEach(t => tbox.append(h('span',{class:'chip'}, t, h('button',{type:'button',class:'linkbtn','aria-label':'Remove '+t,onclick:()=>{ times = times.filter(x => x !== t); drawT(); }},' ✕')))); };
+    const nt = h('input',{type:'time','aria-label':'Add a dose time',style:'max-width:9rem'});
+    const timeBox = h('div',{class:'f'}, h('span',null,'Dose times'), tbox, h('div',{class:'row'}, nt, h('button',{class:'btn quiet sm',type:'button',onclick:()=>{ if (nt.value && !times.includes(nt.value)){ times.push(nt.value); drawT(); } }},'Add time')));
+    kind.addEventListener('change', () => { const prn = kind.value === 'prn'; prnBox.hidden = !prn; timeBox.hidden = prn; });
+    const nurse = h('input',{type:'checkbox'}), psych = h('input',{type:'checkbox'}), ctl = h('input',{type:'checkbox'});
+    const count = h('input',{type:'number',min:'0',placeholder:'Count on hand','aria-label':'Count on hand',style:'max-width:9rem',hidden:true});
+    ctl.addEventListener('change', () => { count.hidden = !ctl.checked; });
+    const form = h('form',{class:'card grid',style:'gap:.6rem'},
+      h('h2',null,'Add a resident\'s medicine'),
+      h('p',{class:'small muted'},'Use the resident\'s code or initials, not their full name. Copy everything from the signed order and the pharmacy label.'),
+      h('label',{class:'f'},'Resident', res), h('div',{class:'grid g2'}, h('label',{class:'f'},'Medicine', name), h('label',{class:'f'},'Dose', dose)),
+      h('div',{class:'grid g2'}, h('label',{class:'f'},'How it\'s given', route), h('label',{class:'f'},'When', kind)),
+      timeBox, prnBox,
+      h('div',{class:'grid',style:'gap:.3rem'}, h('label',{class:'row small'}, nurse, 'Nurse task or delegated only'), h('label',{class:'row small'}, psych, 'Psychotropic (reviewed every 3 months)'), h('label',{class:'row small'}, ctl, 'Controlled (counted)'), count),
+      h('div',{class:'row'}, h('button',{class:'btn',type:'submit'},'Add medicine')));
+    form.addEventListener('submit', e => { e.preventDefault();
+      if (!res.value) return toast('Pick the resident');
+      if (!name.value.trim()) return toast('Add the medicine name');
+      const prn = kind.value === 'prn';
+      if (!prn && !times.length) return toast('Add at least one dose time');
+      if (prn && !prnFor.value.trim()) return toast('Add what it is given for');
+      const m = {id:uid(), site:sid, res:res.value, name:name.value.trim(), dose:dose.value.trim(), route:route.value, times:prn ? [] : times.slice().sort(), prn, prnFor:prnFor.value.trim(), prnMax:prnMax.value.trim(), controlled:ctl.checked, psych:psych.checked, nurse:nurse.checked, start:today(), addedBy:me()};
+      if (ctl.checked && count.value !== '') m.count = +count.value;
+      if (psych.checked) m.psychReview = today();
+      if (nurse.checked) m.nurseNote = 'Nurse task or delegated staff only.';
+      s.meds.push(m); s.timeLog = s.timeLog || []; s.timeLog.push({at:new Date().toISOString(), by:me(), med:m.id, from:[], to:m.times.slice(), add:true});
+      save(); toast('Added for '+res.value); A.route(); });
+    return form;
   }
   function setTimes(m, to){
     if (!isNurse()) return toast('Only a manager or nurse can change dose times');
