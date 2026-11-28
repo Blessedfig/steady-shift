@@ -33,6 +33,8 @@
   const isOwner = () => ['owner','multi'].includes(S().tier);
   function viewOn(view){
     const m = VIEW_MOD[view]; if (!m) return true;
+    // The house tablet is also the care tablet (tablet.js): a registered tablet, or a family home, can always open it.
+    if (view === 'kiosk' && (S().site === 'family' || (window.SSStation && SSStation.here()))) return true;
     const s = st(), x = mod(s.site, m);
     if (!x.on) return false;
     if (x.tiers.includes(s.tier)) return true;
