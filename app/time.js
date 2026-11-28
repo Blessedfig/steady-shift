@@ -91,7 +91,16 @@
       res(2*R0*Math.asin(Math.sqrt(a)) > 250 ? 'Clock-in needs to happen at the home.' : '');
     }, () => res('Location is needed to clock in here.'), {timeout:8000}));
   }
-  async function punch(site, n, action, kind){
+  // What still has to be done this shift: an unfinished incident report, medicine doses not recorded, and shift tasks.
+  function leftUndone(site){
+    const out = [], S0 = A.state();
+    if (S0.reportDraft && S0.reportDraft.site === site) out.push({t:'an incident report you started', href:'#/report'});
+    try { if (window.SSMar && site === S0.site){ const d = SSMar.dueNow(site).length; if (d) out.push({t:d+' medicine dose'+(d===1?'':'s')+' to record', href:'#/mar'}); } } catch(e){}
+    try { if (window.SSFace && site === S0.site){ const d = SSFace.openTasks(site).length; if (d) out.push({t:d+' resident task'+(d===1?'':'s')+' on the shift checklist', href:'#/face'}); } } catch(e){}
+    try { if (window.SSClean && site === S0.site){ const d = SSClean.openTasks(site).length; if (d) out.push({t:d+' cleaning job'+(d===1?'':'s'), href:'#/face'}); } } catch(e){}
+    return out;
+  }
+  async function punch(site, n, action, kind, opts){
     const T = ensure(), cur = current(site, n), dev = device(kind), now = new Date().toISOString();
     if (action === 'in'){
       const bad = await placeOk(site, kind); if (bad) return {err:bad};
@@ -104,12 +113,30 @@
     if (!cur) return {err:'You are not clocked in.'};
     if (action === 'break'){ cur.breaks.push({s:now, e:null}); audit(n+' started a break ('+dev.label+')', site); A.save(); return {msg:'Break started at '+clock(now)+'. Breaks of 30 minutes or more are unpaid when you are fully off duty.'}; }
     if (action === 'back'){ const b = cur.breaks.find(x => !x.e); if (b) b.e = now; audit(n+' ended a break ('+dev.label+')', site); A.save(); return {msg:'Back from break at '+clock(now)+'.'}; }
-    if (action === 'out'){ const b = cur.breaks.find(x => !x.e); if (b) b.e = now; cur.out = now; audit(n+' clocked out ('+dev.label+')', site); A.save(); return {msg:'Clocked out at '+clock(now)+'. '+hrs(worked(cur))+' hours. Thank you.'}; }
+    if (action === 'out'){
+      // Angelika (2026-11-27): staff can't clock out until everything is finished, including incident reports.
+      const left = leftUndone(site);
+      if (left.length && !(opts && opts.override)) return {err:'Finish these before you clock out: '+left.map(x => x.t).join('; ')+'.', left};
+      const b = cur.breaks.find(x => !x.e); if (b) b.e = now; cur.out = now;
+      if (opts && opts.override){ cur.outOverride = {why:opts.override, left:left.map(x => x.t)}; audit(n+' clocked out with work open ('+opts.override+'): '+left.map(x => x.t).join('; '), site); }
+      else audit(n+' clocked out ('+dev.label+')', site);
+      A.save(); return {msg:'Clocked out at '+clock(now)+'. '+hrs(worked(cur))+' hours. Thank you.'+(opts && opts.override ? ' Your manager will see what was left open.' : '')}; }
   }
   function clockCard(site, n, kind, after){
     const cur = current(site, n), s = shiftNow(site, n), onBreak = cur && cur.breaks.some(b => !b.e);
-    const out = h('p',{'aria-live':'polite',class:'small'});
-    const go = async action => { const r = await punch(site, n, action, kind); out.textContent = r.err || r.msg; if (r.err) toast(r.err); if (after) after(r); else setTimeout(() => A.route(), 900); };
+    const out = h('div',{'aria-live':'polite',class:'small'});
+    const go = async (action, opts) => {
+      const r = await punch(site, n, action, kind, opts);
+      if (r.left){
+        out.textContent = '';
+        const why = h('input',{type:'text',maxlength:'160',placeholder:'Why you have to leave now (your manager sees this)','aria-label':'Reason to clock out with work open'});
+        out.append(h('div',{class:'card warn',role:'alert'}, h('b',null,'Finish these before you clock out'),
+          h('ul',null, r.left.map(x => h('li',null, h('a',{href:x.href}, x.t)))),
+          h('p',{class:'small'},'Or pass a task on in the ', h('a',{href:'#/shift/give'},'shift change report'), '. Incident reports and medicine records can\'t be passed on.'),
+          h('details',{class:'small'}, h('summary',null,'Emergency: I have to leave now'), h('div',{class:'row'}, why, h('button',{class:'btn quiet sm',type:'button',onclick:()=>{ if (why.value.trim().length < 5) return toast('Write why you have to leave'); go('out', {override:why.value.trim()}); }},'Clock out anyway')))));
+        return;
+      }
+      out.textContent = r.err || r.msg; if (r.err) toast(r.err); if (after) after(r); else setTimeout(() => A.route(), 900); };
     const big = (txt, action, cls) => h('button',{class:'btn big '+(cls||''),type:'button',onclick:()=>go(action)}, txt);
     return h('div',{class:'card clock'},
       h('div',{class:'meta small'}, h('b',null, cur ? (onBreak ? 'On break' : 'On the clock since '+clock(cur.in)) : 'Not clocked in'), s ? h('span',null,' · Scheduled '+span(s)) : h('span',null,' · No shift scheduled right now')),
@@ -254,5 +281,5 @@
 
   // The house tablet (shift station) lives in station.js.
 
-  window.SSTime = {ensure, weekTotals, weekRows, worked, flags, toM, clockCard, current, punch, shiftNow};
+  window.SSTime = {ensure, weekTotals, weekRows, worked, flags, toM, clockCard, current, punch, shiftNow, leftUndone};
 })();
