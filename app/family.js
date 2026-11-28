@@ -85,8 +85,7 @@
       ['family/about','📅','Appointments and info', nextAppt() ? 'Next: '+fmtDate(nextAppt().date+'T12:00:00') : 'Birth date, doctors, papers'],
       ['family/log','📖','Medicine log', 'Who gave what, by day'],
       ['family/circle','👪','Family circle', f.circle.length ? f.circle.length+' of '+MAX_CIRCLE+' added' : 'Share with family'],
-      ['family/guide','🧭','Your situation', 'Who decides, pay, papers'],
-      ['night','📞','Who do I call?', '']
+      ['family/guide','🧭','Your situation', 'Who decides, pay, papers']
     ];
     v.append(h('div',{class:'biggrid'}, B.map(([href, ic, label, stx]) => h('a',{class:'bigbtn',href:'#/'+href}, h('span',{class:'ic','aria-hidden':'true'},ic), h('b',null,label), stx ? h('span',{class:'st'},stx) : null))));
     const recent = f.log.slice(-3).reverse();
@@ -135,7 +134,7 @@
       const row = h('div',{class:'item'}, h('b',null,m.name+' · '+m.dose), h('span',{class:'small'},'Times: '+m.times.map(clock12).join(', ')+(m.why ? ' · For: '+m.why : '')+(m.how ? ' · '+m.how : '')));
       if (may) row.append(h('div',{class:'row'},
         h('button',{class:'btn quiet sm',type:'button',onclick:()=>{ list.replaceWith(medForm(m)); }},'Change'),
-        h('button',{class:'btn quiet sm',type:'button',onclick:()=>{ if (!confirm('Take '+m.name+' off the list? Do this only if the doctor stopped it.')) return; f.meds = f.meds.filter(x => x !== m); save(); toast('Removed'); A.route(); }},'Stopped by the doctor')));
+        h('button',{class:'btn quiet sm',type:'button',onclick:()=>{ if (!confirm('Remove '+m.name+' from the list? Past doses stay in the medicine log.')) return; f.meds = f.meds.filter(x => x !== m); save(); toast('Removed. Past doses stay in the log.'); A.route(); }},'🗑 Remove')));
       list.append(row);
     });
     if (may) list.append(h('button',{class:'btn sm',type:'button',onclick:()=>{ list.replaceWith(medForm()); }},'+ Add a medicine'));
@@ -353,11 +352,6 @@
       h('li',null,'Keep a list of medicines, allergies, doctors and papers on the fridge for EMTs.'),
       s.live === 'own' ? h('li',null,'Living alone: plan a daily check-in call, and consider a medical alert button.') : null,
       h('li',null,'Medicines in one place, in a weekly pill box, filled by one person.'))));
-    out.push(card('soft', h('h2',null,'📞 Who to call'), h('ul',null,
-      h('li',null,h('b',null,'911: '),'trouble breathing, chest pain, signs of a stroke (face droop, arm weakness, speech), a fall with a hurt head or can\'t get up, not waking up.'),
-      h('li',null,h('b',null,'Doctor\'s nurse line (24 hours on most clinics): '),'new fever, new confusion, not eating or drinking for a day, a new rash after a new medicine.'),
-      h('li',null,h('b',null,'Pharmacist: '),'missed or doubled dose, side effects, can these be taken together.'),
-      h('li',null,h('b',null,'Next visit: '),'slow changes, questions about the plan. Write them down as they come up.'))));
     if (!out.length || !s.decide) out.unshift(card('soft', h('p',null,'Answer the questions above and this page fills in with what applies to you: who decides, how pay works, and which papers to keep.')));
     return out;
   }
@@ -409,6 +403,6 @@
   window.addEventListener('hashchange', () => setTimeout(tick, 300));
 
   VIEWS.family = {t:'Caring for family', ic:'👪'};
-  if (NAV.family) NAV.family.splice(0, NAV.family.length, 'home', 'family', 'night', 'handoff', 'behavior');
+  if (NAV.family) NAV.family.splice(0, NAV.family.length, 'home', 'family', 'handoff', 'behavior');
   window.SSFamily = {home, st, doses, tick};
 })();
