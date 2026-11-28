@@ -128,3 +128,37 @@ ol.steps{display:grid;gap:.35rem;padding-left:1.3rem;margin:.3rem 0 .6rem}
 .bdays legend{font-weight:600;color:var(--muted);margin-bottom:.3rem;padding:0}
 .bdays label{min-height:44px;gap:.4rem}
 ul.blist{margin:.3rem 0 0;padding-left:1.2rem;display:grid;gap:.2rem}
+/* house tablet: care screens after unlocking (station.js all-in-one mode) */
+body.kiosk .biggrid{margin:.4rem 0 1rem}
+button.bigbtn{font:inherit;cursor:pointer;width:100%}
+body.carepass .top,body.carepass .fab,body.carepass .chat,body.carepass #trialBar{display:none!important}
+.carebar{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap;padding:.6rem 16px;background:var(--calm-soft);border-bottom:2px solid var(--calm);color:var(--ink);font-weight:700}
+.carebar.soon{background:var(--amber-soft);border-bottom-color:var(--amber)}
+body.carepass nav.side{top:56px}
+/* one central tablet: guided setup and training (tablet.js) */
+.wsteps{list-style:none;margin:0 0 1rem;padding:0;display:flex;gap:.4rem;flex-wrap:wrap}
+.wsteps li{display:flex;align-items:center;gap:.45rem;padding:.4rem .75rem .4rem .4rem;border-radius:99px;background:var(--bg);border:1px solid var(--line);font-size:.88rem;font-weight:600;color:var(--muted)}
+.wsteps .num{width:1.6rem;height:1.6rem;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:var(--surface);border:1px solid var(--line);font-weight:800}
+.wsteps li.on{background:var(--sky-soft);border-color:var(--sky);color:var(--ink)}
+.wsteps li.on .num{background:var(--sky);border-color:var(--sky);color:#fff}
+.wsteps li.past{color:var(--calm)}.wsteps li.past .num{background:var(--calm-soft);border-color:var(--calm);color:var(--calm)}
+.pick{display:flex;gap:.7rem;align-items:flex-start;padding:.9rem 1rem;border:2px solid var(--line);border-radius:16px;background:var(--surface);cursor:pointer;min-height:44px}
+.pick span{display:grid;gap:.2rem}
+.pick input{width:22px;height:22px;margin-top:.1rem;flex:none;accent-color:var(--sky)}
+.pick.on{border-color:var(--sky);background:var(--sky-soft)}
+.wnav{border-top:1px solid var(--line);padding-top:.9rem;margin-top:.3rem}
+.tmock{border:10px solid #2B3A4A;border-radius:22px;background:var(--surface);padding:.8rem;max-width:340px;display:grid;gap:.5rem;justify-items:start}
+.tgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.45rem;width:100%}
+.tname,.tbig{display:flex;align-items:center;justify-content:center;text-align:center;min-height:52px;padding:.4rem;border:2px solid var(--line);border-radius:14px;font-weight:700;font-size:.9rem;width:100%}
+.tbig.red{border-color:var(--red);background:var(--red-soft)}
+.tbar{display:block;width:100%;padding:.4rem .6rem;border-radius:10px;background:var(--calm-soft);border:1px solid var(--calm);font-weight:700;font-size:.85rem}
+.tbarprog{height:10px;background:var(--surface);border-radius:99px;overflow:hidden;border:1px solid var(--line)}
+.tbarprog i{display:block;height:100%;background:var(--calm);border-radius:99px}
+fieldset.tq{border:1px solid var(--line);border-radius:16px;padding:.8rem 1rem;margin:0;display:grid;gap:.3rem}
+fieldset.tq legend{font-weight:700;padding:0 .3rem}
+.okmsg{color:var(--calm);font-weight:700}.nomsg{color:var(--amber);font-weight:700}
+.tpractice{justify-items:start}
+details.lesson>summary{cursor:pointer;display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;min-height:44px}
+.tabletcard{max-width:620px}
+@media print{body.printcard main .view>*:not(.tabletcard),body.printcard .testbar,body.printcard .carebar{display:none!important}body.printcard .tabletcard{border:2px solid #000;font-size:1.1rem}}
+@media (max-width:420px){.kpad{grid-template-columns:repeat(3,72px)}}

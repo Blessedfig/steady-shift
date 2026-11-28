@@ -731,7 +731,8 @@
   VIEWS.loved = {t:'Your loved one', ic:'💛'};
   const addNav = (t, id, after) => { const n = NAV[t]; if (!n || n.includes(id)) return; const at = after && n.indexOf(after) >= 0 ? n.indexOf(after)+1 : n.length; n.splice(at, 0, id); };
   addNav('caregiver','sharing','night'); addNav('manager','sharing','inbox'); addNav('rn','sharing','orders');
-  addNav('owner','sharing','owner'); addNav('multi','sharing','owner'); addNav('kin','loved');
+  addNav('owner','sharing','owner'); addNav('multi','sharing','owner');
+  NAV.kin = ['loved'];   // approved family see one page only (other modules may have added theirs)
   if (window.SSAccess && SSAccess.register) try {
     SSAccess.register({id:'sharing', name:'Family sharing', ic:'💌', what:'Signed permissions for family to get updates, a "Who can I tell?" list for staff, updates and check-in reminders for approved family, and a full access log.', views:['sharing','loved'], tiers:['caregiver','manager','rn','owner','multi','kin']});
   } catch(e){}
