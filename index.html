@@ -70,6 +70,9 @@ section{padding-block:clamp(3rem,7vw,5rem)}
 .who{display:flex;flex-wrap:wrap;gap:.5rem}
 .chip{font:500 .8rem/1 var(--mono);border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:.45em .8em;color:var(--muted)}
 .cta-row{display:flex;gap:.8rem;flex-wrap:wrap;align-items:center}
+.trialnote{font-size:.92rem;color:var(--muted);margin:.4rem 0 0}
+.trialband{display:flex;gap:1rem;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-top:1.2rem;padding:1rem 1.2rem;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+.trialband>div{flex:1 1 260px}
 .btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;font:800 1.05rem/1.1 var(--display);padding:.75em 1.3em;border-radius:12px;text-decoration:none;border:1px solid var(--pine)}
 .btn.primary{background:var(--pine);color:var(--bg)}
 .btn.ghost{color:var(--pine);background:transparent}
@@ -303,7 +306,7 @@ footer nav a:hover{color:var(--pine)}
         <a href="get-app.html">Get the app</a>
       </nav>
       <a class="btn ghost hdr-signin" href="app/">Sign in</a>
-      <a class="btn primary" href="#pilot">Try it early</a>
+      <a class="btn primary" href="app/?trial">Start free trial</a>
     </div>
   </div>
 </header>
@@ -311,7 +314,7 @@ footer nav a:hover{color:var(--pine)}
 <main id="main" tabindex="-1">
 <div class="appbar"><div class="wrap">
   <span><b>Testing the app?</b> Sign in with the email you were invited with. <b>New here?</b> <a href="app/?trial">Start a free 2-week trial</a>, no card needed.</span>
-  <span class="appbar-btns"><a class="btn primary sm" href="app/">Open the app</a><a class="btn ghost sm" href="get-app.html">Get it on your phone</a></span>
+  <span class="appbar-btns"><a class="btn primary sm" href="app/?trial">Start free 2-week trial</a><a class="btn ghost sm" href="app/">Sign in</a></span>
 </div></div>
 
 <div class="notice"><div class="wrap">First draft for review. Anything tagged <span class="draft">Draft</span> is a placeholder or a guess we still need to confirm before showing it to a facility.</div></div>
@@ -332,7 +335,8 @@ footer nav a:hover{color:var(--pine)}
         <a href="#multisite">I run several sites</a>
       </div>
       <p><a href="demo.html" style="font-weight:600">Or see a demo with sample data →</a></p>
-      <div class="cta-row"><a class="btn primary" href="app/">Open the app</a><a class="btn ghost" href="get-app.html">Get it on your phone</a></div>
+      <div class="cta-row"><a class="btn primary" href="app/?trial">Start my free 2-week trial</a><a class="btn ghost" href="get-app.html">Get it on your phone</a></div>
+      <p class="trialnote">Everything unlocked for 14 days. No card, no code, no sales call. Sign up with your email in about a minute.</p>
     </div>
 
     <div class="hero-visual">
@@ -386,7 +390,7 @@ footer nav a:hover{color:var(--pine)}
         <div style="display:flex;justify-content:space-between;gap:.5rem;align-items:center;flex-wrap:wrap"><span class="pname">Family plan</span><span class="draft">Draft price</span></div>
         <div class="pprice">about $10 <small>/month</small></div>
         <ul><li>Just you and the person you care for</li><li>Works on your phone</li><li>Nothing shared unless you choose</li></ul>
-        <a class="btn primary" href="#pilot" style="text-align:center">Try it early</a>
+        <a class="btn primary" href="app/?trial" style="text-align:center">Start free 2-week trial</a>
       </div>
     </div>
 <div class="path" id="afh" role="tabpanel" aria-labelledby="tab-afh">
@@ -403,7 +407,7 @@ footer nav a:hover{color:var(--pine)}
         <div style="display:flex;justify-content:space-between;gap:.5rem;align-items:center;flex-wrap:wrap"><span class="pname">Home plan</span></div>
         <div class="pprice">$59 <small>/month per home</small></div>
         <ul><li>Founding homes: $35 a month for the first year</li><li>All your caregivers included</li><li>Manager and owner views</li><li>Nurse you work with joins free</li></ul>
-        <a class="btn primary" href="#pilot" style="text-align:center">Try it early</a>
+        <a class="btn primary" href="app/?trial" style="text-align:center">Start free 2-week trial</a>
       </div>
     </div>
 <div class="path" id="cbrf" role="tabpanel" aria-labelledby="tab-cbrf">
@@ -420,7 +424,7 @@ footer nav a:hover{color:var(--pine)}
         <div style="display:flex;justify-content:space-between;gap:.5rem;align-items:center;flex-wrap:wrap"><span class="pname">Facility plan</span></div>
         <div class="pprice">$149 <small>/month per CBRF up to 20 beds</small></div>
         <ul><li>$229 a month above 20 beds</li><li>Founding homes: $89 a month for the first year</li><li>All staff included</li><li>Manager, nurse and owner views</li><li>Survey-ready export</li></ul>
-        <a class="btn primary" href="#pilot" style="text-align:center">Try it early</a>
+        <a class="btn primary" href="app/?trial" style="text-align:center">Start free 2-week trial</a>
       </div>
     </div>
 <div class="path" id="agency" role="tabpanel" aria-labelledby="tab-agency">
@@ -437,7 +441,7 @@ footer nav a:hover{color:var(--pine)}
         <div style="display:flex;justify-content:space-between;gap:.5rem;align-items:center;flex-wrap:wrap"><span class="pname">Agency plan</span><span class="draft">Draft price</span></div>
         <div class="pprice">about $5 <small>/caregiver a month</small></div>
         <ul><li>$99 a month minimum</li><li>Office and nurse views</li><li>Agency rules still being checked</li></ul>
-        <a class="btn primary" href="#pilot" style="text-align:center">Try it early</a>
+        <a class="btn primary" href="app/?trial" style="text-align:center">Start free 2-week trial</a>
       </div>
     </div>
 <div class="path" id="multisite" role="tabpanel" aria-labelledby="tab-multisite">
@@ -454,7 +458,7 @@ footer nav a:hover{color:var(--pine)}
         <div style="display:flex;justify-content:space-between;gap:.5rem;align-items:center;flex-wrap:wrap"><span class="pname">Group plan</span></div>
         <div class="pprice">$119 <small>/month per site, 4 sites or more</small></div>
         <ul><li>A view across all your sites</li><li>Each site keeps its own private space</li><li>Volume pricing to talk through</li></ul>
-        <a class="btn primary" href="#pilot" style="text-align:center">Try it early</a>
+        <a class="btn primary" href="app/?trial" style="text-align:center">Start free 2-week trial</a>
       </div>
     </div>
   </div>
@@ -645,7 +649,7 @@ footer nav a:hover{color:var(--pine)}
     <span class="eyebrow">Small homes and family care</span>
     <h2 id="tablet-h">One tablet runs the whole shift.</h2>
     <p>Put one tablet in the staff spot. Everyone unlocks it with their own PIN and gets big, simple buttons for medications, notes, reports and hand-offs. It locks itself, keeps a record of who did what, and comes with built-in training. Setup takes about 15 minutes.</p>
-    <div class="cta-row" style="margin-top:1rem"><a class="btn primary" href="small-homes.html">See how it works</a><a class="btn ghost" href="#pilot">Try it free</a></div>
+    <div class="cta-row" style="margin-top:1rem"><a class="btn primary" href="small-homes.html">See how it works</a><a class="btn ghost" href="app/?trial">Try it free for 2 weeks</a></div>
   </div>
 </section>
 
@@ -679,6 +683,7 @@ footer nav a:hover{color:var(--pine)}
       </table>
     </div>
     <p class="why">Prices are per home with unlimited staff. Pay yearly and get 2 months free. Family, Agency and Nurse Pro prices are still drafts. Want to try it first? <a href="app/?trial">Start a free 2-week trial</a>, no card or code needed.</p>
+    <div class="trialband"><div><b>Try any plan free for 2 weeks.</b> Everything unlocked, made-up sample data, no card needed. When the trial ends, pick a plan or walk away.</div><a class="btn primary" href="app/?trial">Start free trial</a></div>
   </div>
 </section>
 
