@@ -117,7 +117,7 @@
       meta.append(...[
         el('span', 'chip ' + (isPaid ? 'ok' : left > 3 ? 'ok' : ''), isPaid ? 'Paid until ' + day(p.paid_until) : left > 0 ? left + (left === 1 ? ' day left' : ' days left') : 'Trial ended ' + day(p.ends_at)),
         el('span', 'chip ' + (p.confirmed ? 'ok' : ''), p.confirmed ? 'Email confirmed' : 'Email not confirmed yet'),
-        el('span', null, 'Code ' + (p.code || '?')), el('span', null, 'Started ' + day(p.started_at)),
+        el('span', null, p.code ? 'Code ' + p.code : 'Open sign-up, no code'), el('span', null, 'Started ' + day(p.started_at)),
         p.last_sign_in ? el('span', null, 'Last in ' + day(p.last_sign_in)) : null].filter(Boolean));
       card.append(meta, el('b', null, (p.name ? p.name + ' · ' : '') + p.email));
       if (p.home_type) card.append(el('span', 'muted', TYPE[p.home_type] || p.home_type));

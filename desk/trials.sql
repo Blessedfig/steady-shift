@@ -6,9 +6,9 @@
 --   trial_codes : codes Christian and Angelika make on the Owner Desk. Each has a trial length (14 days by default),
 --                 how many people may use it, and an optional last day to redeem it.
 --   trials      : one row per person who signed up with a code: when the trial ends and which plan they picked.
---   trial_signup_hook : runs inside Supabase Auth before any new account is created. It lets a sign-up through
---                 only if the email is already on desk_members (an invite) or it carries a valid, unused code.
---                 Everyone else is refused, so the app stays invite-only for people without a code.
+--   trial_signup_hook : runs inside Supabase Auth before any new account is created. Desk members (invites) pass.
+--                 Anyone else gets one free trial per email: 14 days with no code (open sign-up, since 2026-11-28),
+--                 or the code's own length with a valid, unused code. Max 100 no-code sign-ups a day.
 -- Trial users never become desk members. They can use the test app and send ideas from its chat, nothing else.
 -- No resident or health information is stored here: only the email, the code and dates.
 
@@ -76,10 +76,6 @@ begin
   if em <> '' and exists (select 1 from public.desk_members where email = em) then
     return '{}'::jsonb;
   end if;
-  if c = '' then
-    return jsonb_build_object('error', jsonb_build_object('http_code', 403,
-      'message', 'Steady Shift is invite only. To sign up you need a free trial code.'));
-  end if;
   if em = '' then
     return jsonb_build_object('error', jsonb_build_object('http_code', 400, 'message', 'Please sign up with an email address.'));
   end if;
@@ -93,13 +89,24 @@ begin
     return jsonb_build_object('error', jsonb_build_object('http_code', 409,
       'message', 'This email has already used a free trial. Sign in instead, or ask us about a plan.'));
   end if;
+  -- No code: the open free trial (14 days). Capped per day so a flood of fake sign-ups can't run away.
+  if c = '' then
+    if (select count(*) from public.trials where code is null and started_at > now() - interval '1 day') >= 100 then
+      return jsonb_build_object('error', jsonb_build_object('http_code', 429,
+        'message', 'Steady Shift has had a lot of sign-ups today. Please try again tomorrow, or ask us for a trial code.'));
+    end if;
+    insert into public.trials (email, code, name, home_type, ends_at)
+    values (em, null, left(nullif(trim(meta ->> 'name'), ''), 120), left(nullif(meta ->> 'home_type', ''), 40),
+            now() + interval '14 days');
+    return '{}'::jsonb;
+  end if;
   update public.trial_codes
      set uses = uses + 1
    where replace(code, '-', '') = replace(c, '-', '') and active and uses < max_uses and (expires_at is null or expires_at > now())
   returning * into v;
   if not found then
     return jsonb_build_object('error', jsonb_build_object('http_code', 403,
-      'message', 'That trial code is not valid, has expired, or has already been used.'));
+      'message', 'That trial code is not valid, has expired, or has already been used. Leave the code box empty to start the standard free trial.'));
   end if;
   insert into public.trials (email, code, name, home_type, ends_at)
   values (em, v.code, left(nullif(trim(meta ->> 'name'), ''), 120), left(nullif(meta ->> 'home_type', ''), 40),

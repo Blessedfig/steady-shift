@@ -2500,7 +2500,7 @@
     let acc;
     if (window.SSTrial) acc = await SSTrial.check(sb);
     else { const r = await sb.rpc('is_desk_member'); acc = r.error ? {error:r.error} : {member:!!r.data, active:!!r.data}; }
-    if (acc.error || (!acc.member && !acc.trial)){ user = null; gate(acc.error ? 'Could not check access ('+(acc.error.code||acc.error.message)+'). Try reloading.' : 'This email is signed in but is not on the list for the test app. If you were given a free trial code, sign out and use "Start my free trial". Otherwise ask Christian to add it.', true); return; }
+    if (acc.error || (!acc.member && !acc.trial)){ user = null; gate(acc.error ? 'Could not check access ('+(acc.error.code||acc.error.message)+'). Try reloading.' : 'This email is signed in but is not on the list for the test app. To try it, sign out and use "Start my free trial".', true); return; }
     try { localStorage.removeItem('ss-after-signin'); } catch(e){}
     if (/[?&](code|trial|paid)=/.test(location.search)) history.replaceState(null,'',location.pathname+location.hash);
     trial = acc.trialOnly ? acc.trial : null;
