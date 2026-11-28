@@ -83,6 +83,12 @@ begin
   if em = '' then
     return jsonb_build_object('error', jsonb_build_object('http_code', 400, 'message', 'Please sign up with an email address.'));
   end if;
+  -- A trial row with no account behind it is left over from a sign-up that failed after this hook ran
+  -- (for example the confirmation email could not be sent). Give the code use back and let them try again.
+  if exists (select 1 from public.trials t where t.email = em and not exists (select 1 from auth.users u where lower(u.email) = em)) then
+    update public.trial_codes set uses = greatest(uses - 1, 0) where code = (select code from public.trials where email = em);
+    delete from public.trials where email = em;
+  end if;
   if exists (select 1 from public.trials where email = em) then
     return jsonb_build_object('error', jsonb_build_object('http_code', 409,
       'message', 'This email has already used a free trial. Sign in instead, or ask us about a plan.'));
