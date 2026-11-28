@@ -726,6 +726,7 @@
       log('viewed', a.to.name+' opened the app after access ended (nothing shown)', a);
       return;
     }
+    v.append(A.art('care'));
     // check-in nudge
     const mine = sh.checkins.filter(c => c.auth === a.id).sort((x, y) => x.at < y.at ? 1 : -1);
     const last = mine[0], since = last ? daysBetween(last.at, new Date()) : null;

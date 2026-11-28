@@ -242,7 +242,7 @@
       ap(stage, h('h2',null,'Shift code'), h('p',{class:'muted'},'Type the 6 digit code from your schedule in the app, or ask your manager.'), inp, keys, msg, h('button',{class:'btn quiet',type:'button',onclick:lock},'Back'));
     }
     function open(n, how){ who = n; say(n, 'Unlocked the station with a '+how); menu(); }
-    function done(r){ stage.textContent = ''; ap(stage, h('div',{class:'card calm',role:'status'}, h('h2',null, r.err ? 'Not done' : 'Done'), h('p',null, r.err || r.msg), h('p',{class:'small muted'},'Locking now.'))); arm(3500); }
+    function done(r){ stage.textContent = ''; ap(stage, h('div',{class:'card calm',role:'status'}, !r.err && /^Clocked out/.test(r.msg||'') ? A.art('handoff') : null, h('h2',null, r.err ? 'Not done' : 'Done'), h('p',null, r.err || r.msg), h('p',{class:'small muted'},'Locking now.'))); arm(3500); }
     function menu(){
       arm(); stage.textContent = '';
       const n = who, out = h('div',{class:'grid'});

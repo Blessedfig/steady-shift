@@ -94,7 +94,7 @@
   // ---------- overview ----------
   function overview(v){
     const a = st();
-    v.append(head('Getting started', 'Getting started academy', 'For new homes, new owners and people thinking about getting into care. Start with the business, then set up the app, then train your team.'));
+    v.append(head('Getting started', 'Getting started academy', 'For new homes, new owners and people thinking about getting into care. Start with the business, then set up the app, then train your team.'), A.art('night-shift'));
     const vs = h('select',{id:'acVert','aria-label':'Kind of care business'}, Object.keys(AC.VERTICALS).map(k => h('option',{value:k,selected:a.vertical===k,disabled:!AC.VERTICALS[k].live}, AC.VERTICALS[k].name+(AC.VERTICALS[k].live?'':' (coming later)'))));
     vs.addEventListener('change', () => { a.vertical = vs.value; save(); A.route(); });
     v.append(h('div',{class:'card soft'}, h('label',{class:'f',for:'acVert'},'Your kind of care business', vs), h('p',{class:'small'},'Adult family homes and CBRFs are first. In-home care and adult day services will reuse the same business track and tools.')));
@@ -434,7 +434,7 @@
     const [a, b] = p.split('/');
     if (a === 'm') return modulePage(v, b);
     if (a === 'cert') return certPage(v, b);
-    v.append(head('Staff training', 'Short trainings for your role', 'Ten to twenty minutes each, with a quiz and a certificate. Your manager confirms the hours before they count toward your yearly training.'));
+    v.append(head('Staff training', 'Short trainings for your role', 'Ten to twenty minutes each, with a quiz and a certificate. Your manager confirms the hours before they count toward your yearly training.'), A.art('night-shift'));
     const mine = st().certs.filter(c => c.who === defaultLearner());
     rolesTrack(v);
     if (mine.length) v.append(certList(mine.slice().reverse(), 'My certificates'));

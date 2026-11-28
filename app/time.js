@@ -141,7 +141,9 @@
           h('details',{class:'small'}, h('summary',null,'Emergency: I have to leave now'), h('div',{class:'row'}, why, h('button',{class:'btn quiet sm',type:'button',onclick:()=>{ if (why.value.trim().length < 5) return toast('Write why you have to leave'); go('out', {override:why.value.trim()}); }},'Clock out anyway')))));
         return;
       }
-      out.textContent = r.err || r.msg; if (r.err) toast(r.err); if (after) after(r); else setTimeout(() => A.route(), 900); };
+      out.textContent = r.err || r.msg; if (r.err) toast(r.err);
+      if (!r.err && action === 'out' && !after){ out.textContent = ''; out.append(h('div',{class:'card calm',role:'status'}, A.art('handoff'), h('h2',null,'You\'re off the clock'), h('p',null, r.msg))); setTimeout(() => A.route(), 4000); return; }
+      if (after) after(r); else setTimeout(() => A.route(), 900); };
     const big = (txt, action, cls) => h('button',{class:'btn big '+(cls||''),type:'button',onclick:()=>go(action)}, txt);
     return h('div',{class:'card clock'},
       h('div',{class:'meta small'}, h('b',null, cur ? (onBreak ? 'On break' : 'On the clock since '+clock(cur.in)) : 'Not clocked in'), s ? h('span',null,' · Scheduled '+span(s)) : h('span',null,' · No shift scheduled right now')),

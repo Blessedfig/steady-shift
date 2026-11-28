@@ -407,6 +407,12 @@ details.item>summary::-webkit-details-marker{display:none}
 .ec .chip{white-space:normal;line-height:1.3}
 .ec,.ec .item{min-width:0}
 fieldset.goals{border:0;padding:0;margin:0;display:grid;gap:.35rem}fieldset.goals legend{padding:0;margin-bottom:.25rem;font-weight:600;color:var(--ink)}.addm{border-left:3px solid var(--line,#d6dee8);padding-left:.5rem}
+/* calm-screen pictures: only on sign-in, training, family updates and done screens, never on work screens */
+.art-pic{display:block;width:100%;height:auto;max-height:240px;object-fit:cover;border-radius:18px;margin:0 0 .9rem}
+.gate .art-pic{max-height:200px;margin:0}
+.card.calm .art-pic{max-height:180px;margin:0}
+@media (max-width:600px){.art-pic{max-height:170px}.gate .art-pic{max-height:150px}}
+@media (min-width:900px){.view>.art-pic{max-width:720px}}
 </style>
 </head>
 <body>
@@ -415,6 +421,7 @@ fieldset.goals{border:0;padding:0;margin:0;display:grid;gap:.35rem}fieldset.goal
 
 <div id="gate" class="gate" role="main" hidden>
   <div class="card">
+    <img class="art-pic" src="art/care.webp" alt="" width="720" height="480" decoding="async">
     <div class="row"><span class="mark" aria-hidden="true"></span><span class="eyebrow">Steady Shift test app</span></div>
     <h1 id="gateTitle">Sign in</h1>
     <p class="muted" id="gateIntro">This is the private test version with every plan unlocked. Use the same email as the Owner Desk.</p>
