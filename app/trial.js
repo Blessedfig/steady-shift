@@ -140,6 +140,7 @@
       note, h('div',{class:'row'}, rb, mt));
 
     const foot = h('div',{class:'card warn'},
+      h('p',{class:'small',style:'margin:0 0 .5rem'}, h('b',null,'How paid plans renew. '),'Paid plans renew automatically every month at the price shown until you cancel. Founding prices last 12 months, then the regular price for your plan applies. You can cancel any time by emailing owner@theblessedfigtree.com, and cancelling stops the next charge.'),
       h('p',{class:'small',style:'margin:0'}, h('b',null,'Test version. '),'Pay yearly and get 2 months free. Prices may change before release. Even on a paid plan, this version is for made-up sample data only: please don\'t enter real resident names or health details until we tell you the secure version is ready.'));
 
     const actions = h('div',{class:'row'},
