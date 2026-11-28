@@ -31,7 +31,62 @@
     return {r};
   }
   const passOn = () => { try { return Date.now() < +(sessionStorage.getItem(PASS) || 0); } catch(e){ return false; } };
-  const holds = () => !!here() && !passOn();
+  // ---------- care screens on the tablet (all-in-one mode for small homes and family care) ----------
+  // After someone unlocks with their own PIN, they can open the everyday care screens. The tablet goes back to the
+  // locked station after a few minutes without a tap, or when they press "Done, lock it". Each screen they open is logged.
+  const CARE = 'ss-station-care';
+  const CARE_BTNS = [['face','✅','Shift checklist'],['mar','💊','Medications'],['notes','📝','Care notes'],['report','⚠️','Report something'],['shift','🔁','Shift report'],['meals','🍽️','Meals'],['clean','🧽','Cleaning'],['night','📞','Who do I call?'],['check','❓','Ask a question'],['tabletlearn','📘','Learn the tablet']];
+  const FAMILY_BTNS = [['home','🏠','Today'],['family','👪','Meds and family'],['mar','💊','Medications'],['notes','📝','Care notes'],['report','⚠️','Report something'],['handoff','🧾','Hand-off packet'],['night','📞','Who do I call?'],['check','❓','Ask a question'],['tabletlearn','📘','Learn the tablet']];
+  // Screens those buttons link on to. Nothing here shows pay, owner, HR files or other people's schedules.
+  const CARE_OK = new Set(['home','whatif','askpolicy','behavior','cards','monitor','menu','forms'].concat(CARE_BTNS.map(x => x[0]), FAMILY_BTNS.map(x => x[0])));
+  const careBtns = site => (site === 'family' ? FAMILY_BTNS : CARE_BTNS).filter(x => A.VIEWS[x[0]] && SSAccess.viewOn(x[0]));
+  function care(){ try { const c = JSON.parse(sessionStorage.getItem(CARE) || 'null'); return c && here() && c.site === here().site ? c : null; } catch(e){ return null; } }
+  const setCare = c => { try { if (c) sessionStorage.setItem(CARE, JSON.stringify(c)); else sessionStorage.removeItem(CARE); } catch(e){} };
+  const careMin = site => +(SSAccess.kioskCfg(site).careMin || 3);
+  function startCare(who, site, view){
+    const s = S();
+    setCare({who, site, until:Date.now() + careMin(site)*60000, prev:{tier:s.tier, simple:s.simple}});
+    s.tier = site === 'family' ? 'family' : 'caregiver'; s.simple = true;
+    log(who, 'Opened the care screens on the tablet', site, here()); A.save(); A.fillSwitchers(); careBar();
+    location.hash = '#/'+(view || 'home');
+  }
+  function endCare(why, stay){
+    const c = care(); setCare(null);
+    if (c){ const s = S(); if (c.prev){ s.tier = c.prev.tier; s.simple = c.prev.simple; } log(c.who, why || 'Locked the tablet', c.site, here()); A.save(); A.fillSwitchers(); }
+    careBar();
+    if (stay) return;
+    if (!/^#\/kiosk/.test(location.hash)) location.hash = '#/kiosk'; else A.route();
+  }
+  function careBar(){
+    const c = care(); let bar = document.getElementById('careBar');
+    document.body.classList.toggle('carepass', !!c);
+    if (!c){ if (bar) bar.remove(); return; }
+    if (!bar){
+      bar = h('div',{id:'careBar',class:'carebar noprint',role:'region','aria-label':'House tablet'}, h('span',{class:'cbtxt','aria-live':'polite'}), h('button',{class:'btn sm',type:'button',onclick:()=>endCare('Locked the tablet')},'Done, lock it'));
+      const app = document.getElementById('app'); app.insertBefore(bar, app.firstChild);
+    }
+    const left = Math.max(0, Math.round((c.until - Date.now())/1000));
+    bar.querySelector('.cbtxt').textContent = left <= 30 ? 'Locking in '+left+' seconds. Tap anywhere to keep going.' : c.who+' is using the tablet. It locks itself after '+careMin(c.site)+' minutes without a tap.';
+    bar.classList.toggle('soon', left <= 30);
+  }
+  function careNav(nav, view){
+    const c = care(); if (!c) return false;
+    nav.append(h('div',{class:'grp'},'On the house tablet'));
+    careBtns(c.site).forEach(([v, ic, t]) => nav.append(h('a',{href:'#/'+v,'aria-current':v===view?'page':null},h('span',{class:'ic','aria-hidden':'true'},ic),t)));
+    nav.append(h('a',{href:'#/kiosk',onclick:e=>{ e.preventDefault(); endCare('Locked the tablet'); }},h('span',{class:'ic','aria-hidden':'true'},'🔒'),'Done, lock it'));
+    return true;
+  }
+  let bumped = 0;
+  ['pointerdown','keydown'].forEach(ev => document.addEventListener(ev, () => {
+    const c = care(); if (!c || Date.now() - bumped < 5000) return;
+    bumped = Date.now(); c.until = Date.now() + careMin(c.site)*60000; setCare(c); careBar();
+  }, true));
+  setInterval(() => { const c = care(); if (!c){ if (document.body.classList.contains('carepass')) careBar(); return; } if (Date.now() > c.until) endCare('The tablet locked itself after '+careMin(c.site)+' minutes without a tap'); else careBar(); }, 5000);
+  let lastView = '';
+  window.addEventListener('hashchange', () => { const c = care(), v = ((location.hash.match(/^#\/([a-z]+)/)||[])[1]) || 'home';
+    if (c && v !== lastView && CARE_OK.has(v) && A.VIEWS[v]){ log(c.who, 'Opened '+A.VIEWS[v].t+' on the tablet', c.site, here()); A.save(); } lastView = v; });
+  // True when this device is a station and the screen asked for is not allowed right now (the app then shows the station).
+  const holds = view => { if (!here() || passOn()) return false; if (view === 'kiosk') return false; const c = care(); return !(c && CARE_OK.has(view || 'home')); };
   function log(who, what, site, r){ const s = S(); s.audit = s.audit || []; s.audit.unshift({at:new Date().toISOString(), who, what:what+(r ? ' (station: '+r.name+')' : ''), site}); if (s.audit.length > 400) s.audit.length = 400; }
   async function register(site, name, by){
     const token = rnd(32), id = 'ST'+rnd(3);
@@ -116,12 +171,12 @@
   document.addEventListener('visibilitychange', () => { if (/^#\/kiosk/.test(location.hash)) keepAwake(); });
 
   R.kiosk = v => {
+    if (care()) endCare('Locked the tablet', true);
     const st = here(), temp = !st;
     const site = st ? st.site : S().site;
     if (st && S().site !== site){ S().site = site; A.save(); A.fillSwitchers(); }
     if (!st){
-      if (site === 'family'){ ap(v, head('House tablet', 'The house tablet is for homes with staff', 'Pick a home at the top first.')); return; }
-      if (!['manager','owner','multi'].includes(S().tier)){ ap(v, head('House tablet', 'A manager sets up the house tablet', 'Switch "View as" to House manager to open it.')); return; }
+      if (!['manager','owner','multi','family'].includes(S().tier)){ ap(v, head('House tablet', 'A manager sets up the house tablet', 'Switch "View as" to House manager to open it.')); return; }
     }
     const k = SSAccess.kioskCfg(site);
     if (!k.on){ ap(v, head('House tablet', 'House tablet sign-in is off for this home', 'Turn it on in Services and access.'), temp ? h('a',{class:'btn ghost',href:'#/access'},'Services and access') : null); return; }
@@ -195,7 +250,9 @@
           out.textContent = ''; ap(out, h('h3',null,'Ask for time off'), h('div',{class:'grid g2'}, field('From', from), field('To', to)), h('button',{class:'btn',type:'button',onclick:()=>{ if (!from.value || to.value < from.value){ toast('Check the dates'); return; }
             X.ensure().requests.push({id:A.uid(), site, type:'timeoff', by:n, from:from.value, to:to.value, pto:'PTO', status:'Pending', at:new Date().toISOString(), note:'Sent from the house tablet'}); say(n, 'Asked for time off'); done({msg:'Sent to your manager. You will see the answer in the app.'}); }},'Send')); }},'Ask for time off') : null,
         h('button',{class:'btn quiet',type:'button',onclick:lock},'Done, lock it'));
-      ap(stage, h('h2',null,n), k.allow.clock ? T.clockCard(site, n, 'kiosk', done) : null, row, out);
+      const btns = k.care && st ? careBtns(site) : [];
+      const grid = btns.length ? [h('h3',null,'What do you need?'), h('div',{class:'biggrid'}, btns.map(([id, ic, t]) => h('button',{class:'bigbtn',type:'button',onclick:()=>{ clearTimeout(timer); clearInterval(clockT); document.body.classList.remove('kiosk'); who = null; startCare(n, site, id); }}, h('span',{class:'ic','aria-hidden':'true'},ic), h('b',null,t))))] : null;
+      ap(stage, h('h2',null,n), k.allow.clock && site !== 'family' ? T.clockCard(site, n, 'kiosk', done) : null, grid, row, out);
     }
     function boardView(out){
       arm(); const n = who, b = board(site), today = A.isoDay(new Date());
@@ -276,7 +333,7 @@
 
   // ---------- manager setup card (Services and access) ----------
   function setupCard(site){
-    if (site === 'family' || !['manager','owner','multi'].includes(S().tier)) return null;
+    if (!['manager','owner','multi','family'].includes(S().tier)) return null;
     const k = SSAccess.kioskCfg(site), mine = here(), list = stations().filter(x => x.site === site);
     const by = A.tier().name;
     const nameIn = h('input',{type:'text',maxlength:'40',value:'Kitchen tablet','aria-label':'Station name'});
@@ -287,7 +344,13 @@
     const codes = h('div',{class:'list'});
     const showCodes = () => { codes.textContent = ''; ap(codes, todays.length ? todays.map(s => h('div',{class:'item'}, h('b',null,s.staff+' · '+dayFmt(dn(s.date),{weekday:'short'})+' '+tLong(s.start)+' to '+tLong(s.end)), h('b',{class:'code'},codeFor(s)))) : h('p',{class:'muted'},'No shifts in the next 24 hours.')); SSAccess.log('Viewed today\'s shift codes', site); A.save(); };
     const step = (...x) => h('li',null,...x);
+    const careSw = h('input',{type:'checkbox',id:'k_care',checked:!!k.care,onchange:e=>{ k.care = e.target.checked; SSAccess.log('House tablet care screens '+(k.care ? 'on' : 'off'), site); A.save(); }});
+    const careMinSel = sel([['2','2 minutes'],['3','3 minutes'],['5','5 minutes']], String(k.careMin || 3));
+    careMinSel.addEventListener('change', () => { k.careMin = +careMinSel.value; SSAccess.log('House tablet care screens lock after '+k.careMin+' minutes', site); A.save(); });
     return h('div',{class:'card'}, h('h2',null,'Shift station (always-on house tablet)'),
+      h('div',{class:'row'}, h('a',{class:'btn ghost sm',href:'#/tablet'},'Guided setup for one central tablet'), h('a',{class:'btn quiet sm',href:'#/tabletlearn'},'Learn the tablet (training)')),
+      h('label',{class:'row small',for:'k_care'}, careSw, 'All-in-one: after unlocking, people can open the everyday care screens (medications, notes, reports, checklist)'),
+      h('div',{class:'grid g2'}, field('Care screens lock after no taps for', careMinSel)),
       h('p',{class:'small'},'Set it up once on the tablet. It stays signed in through restarts, opens straight to the station, and locks itself after each person. Staff unlock with their own PIN or a shift code. It never shows owner, pay or resident screens.'),
       mine ? h('div',{class:'card soft',role:'status'}, h('b',null,'This device is the shift station "'+mine.name+'".'), h('span',{class:'small'},'It opens to the station when the app starts. Use the Manager button on the station to step out.'), h('div',{class:'row'}, h('a',{class:'btn sm',href:'#/kiosk'},'Back to the station')))
         : h('div',{class:'grid'}, h('b',null,'Make this device a station'), h('div',{class:'grid g2'}, field('Station name', nameIn), field('How staff unlock it', how)),
@@ -321,7 +384,8 @@
   }
 
   // Full app pass for a manager runs out: go back to the station.
-  setInterval(() => { if (holds() && !/^#\/kiosk/.test(location.hash) && !document.getElementById('app').hidden) location.hash = '#/kiosk'; }, 30000);
+  setInterval(() => { if (holds(((location.hash.match(/^#\/([a-z]+)/)||[])[1]) || 'home') && !/^#\/kiosk/.test(location.hash) && !document.getElementById('app').hidden) location.hash = '#/kiosk'; }, 30000);
 
-  window.SSStation = {here, holds, verify, register, revoke, setupCard, codeChip, codeFor, board, summary, stations};
+  setTimeout(careBar, 0);
+  window.SSStation = {here, holds, care, careNav, startCare, endCare, careBtns, verify, register, revoke, setupCard, codeChip, codeFor, board, summary, stations};
 })();

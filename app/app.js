@@ -98,6 +98,7 @@
   function renderNav(view){
     const nav = $('nav'); nav.textContent = '';
     const on = v => !window.SSAccess || SSAccess.viewOn(v);
+    if (window.SSStation && SSStation.careNav(nav, view)) return; // a person unlocked the house tablet
     if (simpleOn()){
       // Simple view for floor staff: only the everyday buttons, plus one way out to everything else.
       nav.append(h('div',{class:'grp'},'On shift'));
@@ -140,7 +141,7 @@
     current = m && VIEWS[m[1]] ? m[1] : 'home';
     param = m && m[2] ? decodeURIComponent(m[2]) : '';
     // A registered shift station only ever shows the station (see station.js).
-    if (window.SSStation && SSStation.holds() && current !== 'kiosk'){ history.replaceState(null,'','#/kiosk'); current = 'kiosk'; param = ''; }
+    if (window.SSStation && SSStation.holds(current)){ history.replaceState(null,'','#/kiosk'); current = 'kiosk'; param = ''; }
     if (window.SSResidents) SSResidents.apply(); // moved-out residents leave every active list
     renderNav(current);
     const main = $('main'); main.textContent = '';
