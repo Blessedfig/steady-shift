@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 400" role="img" aria-labelledby="t">
+<title id="t">Illustration: a caregiver kneels beside an older woman in an armchair, holding her hand, with a warm drink between them and the sun in the window.</title>
+<rect width="560" height="400" rx="28" fill="#EAF4FC"/>
+<!-- window -->
+<rect x="356" y="44" width="160" height="140" rx="12" fill="#FFFFFF"/>
+<circle cx="470" cy="92" r="22" fill="#F6C98B"/>
+<path d="M356 150 C400 126 440 136 516 118 V172 Q516 184 504 184 H368 Q356 184 356 172Z" fill="#CFE6F5"/>
+<path d="M436 44 V184 M356 114 H516" stroke="#D7E3EE" stroke-width="6"/>
+<rect x="356" y="44" width="160" height="140" rx="12" fill="none" stroke="#C4DAEC" stroke-width="6"/>
+<!-- floor and rug -->
+<rect x="0" y="318" width="560" height="82" fill="#F4ECDF"/>
+<path d="M0 372 Q0 400 28 400 H532 Q560 400 560 372 V318 H0Z" fill="#F4ECDF"/>
+<ellipse cx="250" cy="352" rx="200" ry="22" fill="#E6D8C3"/>
+<!-- plant -->
+<path d="M486 318 L498 262 H534 L546 318Z" fill="#E2A65B"/>
+<ellipse cx="500" cy="236" rx="12" ry="30" fill="#7CC9A3" transform="rotate(-28 500 236)"/>
+<ellipse cx="530" cy="232" rx="12" ry="32" fill="#4FA07A" transform="rotate(24 530 232)"/>
+<ellipse cx="516" cy="222" rx="11" ry="34" fill="#7CC9A3"/>
+<!-- armchair -->
+<rect x="64" y="160" width="190" height="170" rx="48" fill="#9CC6E8"/>
+<rect x="48" y="236" width="44" height="98" rx="20" fill="#86B8E0"/>
+<rect x="226" y="236" width="44" height="98" rx="20" fill="#86B8E0"/>
+<rect x="86" y="324" width="12" height="20" rx="4" fill="#6E8FA8"/>
+<rect x="220" y="324" width="12" height="20" rx="4" fill="#6E8FA8"/>
+<!-- resident -->
+<path d="M110 214 Q110 190 134 186 H186 Q210 190 210 214 V286 H110Z" fill="#F2B880"/>
+<path d="M98 270 H226 Q236 270 236 282 V318 Q236 328 226 328 H98 Q88 328 88 318 V282 Q88 270 98 270Z" fill="#FFFFFF"/>
+<path d="M100 290 H224 M100 308 H224" stroke="#CFE6F5" stroke-width="6"/>
+<rect x="148" y="166" width="24" height="26" rx="10" fill="#E9B993"/>
+<circle cx="160" cy="146" r="32" fill="#F1C9A5"/>
+<path d="M128 146 Q126 112 160 110 Q196 112 192 146 Q186 128 160 126 Q136 128 128 146Z" fill="#E8E6EF"/>
+<circle cx="186" cy="118" r="12" fill="#E8E6EF"/>
+<path d="M164 150 q5 4 10 0" stroke="#7A4E3A" stroke-width="3" fill="none" stroke-linecap="round"/>
+<path d="M170 160 q7 6 14 0" stroke="#7A4E3A" stroke-width="3" fill="none" stroke-linecap="round"/>
+<circle cx="184" cy="152" r="5" fill="#F2A99A" opacity=".6"/>
+<!-- resident arm reaching -->
+<path d="M196 220 Q232 236 262 246" stroke="#F2B880" stroke-width="22" stroke-linecap="round" fill="none"/>
+<!-- side table and mug -->
+<rect x="282" y="276" width="70" height="10" rx="5" fill="#C99A63"/>
+<rect x="312" y="286" width="10" height="40" fill="#C99A63"/>
+<rect x="294" y="252" width="26" height="24" rx="6" fill="#FFFFFF" stroke="#C4DAEC" stroke-width="3"/>
+<path d="M320 258 q10 0 10 8 t-10 8" stroke="#C4DAEC" stroke-width="3" fill="none"/>
+<path d="M300 244 q-6 -10 2 -18 M312 244 q-6 -10 2 -18" stroke="#9CB4C8" stroke-width="3" fill="none" stroke-linecap="round"/>
+<!-- caregiver, kneeling -->
+<path d="M352 330 Q340 300 360 286 L404 280 Q420 300 414 330Z" fill="#155485"/>
+<path d="M330 326 H392 Q400 326 400 334 V340 H322 V334 Q322 326 330 326Z" fill="#155485"/>
+<path d="M346 300 Q338 240 372 226 H398 Q426 236 424 292 Q420 304 404 304 H360 Q348 304 346 300Z" fill="#2E86C9"/>
+<path d="M372 226 L386 248 L398 226" fill="#E8F3FC"/>
+<rect x="374" y="204" width="22" height="26" rx="10" fill="#7E5235"/>
+<circle cx="385" cy="186" r="28" fill="#8A5A3C"/>
+<path d="M357 184 Q356 156 386 156 Q414 158 413 186 Q408 170 392 170 Q372 170 362 192Z" fill="#2B2A33"/>
+<circle cx="404" cy="168" r="9" fill="#2B2A33"/><circle cx="362" cy="172" r="8" fill="#2B2A33"/>
+<path d="M368 190 q5 4 10 0" stroke="#2B2A33" stroke-width="3" fill="none" stroke-linecap="round"/>
+<path d="M366 202 q6 5 12 0" stroke="#2B2A33" stroke-width="3" fill="none" stroke-linecap="round"/>
+<!-- caregiver arm, holding the resident's hand -->
+<path d="M360 246 Q320 252 276 250" stroke="#2E86C9" stroke-width="22" stroke-linecap="round" fill="none"/>
+<circle cx="268" cy="249" r="13" fill="#8A5A3C"/>
+<circle cx="258" cy="246" r="11" fill="#F1C9A5"/>
+<!-- heart -->
+<path d="M264 206 c-14 -10 -12 -24 -2 -24 c4 0 6 3 7 5 c1 -2 3 -5 7 -5 c10 0 12 14 -2 24 l-5 4z" fill="#E7AE55"/>
+</svg>
