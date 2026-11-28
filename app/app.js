@@ -110,6 +110,7 @@
     }
     const mine = NAV[S.tier].filter(on);
     nav.append(h('div',{class:'grp'},(/^[aeiou]/i.test(tier().name)?'For an ':'For a ')+tier().name.toLowerCase()));
+    if (['owner','multi'].includes(S.tier)) nav.append(h('a',{href:DESK_URL},h('span',{class:'ic','aria-hidden':'true'},'🗃️'),'Owner Desk ↗'));
     if (S.tier === 'caregiver') nav.append(h('a',{href:'#/home',onclick:e=>{ e.preventDefault(); setSimple(true); }},h('span',{class:'ic','aria-hidden':'true'},'🔲'),'Back to simple view'));
     mine.forEach(v => nav.append(navLink(v, view)));
     if (S.tier === 'family' || S.tier === 'kin') return;   // family plan and approved family: only what they need
@@ -1419,10 +1420,19 @@
       qs:S.questions.filter(x=>x.site===id).length,
       dele:S.delegations.filter(x=>x.site===id && x.status!=='Active').length};
   }
+  // The Owner Desk (requests, tester notes, replies, trial codes) is a separate page on the same sign-in (Christian, 2026-11-28).
+  const DESK_URL = '../desk/';
+  function deskCard(){
+    return h('a',{class:'card soft deskcard noprint',href:DESK_URL},
+      h('span',{class:'ic','aria-hidden':'true'},'🗃️'),
+      h('div',null, h('b',null,'Open the Owner Desk'), h('span',{class:'small muted'},'Tester notes, requests and replies, and trial codes. Same sign-in, no new password.')),
+      h('span',{class:'deskgo','aria-hidden':'true'},'→'));
+  }
   R.owner = (v, isHome) => {
     if (S.site === 'family'){ S.site = 'maple'; save(); fillSwitchers(); }
     const st = siteStats(S.site);
     v.append(head('Owner view · '+site().name, 'How the home is doing', 'Patterns, not people. Resident names and raw incident text stay out unless you open a report on purpose.'));
+    v.append(deskCard());
     v.append(h('div',{class:'grid g4'},
       h('div',{class:'card'},h('div',{class:'stat '+(st.ready>=80?'good':'warnc')},h('b',null,st.ready!=null?st.ready+'%':'–'),h('span',null,'survey ready'+(st.readySample?' (sample)':'')))),
       h('div',{class:'card'},h('div',{class:'stat '+(st.trained>=80?'good':'warnc')},h('b',null,st.trained+'%'),h('span',null,'staff on track with training'))),
@@ -1462,6 +1472,7 @@
   // All sites (multi-site)
   R.sites = (v, isHome) => {
     v.append(head('Multi-site operator', 'All your homes at a glance', 'Compare health by site. Resident detail stays inside each home.'));
+    v.append(deskCard());
     const ids = D.SITES.filter(s=>s.setting!=='home').map(s=>s.id);
     const tb = h('table',{class:'t'}, h('thead',null,h('tr',null,['Home','Type','Survey ready','Staff trained','Reports open','Questions','Delegations to renew',''].map(x=>h('th',null,x)))));
     const body = h('tbody');
