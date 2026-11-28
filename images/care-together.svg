@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 400" role="img" aria-labelledby="t">
-<title id="t">Illustration: in a sunny living room, a caregiver sits on a low stool beside an older woman in an armchair and holds her hand in both of hers. Both are smiling. Tea and flowers sit on a small table between them.</title>
+<title id="t">Illustration: in a sunny living room, a caregiver sits close on a low stool beside an older woman in an armchair and holds her hand in both of hers. Both are smiling. Tea and flowers sit on a small table nearby.</title>
 <defs>
   <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E6F1FB"/><stop offset="1" stop-color="#F5F9FD"/></linearGradient>
   <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F3E7D6"/><stop offset="1" stop-color="#EAD8C0"/></linearGradient>
@@ -52,6 +52,7 @@
 <path d="M516 280 C530 252 548 246 558 240 C552 260 536 272 518 280Z" fill="#4FA07A"/>
 <path d="M516 280 C506 260 504 238 498 222 C512 236 518 258 518 278Z" fill="#8ED4B0"/>
 
+<g transform="translate(122 0)">
 <!-- side table with tea and flowers -->
 <ellipse cx="316" cy="338" rx="34" ry="5" fill="#D9C4A6"/>
 <rect x="282" y="254" width="70" height="10" rx="5" fill="#C99A63"/>
@@ -62,6 +63,8 @@
 <path d="M330 254 h14 l-2 -20 h-10z" fill="#BFDCF2"/>
 <path d="M337 234 q-6 -14 -12 -20 M337 234 q2 -16 4 -24 M337 234 q8 -12 14 -16" stroke="#4FA07A" stroke-width="2" fill="none"/>
 <circle cx="325" cy="213" r="5" fill="#F2A99A"/><circle cx="341" cy="209" r="5" fill="#F6C98B"/><circle cx="351" cy="217" r="5" fill="#F2A99A"/>
+
+</g>
 
 <!-- armchair -->
 <ellipse cx="160" cy="342" rx="110" ry="10" fill="#D7C2A3"/>
@@ -98,6 +101,7 @@
 <!-- resident's arm reaching out -->
 <path d="M196 214 Q226 232 250 246" stroke="#EDB77C" stroke-width="20" stroke-linecap="round" fill="none"/>
 
+<g transform="translate(-62 0)">
 <!-- caregiver on a low stool -->
 <ellipse cx="404" cy="340" rx="56" ry="8" fill="#D7C2A3"/>
 <rect x="376" y="292" width="60" height="12" rx="6" fill="#C99A63"/>
@@ -118,9 +122,10 @@
 <path d="M386 158 q4 -4 8 0" stroke="#2B1A12" stroke-width="2.6" fill="none" stroke-linecap="round"/>
 <path d="M384 172 q6 6 12 0" stroke="#2B1A12" stroke-width="2.6" fill="none" stroke-linecap="round"/>
 <circle cx="398" cy="170" r="5" fill="#C9705A" opacity=".45"/>
+</g>
 <!-- both arms reaching to hold her hand -->
-<path d="M396 230 Q330 250 284 252" stroke="#3C8CCB" stroke-width="20" stroke-linecap="round" fill="none"/>
-<path d="M408 248 Q340 268 288 262" stroke="#2F7DBE" stroke-width="20" stroke-linecap="round" fill="none"/>
+<path d="M336 230 Q306 244 284 250" stroke="#3C8CCB" stroke-width="20" stroke-linecap="round" fill="none"/>
+<path d="M346 250 Q314 266 288 262" stroke="#2F7DBE" stroke-width="20" stroke-linecap="round" fill="none"/>
 
 <!-- the hands: hers held between both of the caregiver's -->
 <circle cx="292" cy="268" r="70" fill="url(#heartglow)" opacity=".55"/>
