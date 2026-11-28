@@ -111,6 +111,7 @@
     nav.append(h('div',{class:'grp'},(/^[aeiou]/i.test(tier().name)?'For an ':'For a ')+tier().name.toLowerCase()));
     if (S.tier === 'caregiver') nav.append(h('a',{href:'#/home',onclick:e=>{ e.preventDefault(); setSimple(true); }},h('span',{class:'ic','aria-hidden':'true'},'🔲'),'Back to simple view'));
     mine.forEach(v => nav.append(navLink(v, view)));
+    if (S.tier === 'family') return;   // family plan: only what a family caregiver needs
     const rest = Object.keys(VIEWS).filter(v => !mine.includes(v) && on(v));
     nav.append(h('div',{class:'grp'},'Everything else (unlocked)'));
     rest.forEach(v => nav.append(navLink(v, view)));
@@ -345,6 +346,7 @@
   }
 
   function homeFamily(v){
+    if (window.SSFamily) return SSFamily.home(v);
     v.append(head('Family caregiver · '+site().name, 'Today with Mom (sample)', 'Your tasks, who to call, and a hand-off packet for your helper.'));
     S.famTasks = S.famTasks || {};
     const tasks = ['Morning meds at 8 AM','Blood sugar check before lunch','Walk around the block if weather allows','Evening meds at 8 PM','Check smoke detector (monthly)'];
@@ -443,20 +445,28 @@
       did: h('textarea',{style:'min-height:4.5rem',placeholder:'e.g. gave him space, offered coffee, he calmed down in 10 min'}),
       told: h('input',{type:'text',placeholder:'e.g. texted manager 7:45 PM'})
     };
+    // Angelika (2026-11-27): the report shows which staff were working and who is reporting.
+    let onNow = []; try { onNow = window.SSAlerts ? (SSAlerts.onShift(S.site).names || []) : []; } catch(e){}
+    let meName = tier().name+' (you)'; try { if (window.SSSched && SSSched.me) meName = SSSched.me() || meName; } catch(e){}
+    const staffBox = h('div',{class:'row',style:'gap:.6rem;flex-wrap:wrap'}, onNow.map(n => h('label',{class:'row small',style:'gap:.3rem'}, h('input',{type:'checkbox',checked:true,value:n,'aria-label':n+' was working'}), n)));
+    const staffMore = h('input',{type:'text',maxlength:'120',placeholder:onNow.length ? 'Anyone else working (optional)' : 'Staff working this shift','aria-label':'Other staff working'});
+    const byName = h('input',{type:'text',maxlength:'60',value:meName,'aria-label':'Reported by'});
     if (param && param.startsWith('behavior:')) f.raw.value = '';
     const ex = h('button',{class:'btn quiet sm',type:'button',onclick:()=>{ f.res.value = rs[1] ? rs[1].code : ''; f.where.value='Dining room'; f.who.value='me and one coworker'; f.raw.value=(rs[1]?rs[1].nick:'He')+' freaked out at supper and hit Sam cuz he wanted to go home again. I think he was tired and lazy staff didnt help. He wouldnt take his meds after.'; f.did.value='gave him space, offered coffee, he calmed down in 10 min'; f.told.value='texted manager 7:45 PM'; }},'Fill in an example');
     const out = h('div',{class:'grid'});
     const form = h('form',{class:'card'},
       h('div',{class:'grid g2'}, h('label',{class:'f'},'Resident',f.res), h('label',{class:'f'},'When',f.when), h('label',{class:'f'},'Where',f.where), h('label',{class:'f'},'Who was there',f.who)),
+      h('div',{class:'grid g2'}, h('div',{class:'f'}, h('span',null,'Staff working this shift'), staffBox, staffMore), h('label',{class:'f'},'Reported by',byName)),
       h('label',{class:'f'},'What happened, in your own words',f.raw),
       h('label',{class:'f'},'What you did',f.did),
       h('label',{class:'f'},'Who you told, and when',f.told),
       h('div',{class:'row'},h('button',{class:'btn',type:'submit'},'Make it professional'),ex));
-    f.raw.addEventListener('input', () => { if (f.raw.value.trim()) pending = {area:'report', step:'Typed a note but did not make the report'}; });
+    f.raw.addEventListener('input', () => { if (f.raw.value.trim()){ pending = {area:'report', step:'Typed a note but did not make the report'}; if (!S.reportDraft || S.reportDraft.site !== S.site){ S.reportDraft = {site:S.site, by:byName.value, at:new Date().toISOString()}; save(); } } });
     form.addEventListener('submit', e => {
       e.preventDefault(); out.textContent = ''; pending = null;
       if (!f.raw.value.trim()){ f.raw.focus(); return; }
-      const r = rewrite({res:f.res.value, when:f.when.value, where:f.where.value, who:f.who.value, raw:f.raw.value, did:f.did.value, told:f.told.value});
+      const staff = [...staffBox.querySelectorAll('input:checked')].map(i => i.value).concat(staffMore.value.split(',').map(x => x.trim()).filter(Boolean));
+      const r = rewrite({res:f.res.value, when:f.when.value, where:f.where.value, who:f.who.value, raw:f.raw.value, did:f.did.value, told:f.told.value, staff, by:byName.value.trim()});
       showRewrite(out, r, true);
       out.scrollIntoView({behavior:'smooth',block:'start'});
     });
@@ -508,6 +518,7 @@
       'Location: '+x.where,
       'Resident: '+(x.res || 'none'),
       'People present: '+(who ? sentence(who).replace(/\.$/,'') : 'not given'),
+      x.staff ? 'Staff working this shift: '+(x.staff.length ? x.staff.join(', ') : 'not given') : null,
       routes.length ? 'Type: '+routes.map(r=>r.type).join(', ') : null,
       '',
       'What happened (observed facts):',
@@ -519,7 +530,7 @@
       'Notified:',
       x.told ? sentence(x.told) : '(add who you told and when)',
       '',
-      'Written by: '+tier().name+' on shift, '+fmtTime(new Date())
+      'Reported by: '+(x.by || tier().name+' on shift')+', '+fmtTime(new Date())
     ].filter(l => l !== null);
     return {text:lines.join('\n'), changes:[...new Set(changes)], flags, report, routes, missing, x, facts};
   }
@@ -550,7 +561,7 @@
     if (canSend){
       const sb = h('button',{class:'btn sm',type:'button'},'Send to my manager');
       sb.addEventListener('click',()=>{
-        S.reports.push({id:uid(), site:S.site, at:new Date().toISOString(), type:r.routes.map(x=>x.type).join(', ')||'General', status:'Waiting for manager', resident:r.x.res, raw:r.x.raw, clean:finalText(), by:tier().name+' (you)'}); save();
+        S.reports.push({id:uid(), site:S.site, at:new Date().toISOString(), type:r.routes.map(x=>x.type).join(', ')||'General', status:'Waiting for manager', resident:r.x.res, raw:r.x.raw, clean:finalText(), by:r.x.by || tier().name+' (you)', staff:r.x.staff||[]}); delete S.reportDraft; save();
         sb.disabled = true; sb.textContent = 'Sent'; toast('Sent privately to the manager\'s review list.');
       });
       row.append(sb);
